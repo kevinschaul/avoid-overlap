@@ -1,11 +1,14 @@
 {
   "name": "avoid-overlap",
-  "version": "0.0.2-0",
+  "version": "0.0.3",
   "description": "Functions to help avoid text annotation/label overlaps",
   "author": "Kevin Schaul",
   "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "exports": "./dist/index.js",
   "engines": {
-    "node": ">= 14"
+    "node": ">= 16"
   },
   "devDependencies": {
     "@swc/cli": "^0.1.62",
@@ -27,7 +30,6 @@
     "prettier": "^2.8.7",
     "typescript": "^5.0.3"
   },
-  "main": "dist/index.js",
   "scripts": {
     "watch-compile-src": "swc src/index.ts -w --out-dir dist/",
     "test": "jest"

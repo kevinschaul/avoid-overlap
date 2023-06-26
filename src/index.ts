@@ -1,5 +1,5 @@
 import RBush from 'rbush';
-import uniqWith from 'lodash/uniqWith';
+import uniqWith from 'lodash/uniqWith.js';
 
 interface Bounds {
   x: number;
