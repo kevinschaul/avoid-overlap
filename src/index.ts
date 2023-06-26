@@ -1,5 +1,5 @@
 import RBush from 'rbush';
-import { uniqWith } from 'lodash';
+import uniqWith from 'lodash/uniqWith';
 
 interface Bounds {
   x: number;
@@ -393,7 +393,7 @@ export const avoidOverlapNudge = (
         const diffY = newY - bodyToMove.minY;
 
         if (bodyToMove.data.render) {
-          bodyToMove.data.render(bodyToMove.node, newX, newY, diffX, diffY);
+          bodyToMove.data.render(bodyToMove.node, diffX, diffY);
           updateTree(tree, bodyToMove, newX, newY);
         }
 

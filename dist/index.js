@@ -51,7 +51,7 @@ function _object_spread_props(target, source) {
     return target;
 }
 import RBush from 'rbush';
-import { uniqWith } from 'lodash';
+import uniqWith from 'lodash/uniqWith';
 const getRelativeBounds = (child, parent)=>{
     return {
         x: child.x - parent.x,
@@ -321,7 +321,7 @@ const removeCollisions = (tree)=>{
                 const diffX = newX - bodyToMove.minX;
                 const diffY = newY - bodyToMove.minY;
                 if (bodyToMove.data.render) {
-                    bodyToMove.data.render(bodyToMove.node, newX, newY, diffX, diffY);
+                    bodyToMove.data.render(bodyToMove.node, diffX, diffY);
                     updateTree(tree, bodyToMove, newX, newY);
                 }
                 break;
