@@ -1,467 +1,497 @@
-function _define_property(obj, key, value) {
-    if (key in obj) {
-        Object.defineProperty(obj, key, {
-            value: value,
+(function(global, factory) {
+    if (typeof module === "object" && typeof module.exports === "object") factory(exports, require("rbush"), require("lodash/uniqWith"));
+    else if (typeof define === "function" && define.amd) define([
+        "exports",
+        "rbush",
+        "lodash/uniqWith"
+    ], factory);
+    else if (global = typeof globalThis !== "undefined" ? globalThis : global || self) factory(global.index = {}, global.rbush, global.uniqWith);
+})(this, function(exports, _rbush, _uniqWith) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", {
+        value: true
+    });
+    function _export(target, all) {
+        for(var name in all)Object.defineProperty(target, name, {
             enumerable: true,
-            configurable: true,
-            writable: true
+            get: all[name]
         });
-    } else {
-        obj[key] = value;
     }
-    return obj;
-}
-function _object_spread(target) {
-    for(var i = 1; i < arguments.length; i++){
-        var source = arguments[i] != null ? arguments[i] : {};
-        var ownKeys = Object.keys(source);
-        if (typeof Object.getOwnPropertySymbols === "function") {
-            ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function(sym) {
-                return Object.getOwnPropertyDescriptor(source, sym).enumerable;
-            }));
+    _export(exports, {
+        avoidOverlapNudge: function() {
+            return avoidOverlapNudge;
+        },
+        avoidOverlapChoices: function() {
+            return avoidOverlapChoices;
         }
-        ownKeys.forEach(function(key) {
-            _define_property(target, key, source[key]);
-        });
+    });
+    _rbush = /*#__PURE__*/ _interop_require_default(_rbush);
+    _uniqWith = /*#__PURE__*/ _interop_require_default(_uniqWith);
+    function _define_property(obj, key, value) {
+        if (key in obj) {
+            Object.defineProperty(obj, key, {
+                value: value,
+                enumerable: true,
+                configurable: true,
+                writable: true
+            });
+        } else {
+            obj[key] = value;
+        }
+        return obj;
     }
-    return target;
-}
-function ownKeys(object, enumerableOnly) {
-    var keys = Object.keys(object);
-    if (Object.getOwnPropertySymbols) {
-        var symbols = Object.getOwnPropertySymbols(object);
-        if (enumerableOnly) {
-            symbols = symbols.filter(function(sym) {
-                return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+    function _interop_require_default(obj) {
+        return obj && obj.__esModule ? obj : {
+            default: obj
+        };
+    }
+    function _object_spread(target) {
+        for(var i = 1; i < arguments.length; i++){
+            var source = arguments[i] != null ? arguments[i] : {};
+            var ownKeys = Object.keys(source);
+            if (typeof Object.getOwnPropertySymbols === "function") {
+                ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function(sym) {
+                    return Object.getOwnPropertyDescriptor(source, sym).enumerable;
+                }));
+            }
+            ownKeys.forEach(function(key) {
+                _define_property(target, key, source[key]);
             });
         }
-        keys.push.apply(keys, symbols);
+        return target;
     }
-    return keys;
-}
-function _object_spread_props(target, source) {
-    source = source != null ? source : {};
-    if (Object.getOwnPropertyDescriptors) {
-        Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-        ownKeys(Object(source)).forEach(function(key) {
-            Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-        });
-    }
-    return target;
-}
-import RBush from 'rbush';
-import uniqWith from 'lodash/uniqWith';
-const getRelativeBounds = (child, parent)=>{
-    return {
-        x: child.x - parent.x,
-        y: child.y - parent.y,
-        width: child.width,
-        height: child.height
-    };
-};
-const first = (array, callback)=>{
-    for(let i = 0, l = array.length; i < l; i++){
-        const value = callback(array[i], i);
-        if (value) {
-            return value;
+    function ownKeys(object, enumerableOnly) {
+        var keys = Object.keys(object);
+        if (Object.getOwnPropertySymbols) {
+            var symbols = Object.getOwnPropertySymbols(object);
+            if (enumerableOnly) {
+                symbols = symbols.filter(function(sym) {
+                    return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+                });
+            }
+            keys.push.apply(keys, symbols);
         }
+        return keys;
     }
-    return null;
-};
-const all = (array, callback)=>{
-    let ret = [];
-    for(let i = 0, l = array.length; i < l; i++){
-        const value = callback(array[i], i);
-        if (value) {
-            ret.push(value);
-        }
-    }
-    return ret;
-};
-const checkOne = (tree, body)=>{
-    if (body.isStatic) {
-        return false;
-    }
-    const bodies = tree.search(body);
-    const checkCollision = (candidate)=>{
-        if (candidate !== body) {
-            return {
-                a: body,
-                b: candidate
-            };
-        }
-    };
-    return first(bodies, checkCollision);
-};
-const getCollisions = (tree)=>{
-    const bodies = tree.all();
-    const check = (body)=>{
-        return checkOne(tree, body);
-    };
-    const collisions = all(bodies, check);
-    const uniqueCollisions = uniqWith(collisions, (a, b)=>{
-        return a.a === b.a || a.a === b.b;
-    });
-    return uniqueCollisions;
-};
-const updateTree = (tree, body, x, y)=>{
-    const newBody = _object_spread_props(_object_spread({}, body), {
-        minX: x,
-        minY: y,
-        maxX: x + (body.maxX - body.minX),
-        maxY: y + (body.maxY - body.minY)
-    });
-    // Remove the old body, comparing the nodes so that other changes to the body properties will not appear as different bodies
-    tree.remove(body, (a, b)=>a.node === b.node);
-    tree.insert(newBody);
-    return newBody;
-};
-const getDistance = (a, b)=>{
-    const dx = a.x - b.x;
-    const dy = a.y - b.y;
-    return Math.sqrt(dx * dx + dy * dy);
-};
-const getNudgedPosition = (direction, bodyToMove, bodyToNotMove)=>{
-    let x = bodyToMove.minX;
-    let y = bodyToMove.minY;
-    if (direction === 'down') {
-        x = bodyToMove.minX;
-        y = bodyToNotMove.maxY + 1;
-    } else if (direction === 'right') {
-        x = bodyToNotMove.maxX + 1;
-        y = bodyToMove.minY;
-    } else if (direction === 'up') {
-        x = bodyToMove.minX;
-        y = bodyToNotMove.minY - (bodyToMove.maxY - bodyToMove.minY) - 1;
-    } else if (direction === 'left') {
-        x = bodyToNotMove.minX - (bodyToMove.maxX - bodyToMove.minX) - 1;
-        y = bodyToMove.minY;
-    }
-    return {
-        direction,
-        x,
-        y,
-        distance: getDistance({
-            x,
-            y
-        }, {
-            x: bodyToMove.minX,
-            y: bodyToMove.minY
-        })
-    };
-};
-/* Return the two bodies in order according to their priority values
- */ const orderBodies = (a, b)=>{
-    if (b.data.priority > a.data.priority) {
-        return [
-            a,
-            b
-        ];
-    } else if (a.data.priority > b.data.priority) {
-        return [
-            b,
-            a
-        ];
-    } else if (b.data.priorityWithinGroup > a.data.priorityWithinGroup) {
-        return [
-            a,
-            b
-        ];
-    } else {
-        return [
-            b,
-            a
-        ];
-    }
-};
-const removeCollisions = (tree)=>{
-    let attempts = 0;
-    let hasCollisions = true;
-    while(hasCollisions && attempts <= 5){
-        attempts++;
-        const collisions = getCollisions(tree);
-        if (collisions.length) {
-            const response = collisions[0];
-            const [bodyToMove, _bodyToNotMove] = orderBodies(response.a, response.b);
-            bodyToMove.node.remove();
-            tree.remove(bodyToMove);
+    function _object_spread_props(target, source) {
+        source = source != null ? source : {};
+        if (Object.getOwnPropertyDescriptors) {
+            Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
         } else {
-            break;
+            ownKeys(Object(source)).forEach(function(key) {
+                Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+            });
         }
+        return target;
     }
-};
-/* Avoid label collisions by nudging colliding labels
- *
- */ export const avoidOverlapNudge = (parent, labelGroups, options)=>{
-    const tree = new RBush();
-    const parentBounds = parent.getBoundingClientRect();
-    const maxAttempts = options.maxAttempts || 3;
-    const includeParent = options.includeParent || false;
-    const parentMargin = options.parentMargin || {
-        top: -2,
-        right: -2,
-        bottom: -2,
-        left: -2
-    };
-    if (includeParent) {
-        const parentThickness = 200;
-        // Top
-        tree.insert({
-            minX: -parentThickness,
-            minY: -parentThickness,
-            maxX: parentBounds.width + parentThickness,
-            maxY: parentMargin.top,
-            isStatic: true,
-            node: parent,
-            data: {
-                priority: Infinity,
-                priorityWithinGroup: Infinity
-            }
-        });
-        // Bottom
-        tree.insert({
-            minX: -parentThickness,
-            minY: parentBounds.height - parentMargin.bottom,
-            maxX: parentBounds.width + parentThickness,
-            maxY: parentBounds.height + parentThickness,
-            isStatic: true,
-            node: parent,
-            data: {
-                priority: Infinity,
-                priorityWithinGroup: Infinity
-            }
-        });
-        // Right
-        tree.insert({
-            minX: parentBounds.width - parentMargin.left,
-            minY: -parentThickness,
-            maxX: parentBounds.width + parentThickness,
-            maxY: parentBounds.height + parentThickness,
-            isStatic: true,
-            node: parent,
-            data: {
-                priority: Infinity,
-                priorityWithinGroup: Infinity
-            }
-        });
-        // Left
-        tree.insert({
-            minX: -parentThickness,
-            minY: -parentThickness,
-            maxX: parentMargin.left,
-            maxY: parentBounds.height + parentThickness,
-            isStatic: true,
-            node: parent,
-            data: {
-                priority: Infinity,
-                priorityWithinGroup: Infinity
-            }
-        });
-    }
-    // Add everything to the system
-    labelGroups.map((labelGroup)=>{
-        const margin = labelGroup.margin || {
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0
+    const getRelativeBounds = (child, parent)=>{
+        return {
+            x: child.x - parent.x,
+            y: child.y - parent.y,
+            width: child.width,
+            height: child.height
         };
-        const priority = labelGroup.priority || 0;
-        const nudgeStrategy = labelGroup.nudgeStrategy || 'shortest';
-        const nudgeDirections = labelGroup.nudgeDirections || [
-            'down',
-            'right',
-            'up',
-            'left'
-        ];
-        const maxDistance = labelGroup.maxDistance || Infinity;
-        const render = labelGroup.render;
-        labelGroup.nodes.map((node, i)=>{
-            const bounds = getRelativeBounds(node.getBoundingClientRect(), parentBounds);
-            const body = {
-                minX: bounds.x - margin.left,
-                minY: bounds.y - margin.top,
-                maxX: bounds.x + bounds.width + margin.left + margin.right,
-                maxY: bounds.y + bounds.height + margin.top + margin.bottom,
-                isStatic: false,
-                node,
-                data: {
-                    priority,
-                    priorityWithinGroup: labelGroup.nodes.length - i,
-                    nudgeStrategy,
-                    nudgeDirections,
-                    maxDistance,
-                    render
-                }
-            };
-            tree.insert(body);
-        });
-    });
-    const handleCollision = (response)=>{
-        const [bodyToMove, bodyToNotMove] = orderBodies(response.a, response.b);
-        if (bodyToMove.data.nudgeStrategy === 'shortest') {
-            const closestPosition = [
-                'down',
-                'right'
-            ].map((direction)=>getNudgedPosition(direction, bodyToMove, bodyToNotMove)).sort((a, b)=>a.distance - b.distance)[0];
-            const newX = closestPosition.x;
-            const newY = closestPosition.y;
-            const diffX = newX - bodyToMove.minX;
-            const diffY = newY - bodyToMove.minY;
-            if (bodyToMove.data.render) {
-                bodyToMove.data.render(bodyToMove.node, diffX, diffY);
-                updateTree(tree, bodyToMove, newX, newY);
+    };
+    const first = (array, callback)=>{
+        for(let i = 0, l = array.length; i < l; i++){
+            const value = callback(array[i], i);
+            if (value) {
+                return value;
             }
-        } else if (bodyToMove.data.nudgeStrategy === 'ordered' && bodyToMove.data.nudgeDirections) {
-            for (const direction of bodyToMove.data.nudgeDirections){
-                const position = getNudgedPosition(direction, bodyToMove, bodyToNotMove);
-                const newX = position.x;
-                const newY = position.y;
+        }
+        return null;
+    };
+    const all = (array, callback)=>{
+        let ret = [];
+        for(let i = 0, l = array.length; i < l; i++){
+            const value = callback(array[i], i);
+            if (value) {
+                ret.push(value);
+            }
+        }
+        return ret;
+    };
+    const checkOne = (tree, body)=>{
+        if (body.isStatic) {
+            return false;
+        }
+        const bodies = tree.search(body);
+        const checkCollision = (candidate)=>{
+            if (candidate !== body) {
+                return {
+                    a: body,
+                    b: candidate
+                };
+            }
+        };
+        return first(bodies, checkCollision);
+    };
+    const getCollisions = (tree)=>{
+        const bodies = tree.all();
+        const check = (body)=>{
+            return checkOne(tree, body);
+        };
+        const collisions = all(bodies, check);
+        const uniqueCollisions = (0, _uniqWith.default)(collisions, (a, b)=>{
+            return a.a === b.a || a.a === b.b;
+        });
+        return uniqueCollisions;
+    };
+    const updateTree = (tree, body, x, y)=>{
+        const newBody = _object_spread_props(_object_spread({}, body), {
+            minX: x,
+            minY: y,
+            maxX: x + (body.maxX - body.minX),
+            maxY: y + (body.maxY - body.minY)
+        });
+        // Remove the old body, comparing the nodes so that other changes to the body properties will not appear as different bodies
+        tree.remove(body, (a, b)=>a.node === b.node);
+        tree.insert(newBody);
+        return newBody;
+    };
+    const getDistance = (a, b)=>{
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    };
+    const getNudgedPosition = (direction, bodyToMove, bodyToNotMove)=>{
+        let x = bodyToMove.minX;
+        let y = bodyToMove.minY;
+        if (direction === 'down') {
+            x = bodyToMove.minX;
+            y = bodyToNotMove.maxY + 1;
+        } else if (direction === 'right') {
+            x = bodyToNotMove.maxX + 1;
+            y = bodyToMove.minY;
+        } else if (direction === 'up') {
+            x = bodyToMove.minX;
+            y = bodyToNotMove.minY - (bodyToMove.maxY - bodyToMove.minY) - 1;
+        } else if (direction === 'left') {
+            x = bodyToNotMove.minX - (bodyToMove.maxX - bodyToMove.minX) - 1;
+            y = bodyToMove.minY;
+        }
+        return {
+            direction,
+            x,
+            y,
+            distance: getDistance({
+                x,
+                y
+            }, {
+                x: bodyToMove.minX,
+                y: bodyToMove.minY
+            })
+        };
+    };
+    /* Return the two bodies in order according to their priority values
+ */ const orderBodies = (a, b)=>{
+        if (b.data.priority > a.data.priority) {
+            return [
+                a,
+                b
+            ];
+        } else if (a.data.priority > b.data.priority) {
+            return [
+                b,
+                a
+            ];
+        } else if (b.data.priorityWithinGroup > a.data.priorityWithinGroup) {
+            return [
+                a,
+                b
+            ];
+        } else {
+            return [
+                b,
+                a
+            ];
+        }
+    };
+    const removeCollisions = (tree)=>{
+        let attempts = 0;
+        let hasCollisions = true;
+        while(hasCollisions && attempts <= 5){
+            attempts++;
+            const collisions = getCollisions(tree);
+            if (collisions.length) {
+                const response = collisions[0];
+                const [bodyToMove, _bodyToNotMove] = orderBodies(response.a, response.b);
+                bodyToMove.node.remove();
+                tree.remove(bodyToMove);
+            } else {
+                break;
+            }
+        }
+    };
+    const avoidOverlapNudge = (parent, labelGroups, options)=>{
+        const tree = new _rbush.default();
+        const parentBounds = parent.getBoundingClientRect();
+        const maxAttempts = options.maxAttempts || 3;
+        const includeParent = options.includeParent || false;
+        const parentMargin = options.parentMargin || {
+            top: -2,
+            right: -2,
+            bottom: -2,
+            left: -2
+        };
+        if (includeParent) {
+            const parentThickness = 200;
+            // Top
+            tree.insert({
+                minX: -parentThickness,
+                minY: -parentThickness,
+                maxX: parentBounds.width + parentThickness,
+                maxY: parentMargin.top,
+                isStatic: true,
+                node: parent,
+                data: {
+                    priority: Infinity,
+                    priorityWithinGroup: Infinity
+                }
+            });
+            // Bottom
+            tree.insert({
+                minX: -parentThickness,
+                minY: parentBounds.height - parentMargin.bottom,
+                maxX: parentBounds.width + parentThickness,
+                maxY: parentBounds.height + parentThickness,
+                isStatic: true,
+                node: parent,
+                data: {
+                    priority: Infinity,
+                    priorityWithinGroup: Infinity
+                }
+            });
+            // Right
+            tree.insert({
+                minX: parentBounds.width - parentMargin.left,
+                minY: -parentThickness,
+                maxX: parentBounds.width + parentThickness,
+                maxY: parentBounds.height + parentThickness,
+                isStatic: true,
+                node: parent,
+                data: {
+                    priority: Infinity,
+                    priorityWithinGroup: Infinity
+                }
+            });
+            // Left
+            tree.insert({
+                minX: -parentThickness,
+                minY: -parentThickness,
+                maxX: parentMargin.left,
+                maxY: parentBounds.height + parentThickness,
+                isStatic: true,
+                node: parent,
+                data: {
+                    priority: Infinity,
+                    priorityWithinGroup: Infinity
+                }
+            });
+        }
+        // Add everything to the system
+        labelGroups.map((labelGroup)=>{
+            const margin = labelGroup.margin || {
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0
+            };
+            const priority = labelGroup.priority || 0;
+            const nudgeStrategy = labelGroup.nudgeStrategy || 'shortest';
+            const nudgeDirections = labelGroup.nudgeDirections || [
+                'down',
+                'right',
+                'up',
+                'left'
+            ];
+            const maxDistance = labelGroup.maxDistance || Infinity;
+            const render = labelGroup.render;
+            labelGroup.nodes.map((node, i)=>{
+                const bounds = getRelativeBounds(node.getBoundingClientRect(), parentBounds);
+                const body = {
+                    minX: bounds.x - margin.left,
+                    minY: bounds.y - margin.top,
+                    maxX: bounds.x + bounds.width + margin.left + margin.right,
+                    maxY: bounds.y + bounds.height + margin.top + margin.bottom,
+                    isStatic: false,
+                    node,
+                    data: {
+                        priority,
+                        priorityWithinGroup: labelGroup.nodes.length - i,
+                        nudgeStrategy,
+                        nudgeDirections,
+                        maxDistance,
+                        render
+                    }
+                };
+                tree.insert(body);
+            });
+        });
+        const handleCollision = (response)=>{
+            const [bodyToMove, bodyToNotMove] = orderBodies(response.a, response.b);
+            if (bodyToMove.data.nudgeStrategy === 'shortest') {
+                const closestPosition = [
+                    'down',
+                    'right'
+                ].map((direction)=>getNudgedPosition(direction, bodyToMove, bodyToNotMove)).sort((a, b)=>a.distance - b.distance)[0];
+                const newX = closestPosition.x;
+                const newY = closestPosition.y;
                 const diffX = newX - bodyToMove.minX;
                 const diffY = newY - bodyToMove.minY;
                 if (bodyToMove.data.render) {
                     bodyToMove.data.render(bodyToMove.node, diffX, diffY);
                     updateTree(tree, bodyToMove, newX, newY);
                 }
-                break;
-            }
-        }
-    };
-    let attempts = 0;
-    while(attempts < maxAttempts){
-        attempts++;
-        const collisions = getCollisions(tree);
-        if (collisions) {
-            collisions.map(handleCollision);
-        } else {
-            break;
-        }
-    }
-    removeCollisions(tree);
-};
-/* Avoid label collisions by trying different label position choices
- */ export const avoidOverlapChoices = (parent, labelGroups, options)=>{
-    const tree = new RBush();
-    const parentBounds = parent.getBoundingClientRect();
-    const maxAttempts = options.maxAttempts || 3;
-    const includeParent = options.includeParent || false;
-    const parentMargin = options.parentMargin || {
-        top: -2,
-        right: -2,
-        bottom: -2,
-        left: -2
-    };
-    if (includeParent) {
-        const parentThickness = 200;
-        // Top
-        tree.insert({
-            minX: -parentThickness,
-            minY: -parentThickness,
-            maxX: parentBounds.width + parentThickness,
-            maxY: parentMargin.top,
-            isStatic: true,
-            node: parent,
-            data: {
-                priority: Infinity,
-                priorityWithinGroup: Infinity
-            }
-        });
-        // Bottom
-        tree.insert({
-            minX: -parentThickness,
-            minY: parentBounds.height - parentMargin.bottom,
-            maxX: parentBounds.width + parentThickness,
-            maxY: parentBounds.height + parentThickness,
-            isStatic: true,
-            node: parent,
-            data: {
-                priority: Infinity,
-                priorityWithinGroup: Infinity
-            }
-        });
-        // Right
-        tree.insert({
-            minX: parentBounds.width - parentMargin.left,
-            minY: -parentThickness,
-            maxX: parentBounds.width + parentThickness,
-            maxY: parentBounds.height + parentThickness,
-            isStatic: true,
-            node: parent,
-            data: {
-                priority: Infinity,
-                priorityWithinGroup: Infinity
-            }
-        });
-        // Left
-        tree.insert({
-            minX: -parentThickness,
-            minY: -parentThickness,
-            maxX: parentMargin.left,
-            maxY: parentBounds.height + parentThickness,
-            isStatic: true,
-            node: parent,
-            data: {
-                priority: Infinity,
-                priorityWithinGroup: Infinity
-            }
-        });
-    }
-    // Add everything to the system
-    labelGroups.map((labelGroup)=>{
-        const margin = labelGroup.margin || {
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0
-        };
-        const priority = labelGroup.priority || 0;
-        const choices = labelGroup.choices;
-        labelGroup.nodes.map((node, i)=>{
-            const bounds = getRelativeBounds(node.getBoundingClientRect(), parentBounds);
-            const body = {
-                minX: bounds.x - margin.left,
-                minY: bounds.y - margin.top,
-                maxX: bounds.x + bounds.width + margin.left + margin.right,
-                maxY: bounds.y + bounds.height + margin.top + margin.bottom,
-                isStatic: false,
-                node,
-                data: {
-                    priority,
-                    priorityWithinGroup: labelGroup.nodes.length - i,
-                    choices
-                }
-            };
-            tree.insert(body);
-        });
-    });
-    const handleCollision = (response)=>{
-        const [bodyToMove, _bodyToNotMove] = orderBodies(response.a, response.b);
-        if (!bodyToMove.isStatic && bodyToMove.data.choices) {
-            // Loop through the positioning choices, finding one that works
-            for (const choice of bodyToMove.data.choices){
-                choice(bodyToMove.node);
-                // Update the position of the body in the system
-                const bounds = bodyToMove.node.getBoundingClientRect();
-                const newBody = updateTree(tree, bodyToMove, bounds.x, bounds.y);
-                // Check if this position collides with anything else in the system
-                const collisions = checkOne(tree, newBody);
-                const stillCollides = !!collisions;
-                if (!stillCollides) {
+            } else if (bodyToMove.data.nudgeStrategy === 'ordered' && bodyToMove.data.nudgeDirections) {
+                for (const direction of bodyToMove.data.nudgeDirections){
+                    const position = getNudgedPosition(direction, bodyToMove, bodyToNotMove);
+                    const newX = position.x;
+                    const newY = position.y;
+                    const diffX = newX - bodyToMove.minX;
+                    const diffY = newY - bodyToMove.minY;
+                    if (bodyToMove.data.render) {
+                        bodyToMove.data.render(bodyToMove.node, diffX, diffY);
+                        updateTree(tree, bodyToMove, newX, newY);
+                    }
                     break;
                 }
             }
+        };
+        let attempts = 0;
+        while(attempts < maxAttempts){
+            attempts++;
+            const collisions = getCollisions(tree);
+            if (collisions) {
+                collisions.map(handleCollision);
+            } else {
+                break;
+            }
         }
+        removeCollisions(tree);
     };
-    let attempts = 0;
-    while(attempts < maxAttempts){
-        attempts++;
-        const collisions = getCollisions(tree);
-        if (collisions) {
-            collisions.map(handleCollision);
-        } else {
-            break;
+    const avoidOverlapChoices = (parent, labelGroups, options)=>{
+        const tree = new _rbush.default();
+        const parentBounds = parent.getBoundingClientRect();
+        const maxAttempts = options.maxAttempts || 3;
+        const includeParent = options.includeParent || false;
+        const parentMargin = options.parentMargin || {
+            top: -2,
+            right: -2,
+            bottom: -2,
+            left: -2
+        };
+        if (includeParent) {
+            const parentThickness = 200;
+            // Top
+            tree.insert({
+                minX: -parentThickness,
+                minY: -parentThickness,
+                maxX: parentBounds.width + parentThickness,
+                maxY: parentMargin.top,
+                isStatic: true,
+                node: parent,
+                data: {
+                    priority: Infinity,
+                    priorityWithinGroup: Infinity
+                }
+            });
+            // Bottom
+            tree.insert({
+                minX: -parentThickness,
+                minY: parentBounds.height - parentMargin.bottom,
+                maxX: parentBounds.width + parentThickness,
+                maxY: parentBounds.height + parentThickness,
+                isStatic: true,
+                node: parent,
+                data: {
+                    priority: Infinity,
+                    priorityWithinGroup: Infinity
+                }
+            });
+            // Right
+            tree.insert({
+                minX: parentBounds.width - parentMargin.left,
+                minY: -parentThickness,
+                maxX: parentBounds.width + parentThickness,
+                maxY: parentBounds.height + parentThickness,
+                isStatic: true,
+                node: parent,
+                data: {
+                    priority: Infinity,
+                    priorityWithinGroup: Infinity
+                }
+            });
+            // Left
+            tree.insert({
+                minX: -parentThickness,
+                minY: -parentThickness,
+                maxX: parentMargin.left,
+                maxY: parentBounds.height + parentThickness,
+                isStatic: true,
+                node: parent,
+                data: {
+                    priority: Infinity,
+                    priorityWithinGroup: Infinity
+                }
+            });
         }
-    }
-    removeCollisions(tree);
-};
+        // Add everything to the system
+        labelGroups.map((labelGroup)=>{
+            const margin = labelGroup.margin || {
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0
+            };
+            const priority = labelGroup.priority || 0;
+            const choices = labelGroup.choices;
+            labelGroup.nodes.map((node, i)=>{
+                const bounds = getRelativeBounds(node.getBoundingClientRect(), parentBounds);
+                const body = {
+                    minX: bounds.x - margin.left,
+                    minY: bounds.y - margin.top,
+                    maxX: bounds.x + bounds.width + margin.left + margin.right,
+                    maxY: bounds.y + bounds.height + margin.top + margin.bottom,
+                    isStatic: false,
+                    node,
+                    data: {
+                        priority,
+                        priorityWithinGroup: labelGroup.nodes.length - i,
+                        choices
+                    }
+                };
+                tree.insert(body);
+            });
+        });
+        const handleCollision = (response)=>{
+            const [bodyToMove, _bodyToNotMove] = orderBodies(response.a, response.b);
+            if (!bodyToMove.isStatic && bodyToMove.data.choices) {
+                // Loop through the positioning choices, finding one that works
+                for (const choice of bodyToMove.data.choices){
+                    choice(bodyToMove.node);
+                    // Update the position of the body in the system
+                    const bounds = bodyToMove.node.getBoundingClientRect();
+                    const newBody = updateTree(tree, bodyToMove, bounds.x, bounds.y);
+                    // Check if this position collides with anything else in the system
+                    const collisions = checkOne(tree, newBody);
+                    const stillCollides = !!collisions;
+                    if (!stillCollides) {
+                        break;
+                    }
+                }
+            }
+        };
+        let attempts = 0;
+        while(attempts < maxAttempts){
+            attempts++;
+            const collisions = getCollisions(tree);
+            if (collisions) {
+                collisions.map(handleCollision);
+            } else {
+                break;
+            }
+        }
+        removeCollisions(tree);
+    };
+});

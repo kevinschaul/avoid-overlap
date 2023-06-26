@@ -11,7 +11,7 @@
     "loose": false
   },
   "module": {
-    "type": "es6",
+    "type": "umd",
     "strict": true,
     "strictMode": true,
     "lazy": false

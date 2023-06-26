@@ -1,6 +1,6 @@
 {
   "name": "avoid-overlap",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Functions to help avoid text annotation/label overlaps",
   "author": "Kevin Schaul",
   "license": "MIT",
