@@ -299,12 +299,10 @@ const removeCollisions = (tree)=>{
         });
     });
     const handleCollision = (response)=>{
+        // TODO better type handling here. Can we assume `bodyToMove` is a DynamicBody?
         const [bodyToMove, bodyToNotMove] = orderBodies(response.a, response.b);
         if (bodyToMove.data.nudgeStrategy === 'shortest') {
-            const closestPosition = [
-                'down',
-                'right'
-            ].map((direction)=>getNudgedPosition(direction, bodyToMove, bodyToNotMove)).sort((a, b)=>a.distance - b.distance)[0];
+            const closestPosition = bodyToMove.data.nudgeDirections.map((direction)=>getNudgedPosition(direction, bodyToMove, bodyToNotMove)).sort((a, b)=>a.distance - b.distance)[0];
             const newX = closestPosition.x;
             const newY = closestPosition.y;
             const diffX = newX - bodyToMove.minX;
