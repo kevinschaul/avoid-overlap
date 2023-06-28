@@ -70,6 +70,13 @@ interface OptionsNudge {
   maxAttempts?: number;
 }
 
+interface NudgedPosition {
+  direction: Direction;
+  x: number;
+  y: number;
+  distance: number;
+}
+
 interface Point {
   x: number;
   y: number;
@@ -102,7 +109,7 @@ const all = <T>(
   array: T[],
   callback: (item: T, index: number) => unknown
 ): any => {
-  let ret : any[] = [];
+  let ret: any[] = [];
   for (let i = 0, l = array.length; i < l; i++) {
     const value = callback(array[i], i);
     if (value) {
@@ -174,7 +181,7 @@ const getNudgedPosition = (
   direction: Direction,
   bodyToMove: Body,
   bodyToNotMove: Body
-) => {
+): NudgedPosition => {
   let x = bodyToMove.minX;
   let y = bodyToMove.minY;
 
@@ -359,14 +366,20 @@ export const avoidOverlapNudge = (
   });
 
   const handleCollision = (response: CollisionCandidate) => {
-    const [bodyToMove, bodyToNotMove] = orderBodies(response.a, response.b);
+    // TODO better type handling here. Can we assume `bodyToMove` is a DynamicBody?
+    const [bodyToMove, bodyToNotMove]: any[] = orderBodies(
+      response.a,
+      response.b
+    );
 
     if (bodyToMove.data.nudgeStrategy === 'shortest') {
-      const closestPosition = [<Direction>'down', <Direction>'right']
-        .map((direction) =>
+      const closestPosition = bodyToMove.data.nudgeDirections
+        .map((direction: Direction) =>
           getNudgedPosition(direction, bodyToMove, bodyToNotMove)
         )
-        .sort((a, b) => a.distance - b.distance)[0];
+        .sort(
+          (a: NudgedPosition, b: NudgedPosition) => a.distance - b.distance
+        )[0];
 
       const newX = closestPosition.x;
       const newY = closestPosition.y;
@@ -397,7 +410,7 @@ export const avoidOverlapNudge = (
           updateTree(tree, bodyToMove, newX, newY);
         }
 
-        // TODO only break if there is no longer a collision so that other nudgeDirection values are attempted?
+        // TODO only break if there is no longer a collision so that other nudgeDirections values are attempted?
         break;
       }
     }

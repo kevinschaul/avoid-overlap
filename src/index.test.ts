@@ -130,6 +130,83 @@ test('nudge works with two sets of nodes', () => {
   });
 });
 
+test('nudge shortest with directions', () => {
+  const nodesTitle = [
+    { x: 0, y: 0, width: 10, height: 10 },
+    { x: 40, y: 0, width: 10, height: 10 },
+  ].map((d) => new CustomElement(d));
+
+  const nodesSubtitle = [
+    { x: 0, y: 0, width: 10, height: 10 },
+    { x: 40, y: 0, width: 10, height: 10 },
+  ].map((d) => new CustomElement(d));
+
+  const parentNode = new CustomElement({ x: 0, y: 0, width: 100, height: 100 });
+
+  const nudge = (
+    node: CustomElement,
+    diffX: number,
+    diffY: number
+  ) => {
+    const previousBounds = node.getBoundingClientRect();
+    node.setBoundingClientRect({
+      x: previousBounds.x + diffX,
+      y: previousBounds.y + diffY,
+      width: previousBounds.width,
+      height: previousBounds.height,
+    });
+  };
+
+  avoidOverlapNudge(
+    parentNode,
+    [
+      {
+        nodes: nodesTitle,
+        render: nudge,
+        priority: 10,
+        nudgeStrategy: 'shortest',
+        nudgeDirections: ['up', 'left'],
+      },
+      {
+        nodes: nodesSubtitle,
+        render: nudge,
+        priority: 5,
+        nudgeStrategy: 'shortest',
+        nudgeDirections: ['up', 'left'],
+      },
+    ],
+    {}
+  );
+
+  expect(nodesTitle[0].getBoundingClientRect()).toEqual({
+    x: 0,
+    y: 0,
+    width: 10,
+    height: 10,
+  });
+
+  expect(nodesSubtitle[0].getBoundingClientRect()).toEqual({
+    x: 0,
+    y: -11,
+    width: 10,
+    height: 10,
+  });
+
+  expect(nodesTitle[1].getBoundingClientRect()).toEqual({
+    x: 40,
+    y: 0,
+    width: 10,
+    height: 10,
+  });
+
+  expect(nodesSubtitle[1].getBoundingClientRect()).toEqual({
+    x: 40,
+    y: -11,
+    width: 10,
+    height: 10,
+  });
+});
+
 test('choices avoids viewbox bounds', () => {
   const nodes = [{ x: 0, y: 0, width: 10, height: 10 }].map(
     (d) => new CustomElement(d)
