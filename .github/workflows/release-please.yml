@@ -17,7 +17,6 @@ jobs:
         with:
           release-type: node
           package-name: avoid-overlap
-          release-as: 0.1.0
           bump-minor-pre-major: true
           bump-patch-for-minor-pre-major: true
 
@@ -32,4 +31,4 @@ jobs:
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-        # if: ${{ steps.release.outputs.release_created }}
+        if: ${{ steps.release.outputs.release_created }}
