@@ -70,11 +70,7 @@ test('nudge works with two sets of nodes', () => {
 
   const parentNode = new CustomElement({ x: 0, y: 0, width: 100, height: 100 });
 
-  const nudge = (
-    node: CustomElement,
-    diffX: number,
-    diffY: number
-  ) => {
+  const nudge = (node: CustomElement, diffX: number, diffY: number) => {
     const previousBounds = node.getBoundingClientRect();
     node.setBoundingClientRect({
       x: previousBounds.x + diffX,
@@ -143,11 +139,7 @@ test('nudge shortest with directions', () => {
 
   const parentNode = new CustomElement({ x: 0, y: 0, width: 100, height: 100 });
 
-  const nudge = (
-    node: CustomElement,
-    diffX: number,
-    diffY: number
-  ) => {
+  const nudge = (node: CustomElement, diffX: number, diffY: number) => {
     const previousBounds = node.getBoundingClientRect();
     node.setBoundingClientRect({
       x: previousBounds.x + diffX,
@@ -236,8 +228,8 @@ test('choices avoids viewbox bounds', () => {
         top: 0,
         right: 0,
         bottom: 0,
-        left: 0
-      }
+        left: 0,
+      },
     }
   );
 
