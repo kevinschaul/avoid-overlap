@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.0](https://github.com/kevinschaul/avoid-overlap/compare/v0.1.0...v0.1.0) (2023-07-01)
+
+
+### Bug Fixes
+
+* testing npm publish, added some docs ([205f631](https://github.com/kevinschaul/avoid-overlap/commit/205f631467987adc7114aee66f1754a265475578))
+
 ## 0.1.0 (2023-07-01)
 
 
