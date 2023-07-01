@@ -57,7 +57,11 @@ avoidOverlapNudge(
 
 #### Options
 
-TODO list these
+| option | type | default | description |
++--------+------+---------+-------------+
+| includeParent | boolean | `false` | Whether to consider the parent as part of the bounds |
+| parentMargin | object | `{ top: 0, right: 0, bottom: 0, left: 0 }` | How much extra spacing to consider for collisions with the parent |
+| maxAttempts | number | 3 | How many iterations to try finding collisions before giving up |
 
 ### `avoidOverlapChoices()`
 
@@ -101,4 +105,3 @@ TODO list these
 Development should happen on feature branches, which should be PR-ed into the main branch.
 
 Releasing happens using the [release-please](https://github.com/marketplace/actions/release-please-action) GitHub action. The action handles versioning, changelogs and publishing the package to npm.
-
