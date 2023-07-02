@@ -33,8 +33,8 @@
     "typescript": "^5.0.3"
   },
   "scripts": {
-    "build": "swc src/index.ts --out-dir dist/",
-    "dev": "swc src/index.ts -w --out-dir dist/",
+    "build": "swc src/ --out-dir dist/ --ignore **/*.test.ts",
+    "dev": "swc src/ -w --out-dir dist/ --ignore **/*.test.ts",
     "test": "jest",
     "prepare": "husky install"
   },
