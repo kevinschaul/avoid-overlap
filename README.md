@@ -14,19 +14,20 @@ This module exports two types of overlap avoider functions, depending on how you
 
 In both cases, you'll pass in the parent Element, an array of label groups that define how to resolve overlaps, and global options.
 
-### `avoidOverlapNudge()`
+### `AvoidOverlapNudge`
 
 Use this when you want any overlapping labels to be nudged in a certain direction. This can be helpful if the thing you're labeling is large. The lower-priority label will be nudged until it no longer overlaps.
 
 ```js
-import { avoidOverlapNudge } from 'avoid-overlap';
+import { AvoidOverlapNudge } from 'avoid-overlap';
 import { select, selectAll } from 'd3-selection';
 
 const parent = select('.chart');
 const headers = selectAll('.label-header');
 const subheads = selectAll('.label-subhead');
 
-avoidOverlapNudge(
+const avoidOverlapNudge = new AvoidOverlapNudge();
+avoidOverlapNudge.run(
   parent,
   [
     {
@@ -63,7 +64,7 @@ avoidOverlapNudge(
 | parentMargin | object | `{ top: 0, right: 0, bottom: 0, left: 0 }` | How much extra spacing to consider for collisions with the parent |
 | maxAttempts | number | 3 | How many iterations to try finding collisions before giving up |
 
-### `avoidOverlapChoices()`
+### `AvoidOverlapChoices`
 
 Use this when you have a few valid choices for positining labels. This can be helpful for drawing arrows, for example, when you could put the label above or below the thing you're labeling.
 
@@ -81,7 +82,8 @@ const arrowBottom = (node) => {
   /* TODO draw the arrow at the bottom */
 };
 
-avoidOverlapChoices(
+const avoidOverlapChoices = new AvoidOverlapChoices();
+avoidOverlapChoices.run(
   parent,
   [
     {
