@@ -102,6 +102,10 @@ TODO list these
 
 ## Development
 
+```
+npm run dev
+```
+
 Development should happen on feature branches, which should be PR-ed into the main branch.
 
 Releasing happens using the [release-please](https://github.com/marketplace/actions/release-please-action) GitHub action. The action handles versioning, changelogs and publishing the package to npm.

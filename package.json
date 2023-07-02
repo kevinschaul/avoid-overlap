@@ -34,7 +34,7 @@
   },
   "scripts": {
     "build": "swc src/index.ts --out-dir dist/",
-    "watch-compile-src": "swc src/index.ts -w --out-dir dist/",
+    "dev": "swc src/index.ts -w --out-dir dist/",
     "test": "jest",
     "prepare": "husky install"
   },
