@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html';
 
-import { AvoidOverlapChoices, AvoidOverlapNudge } from './index';
-import type { LabelGroupNudge } from './index';
+import { AvoidOverlapChoices, AvoidOverlapNudge } from '../src/index';
+import type { LabelGroupNudge } from '../src/index';
 
 interface TestNode {
   bounds: {

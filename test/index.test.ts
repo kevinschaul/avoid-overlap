@@ -1,4 +1,4 @@
-import { avoidOverlapChoices, avoidOverlapNudge } from './index';
+import { AvoidOverlapChoices, AvoidOverlapNudge } from '../src/index';
 
 interface CustomElement {
   bbox: {
@@ -80,7 +80,7 @@ test('nudge works with two sets of nodes', () => {
     });
   };
 
-  avoidOverlapNudge(
+  new AvoidOverlapNudge().run(
     parentNode,
     [
       {
@@ -149,7 +149,7 @@ test('nudge shortest with directions', () => {
     });
   };
 
-  avoidOverlapNudge(
+  new AvoidOverlapNudge().run(
     parentNode,
     [
       {
@@ -205,7 +205,7 @@ test('choices avoids viewbox bounds', () => {
   );
   const parentNode = new CustomElement({ x: 0, y: 0, width: 100, height: 100 });
 
-  avoidOverlapChoices(
+  new AvoidOverlapChoices().run(
     parentNode,
     [
       {
