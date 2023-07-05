@@ -23,7 +23,7 @@ interface TestLabelGroupNudge extends Omit<LabelGroupNudge, 'nodes'> {
 const svgNamespace = 'http://www.w3.org/2000/svg';
 
 const meta: Meta = {
-  title: 'AvoidOverlapNudge',
+  title: 'Real-world exported tests',
   argTypes: {
     exportedArgs: { control: 'text' },
     debug: { control: 'boolean' },
@@ -88,7 +88,7 @@ const play = async ({ canvasElement, args }) => {
   avoidOverlapNudge.run(parent, labelGroups, exportedArgs.options);
 };
 
-export const Default: StoryObj = {
+export const NoOverlap: StoryObj = {
   render: render,
   play: play,
   args: {
