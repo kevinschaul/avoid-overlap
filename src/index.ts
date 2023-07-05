@@ -49,7 +49,7 @@ interface CollisionCandidate {
   b: Body;
 }
 
-interface LabelGroupNudge {
+export interface LabelGroupNudge {
   nodes: Element[];
   render: Function;
   margin?: Margin;
@@ -326,6 +326,34 @@ const addParent = (
   savePositionHistory(right, 'initial');
 };
 
+const serialize = (
+  parent: Element,
+  labelGroups: LabelGroupNudge[],
+  options: OptionsNudge
+) => {
+  return JSON.stringify(
+    {
+      parent: {
+        bounds: parent.getBoundingClientRect(),
+      },
+      labelGroups: labelGroups.map((group) => {
+        return {
+          ...group,
+          nodes: group.nodes.map((node) => {
+            return {
+              bounds: node.getBoundingClientRect(),
+              textContent: node.textContent,
+            };
+          }),
+        };
+      }),
+      options: options,
+    },
+    null,
+    2
+  );
+};
+
 // Global id counter, incremented for each instance of an avoid overlap class
 let uid = 0;
 
@@ -340,11 +368,25 @@ export class AvoidOverlapNudge {
   }
 
   run(parent: Element, labelGroups: LabelGroupNudge[], options: OptionsNudge) {
+    if (options.debug) {
+      console.log(serialize(parent, labelGroups, options));
+      console.log('^ copy the above message into this project’s Storybook for more debugging')
+    }
+
     const tree: RBush<Body> = new RBush();
     const parentBounds = parent.getBoundingClientRect();
 
-    if (options.includeParent) {
-      addParent(tree, parent, parentBounds, options.parentMargin);
+    const maxAttempts = options.maxAttempts || 3;
+    const includeParent = options.includeParent || false;
+    const parentMargin = options.parentMargin || {
+      top: -2,
+      right: -2,
+      bottom: -2,
+      left: -2,
+    };
+
+    if (includeParent) {
+      addParent(tree, parent, parentBounds, parentMargin);
     }
 
     // Add everything to the system
@@ -453,7 +495,7 @@ export class AvoidOverlapNudge {
     };
 
     let attempts = 0;
-    while (attempts < options.maxAttempts) {
+    while (attempts < maxAttempts) {
       attempts++;
       const collisions = getCollisions(tree);
       if (collisions) {

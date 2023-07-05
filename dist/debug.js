@@ -9,7 +9,7 @@ const scale = (domain, range, value)=>{
 export const defaultDebugFunc = (tree, parentBounds, uid)=>{
     const bodies = tree.all();
     // TODO build a unique class name so we can support multiple instances on the same page
-    const debugClassName = `avoid-overlap-debugger-${uid}`;
+    const debugClassName = `avoid-overlap-debugger avoid-overlap-debugger-${uid}`;
     const root = document.querySelector('body');
     if (root) {
         let debugEl = root.querySelector(`.${debugClassName}`);

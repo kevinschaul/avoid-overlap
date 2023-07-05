@@ -20,7 +20,7 @@ export const defaultDebugFunc = (
   const bodies = tree.all();
 
   // TODO build a unique class name so we can support multiple instances on the same page
-  const debugClassName = `avoid-overlap-debugger-${uid}`;
+  const debugClassName = `avoid-overlap-debugger avoid-overlap-debugger-${uid}`;
   const root = document.querySelector('body');
 
   if (root) {
