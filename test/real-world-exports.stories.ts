@@ -55,31 +55,49 @@ const play = async ({ canvasElement, args }) => {
       return {
         ...labelGroup,
         nodes: labelGroup.nodes.map((node) => {
-          const element = document.createElementNS(svgNamespace, 'rect');
-          element.setAttributeNS(null, 'data-text', node.textContent);
-          element.setAttributeNS(
-            null,
-            'x',
-            `${node.bounds.x - exportedArgs.parent.bounds.x}`
-          );
-          element.setAttributeNS(
-            null,
-            'y',
-            `${node.bounds.y - exportedArgs.parent.bounds.y}`
-          );
-          element.setAttributeNS(null, 'width', `${node.bounds.width}`);
-          element.setAttributeNS(null, 'height', `${node.bounds.height}`);
-          element.setAttributeNS(null, 'fill', '#ccc');
-          element.setAttributeNS(null, 'stroke', '#333');
-          parent.append(element);
+          const element = document.createElementNS(svgNamespace, 'g');
+          // TODO write text
+          // element.setAttributeNS(null, 'data-text', node.textContent);
 
+          element.setAttributeNS(
+            null,
+            'transform',
+            `translate(${node.bounds.x - exportedArgs.parent.bounds.x}, ${
+              node.bounds.y - exportedArgs.parent.bounds.y
+            })`
+          );
+
+          const rect = document.createElementNS(svgNamespace, 'rect');
+          rect.setAttributeNS(null, 'x', '0');
+          rect.setAttributeNS(null, 'y', '0');
+          rect.setAttributeNS(null, 'width', `${node.bounds.width}`);
+          rect.setAttributeNS(null, 'height', `${node.bounds.height}`);
+          rect.setAttributeNS(null, 'fill', '#ccc');
+          rect.setAttributeNS(null, 'stroke', '#333');
+          element.append(rect);
+
+          if (node.textContent) {
+            const text = document.createElementNS(svgNamespace, 'text');
+            text.setAttributeNS(null, 'x', '0');
+            text.setAttributeNS(null, 'y', '0');
+            text.setAttributeNS(null, 'dy', '0.8em');
+            text.innerHTML = node.textContent;
+            element.append(text);
+          }
+
+          parent.append(element);
           return element;
         }),
         render: (element: Element, dx: number, dy: number) => {
-          const prevX = +(element.getAttributeNS(null, 'x') || 0);
-          const prevY = +(element.getAttributeNS(null, 'y') || 0);
-          element.setAttributeNS(null, 'x', `${prevX + dx}`);
-          element.setAttributeNS(null, 'y', `${prevY + dy}`);
+          const prevTransform =
+            element.getAttributeNS(null, 'transform') || 'translate(0, 0)';
+          const [x, y] = prevTransform.match(/([0-9]+)/g)!.map((d) => +d);
+
+          element.setAttributeNS(
+            null,
+            'transform',
+            `translate(${x + dx}, ${y + dy})`
+          );
         },
       };
     }
