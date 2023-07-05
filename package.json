@@ -29,6 +29,7 @@
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
     "chokidar": "^3.5.3",
+    "chromatic": "^6.19.9",
     "eslint": "^8.37.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.8.0",
@@ -49,7 +50,8 @@
     "test": "jest",
     "prepare": "husky install",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "chromatic": "npx chromatic --project-token=chpt_9cef9587e261560"
   },
   "lint-staged": {
     "*.js": "prettier --write --ignore-unknown"
