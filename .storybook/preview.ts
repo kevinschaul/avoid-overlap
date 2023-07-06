@@ -13,9 +13,9 @@ const preview: Preview = {
     docs: {
       page: DocumentationTemplate,
       canvas: {
-        story: { autoplay: true }
-      }
-    }
+        story: { autoplay: true },
+      },
+    },
   },
 };
 

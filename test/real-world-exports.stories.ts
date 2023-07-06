@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/html';
 import { render, playExportedArgs } from './util';
 
 const meta: Meta = {
-  title: 'Real-world exported tests',
+  title: 'Utils/Real-world exported tests',
   argTypes: {
     exportedArgs: { control: 'text' },
     debug: { control: 'boolean' },
