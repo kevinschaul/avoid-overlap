@@ -67,6 +67,7 @@ interface LabelGroupChoices {
 }
 
 interface OptionsNudge {
+  technique?: 'nudge' | 'choices';
   includeParent?: boolean;
   parentMargin?: Margin;
   maxAttempts?: number;

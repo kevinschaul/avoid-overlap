@@ -1,4 +1,5 @@
 import type { Preview } from '@storybook/html';
+import DocumentationTemplate from './DocumentationTemplate.mdx';
 
 const preview: Preview = {
   parameters: {
@@ -9,6 +10,12 @@ const preview: Preview = {
         date: /Date$/,
       },
     },
+    docs: {
+      page: DocumentationTemplate,
+      canvas: {
+        story: { autoplay: true }
+      }
+    }
   },
 };
 
