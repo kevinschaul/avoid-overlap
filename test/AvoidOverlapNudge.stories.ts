@@ -26,7 +26,7 @@ export const TwoSetsOfNodes: StoryObj = {
   ...Default,
   args: {
     parent: {
-      bounds: {
+      coords: {
         x: 0,
         y: 0,
         width: 200,
@@ -37,7 +37,7 @@ export const TwoSetsOfNodes: StoryObj = {
       {
         nodes: [
           {
-            bounds: {
+            coords: {
               x: 0,
               y: 0,
               width: 80,
@@ -51,7 +51,7 @@ export const TwoSetsOfNodes: StoryObj = {
       {
         nodes: [
           {
-            bounds: {
+            coords: {
               x: 0,
               y: 0,
               width: 120,
@@ -76,7 +76,7 @@ export const ShortestWithDirectionUp: StoryObj = {
   ...Default,
   args: {
     parent: {
-      bounds: {
+      coords: {
         x: 0,
         y: 0,
         width: 200,
@@ -87,7 +87,7 @@ export const ShortestWithDirectionUp: StoryObj = {
       {
         nodes: [
           {
-            bounds: {
+            coords: {
               x: 20,
               y: 20,
               width: 100,
@@ -100,7 +100,7 @@ export const ShortestWithDirectionUp: StoryObj = {
       {
         nodes: [
           {
-            bounds: {
+            coords: {
               x: 20,
               y: 20,
               width: 10,
@@ -126,7 +126,7 @@ export const ShortestWithDirectionRight: StoryObj = {
   ...Default,
   args: {
     parent: {
-      bounds: {
+      coords: {
         x: 0,
         y: 0,
         width: 200,
@@ -137,7 +137,7 @@ export const ShortestWithDirectionRight: StoryObj = {
       {
         nodes: [
           {
-            bounds: {
+            coords: {
               x: 20,
               y: 20,
               width: 100,
@@ -150,7 +150,7 @@ export const ShortestWithDirectionRight: StoryObj = {
       {
         nodes: [
           {
-            bounds: {
+            coords: {
               x: 20,
               y: 20,
               width: 10,

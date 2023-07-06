@@ -2,7 +2,7 @@ import { AvoidOverlapChoices, AvoidOverlapNudge } from '../src/index';
 import type { LabelGroupNudge } from '../src/index';
 
 interface TestNode {
-  bounds: {
+  coords: {
     x: number;
     y: number;
     width: number;
@@ -24,6 +24,7 @@ export const render = () => document.createElementNS(svgNamespace, 'svg');
 
 export const play = async ({ canvasElement, args }) => {
   const parent = canvasElement.querySelector('svg');
+  const parentBounds = parent.getBoundingClientRect();
 
   // Clear any previous contents of the svg
   parent.innerHTML = '';
@@ -34,35 +35,36 @@ export const play = async ({ canvasElement, args }) => {
   });
 
   const avoidOverlap = {
-    'nudge': new AvoidOverlapNudge(),
-    'choices': new AvoidOverlapChoices(),
+    nudge: new AvoidOverlapNudge(),
+    choices: new AvoidOverlapChoices(),
   }[args.options.technique];
 
-  parent.setAttributeNS(null, 'width', args.parent.bounds.width);
-  parent.setAttributeNS(null, 'height', args.parent.bounds.height);
+  parent.setAttributeNS(null, 'width', args.parent.coords.width);
+  parent.setAttributeNS(null, 'height', args.parent.coords.height);
+
+  const xOffset = parentBounds.x - args.parent.coords.x;
+  const yOffset = parentBounds.y - args.parent.coords.y;
 
   const labelGroups = args.labelGroups.map(
     (labelGroup: TestLabelGroupNudge) => {
-      return {
+      const newLabelGroup = {
         ...labelGroup,
         nodes: labelGroup.nodes.map((node) => {
           const element = document.createElementNS(svgNamespace, 'g');
-          // TODO write text
-          // element.setAttributeNS(null, 'data-text', node.textContent);
 
           element.setAttributeNS(
             null,
             'transform',
-            `translate(${node.bounds.x - args.parent.bounds.x}, ${
-              node.bounds.y - args.parent.bounds.y
+            `translate(${xOffset + node.coords.x - parentBounds.x}, ${
+              yOffset + node.coords.y - parentBounds.y
             })`
           );
 
           const rect = document.createElementNS(svgNamespace, 'rect');
           rect.setAttributeNS(null, 'x', '0');
           rect.setAttributeNS(null, 'y', '0');
-          rect.setAttributeNS(null, 'width', `${node.bounds.width}`);
-          rect.setAttributeNS(null, 'height', `${node.bounds.height}`);
+          rect.setAttributeNS(null, 'width', `${node.coords.width}`);
+          rect.setAttributeNS(null, 'height', `${node.coords.height}`);
           rect.setAttributeNS(null, 'fill', '#ccc');
           rect.setAttributeNS(null, 'stroke', '#333');
           element.append(rect);
@@ -79,10 +81,12 @@ export const play = async ({ canvasElement, args }) => {
           parent.append(element);
           return element;
         }),
-        render: (element: Element, dx: number, dy: number) => {
+      };
+
+      if (args.options.technique === 'nudge') {
+        newLabelGroup.render = (element: Element, dx: number, dy: number) => {
           const prevTransform =
             element.getAttributeNS(null, 'transform') || 'translate(0, 0)';
-          console.log(prevTransform)
           const [x, y] = prevTransform.match(/([0-9]+)/g)!.map((d) => +d);
 
           element.setAttributeNS(
@@ -90,8 +94,9 @@ export const play = async ({ canvasElement, args }) => {
             'transform',
             `translate(${x + dx}, ${y + dy})`
           );
-        },
-      };
+        };
+      }
+      return newLabelGroup;
     }
   );
 
