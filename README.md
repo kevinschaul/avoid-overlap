@@ -4,6 +4,9 @@ Functions to help avoid text annotation/label overlaps
 
 This API is very likely to change!
 
+- [Visual tesets on Chromatic](https://www.chromatic.com/library?appId=64a5bef463fbc133b9a4b6b6)
+- [Storybook](https://main--64a5bef463fbc133b9a4b6b6.chromatic.com)
+
 ## Installation
 
     npm install avoid-overlap

@@ -45,9 +45,9 @@
     "typescript": "^5.0.3"
   },
   "scripts": {
-    "build": "swc src/ --out-dir dist/ --ignore **/*.test.ts",
-    "dev": "concurrently \"swc src/ -w --out-dir dist/ --ignore **/*.test.ts\" \"npm run storybook\"",
-    "test": "jest",
+    "build": "swc src/ --out-dir dist/",
+    "dev": "concurrently \"swc src/ -w --out-dir dist/\" \"npm run storybook\"",
+    "test": "jest --passWithNoTests",
     "prepare": "husky install",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
