@@ -17,7 +17,7 @@ export const NoOverlap: StoryObj = {
   args: {
     exportedArgs: `{
       "parent": {
-        "bounds": {
+        "coords": {
           "x": 83.5,
           "y": 410.5,
           "width": 960,
@@ -32,7 +32,7 @@ export const NoOverlap: StoryObj = {
         {
           "nodes": [
             {
-              "bounds": {
+              "coords": {
                 "x": 517.4666748046875,
                 "y": 406.33331298828125,
                 "width": 68.25,
@@ -44,7 +44,7 @@ export const NoOverlap: StoryObj = {
               }
             },
             {
-              "bounds": {
+              "coords": {
                 "x": 888.6666870117188,
                 "y": 406.33331298828125,
                 "width": 67.25,
@@ -56,7 +56,7 @@ export const NoOverlap: StoryObj = {
               }
             },
             {
-              "bounds": {
+              "coords": {
                 "x": 322.2833251953125,
                 "y": 406.33331298828125,
                 "width": 87.94999694824219,
@@ -97,7 +97,7 @@ export const Crowded: StoryObj = {
   args: {
     exportedArgs: `{
       "parent": {
-        "bounds": {
+        "coords": {
           "x": 0,
           "y": 0,
           "width": 1217,
@@ -112,7 +112,7 @@ export const Crowded: StoryObj = {
         {
           "nodes": [
             {
-              "bounds": {
+              "coords": {
                 "x": 19,
                 "y": 10,
                 "width": 162.5,
@@ -151,7 +151,7 @@ export const Crowded: StoryObj = {
         {
           "nodes": [
             {
-              "bounds": {
+              "coords": {
                 "x": 19,
                 "y": 10,
                 "width": 112.03334045410156,
@@ -164,7 +164,7 @@ export const Crowded: StoryObj = {
               "textContent": "Business Services"
             },
             {
-              "bounds": {
+              "coords": {
                 "x": 183,
                 "y": 10,
                 "width": 53.75,
@@ -177,7 +177,7 @@ export const Crowded: StoryObj = {
               "textContent": "Industry"
             },
             {
-              "bounds": {
+              "coords": {
                 "x": 183,
                 "y": 86,
                 "width": 52.23333740234375,
@@ -190,7 +190,7 @@ export const Crowded: StoryObj = {
               "textContent": "Finance"
             },
             {
-              "bounds": {
+              "coords": {
                 "x": 304,
                 "y": 10,
                 "width": 80.78334045410156,
@@ -203,7 +203,7 @@ export const Crowded: StoryObj = {
               "textContent": "Construction"
             },
             {
-              "bounds": {
+              "coords": {
                 "x": 304,
                 "y": 79,
                 "width": 43.05000305175781,
@@ -216,7 +216,7 @@ export const Crowded: StoryObj = {
               "textContent": "RealEstate"
             },
             {
-              "bounds": {
+              "coords": {
                 "x": 372,
                 "y": 79,
                 "width": 39.616668701171875,

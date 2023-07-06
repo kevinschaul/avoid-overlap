@@ -273,7 +273,7 @@ const serialize = (parent, labelGroups, options)=>{
             return _object_spread_props(_object_spread({}, group), {
                 nodes: group.nodes.map((node)=>{
                     return {
-                        bounds: node.getBoundingClientRect(),
+                        coords: node.getBoundingClientRect(),
                         textContent: node.textContent
                     };
                 })
