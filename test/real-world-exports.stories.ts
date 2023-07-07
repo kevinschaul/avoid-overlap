@@ -30,6 +30,7 @@ export const NoOverlap: StoryObj = {
       },
       "labelGroups": [
         {
+          "technique": "nudge",
           "nodes": [
             {
               "coords": {
@@ -82,7 +83,6 @@ export const NoOverlap: StoryObj = {
         }
       ],
       "options": {
-        "technique": "nudge",
         "includeParent": false,
         "debug": false
       }
@@ -110,6 +110,7 @@ export const Crowded: StoryObj = {
       },
       "labelGroups": [
         {
+          "technique": "nudge",
           "nodes": [
             {
               "coords": {
@@ -149,6 +150,7 @@ export const Crowded: StoryObj = {
           ]
         },
         {
+          "technique": "nudge",
           "nodes": [
             {
               "coords": {
@@ -244,7 +246,6 @@ export const Crowded: StoryObj = {
         }
       ],
       "options": {
-        "technique": "nudge",
         "includeParent": true,
         "parentMargin": {
           "top": -10,

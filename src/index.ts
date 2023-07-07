@@ -32,14 +32,7 @@ export interface Body {
   positionHistory: PositionHistoryEntry[];
   isStatic: boolean;
   node: Element;
-  data: {
-    render?: Function;
-    priority: number;
-    priorityWithinGroup: number;
-    nudgeStrategy?: 'ordered' | 'shortest';
-    nudgeDirections?: Direction[];
-    choices?: Function[];
-  };
+  data: BodyData;
 }
 
 type Direction = 'up' | 'right' | 'down' | 'left';
@@ -49,40 +42,66 @@ interface CollisionCandidate {
   b: Body;
 }
 
-export interface LabelGroupNudge {
+type LabelGroupGeneric = {
+  technique: 'nudge' | 'choices';
   nodes: Element[];
+  margin: Margin;
+  priority: number;
+};
+
+type LabelGroupNudge = LabelGroupGeneric & {
+  technique: 'nudge';
   render: Function;
-  margin?: Margin;
-  priority?: number;
-  nudgeStrategy?: 'shortest' | 'ordered';
-  nudgeDirections?: Direction[];
-  maxDistance?: number;
-}
+  nudgeStrategy: 'shortest' | 'ordered';
+  nudgeDirections: Direction[];
+};
 
-interface LabelGroupChoices {
-  nodes: Element[];
-  margin?: Margin;
-  priority?: number;
+type LabelGroupChoices = LabelGroupGeneric & {
+  technique: 'choices';
   choices: Function[];
-}
+};
 
-interface OptionsNudge {
-  technique?: 'nudge' | 'choices';
+export type LabelGroup = LabelGroupNudge | LabelGroupChoices;
+
+type BodyDataGeneric = {
+  priority: number;
+  priorityWithinGroup: number;
+};
+
+type BodyDataNudge = BodyDataGeneric & {
+  technique: 'nudge';
+  render: Function;
+  nudgeStrategy: 'shortest' | 'ordered';
+  nudgeDirections: Direction[];
+};
+
+type BodyDataChoices = BodyDataGeneric & {
+  technique: 'choices';
+  choices: Function[];
+};
+
+type BodyDataStatic = BodyDataGeneric & {
+  technique: 'static';
+};
+
+export type BodyData = BodyDataNudge | BodyDataChoices | BodyDataStatic;
+
+type Options = {
   includeParent?: boolean;
   parentMargin?: Margin;
   maxAttempts?: number;
   debug?: boolean;
   debugFunc?: Function;
-}
+};
 
-interface NudgedPosition {
+type NudgedPosition = {
   direction: Direction;
   x: number;
   y: number;
   distance: number;
-}
+};
 
-interface Point {
+export interface Point {
   x: number;
   y: number;
 }
@@ -125,6 +144,11 @@ const all = <T>(
   return ret;
 };
 
+const getDistance = (a: Point, b: Point) => {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.sqrt(dx * dx + dy * dy);
+};
 const checkOne = (tree: RBush<Body>, body: Body) => {
   if (body.isStatic) {
     return false;
@@ -184,12 +208,6 @@ const savePositionHistory = (body: Body, message: string) => {
     maxY: body.maxY,
     message,
   });
-};
-
-const getDistance = (a: Point, b: Point) => {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  return Math.sqrt(dx * dx + dy * dy);
 };
 
 const getNudgedPosition = (
@@ -261,7 +279,7 @@ const addParent = (
 ) => {
   const parentThickness = 200;
 
-  const top = {
+  const top = <Body>{
     minX: -parentThickness,
     minY: -parentThickness,
     maxX: parentBounds.width + parentThickness,
@@ -270,12 +288,13 @@ const addParent = (
     isStatic: true,
     node: parent,
     data: {
+      technique: 'static',
       priority: Infinity,
       priorityWithinGroup: Infinity,
     },
   };
 
-  const bottom = {
+  const bottom = <Body>{
     minX: -parentThickness,
     minY: parentBounds.height - parentMargin.bottom,
     maxX: parentBounds.width + parentThickness,
@@ -284,12 +303,13 @@ const addParent = (
     isStatic: true,
     node: parent,
     data: {
+      technique: 'static',
       priority: Infinity,
       priorityWithinGroup: Infinity,
     },
   };
 
-  const right = {
+  const right = <Body>{
     minX: parentBounds.width - parentMargin.left,
     minY: -parentThickness,
     maxX: parentBounds.width + parentThickness,
@@ -298,12 +318,13 @@ const addParent = (
     isStatic: true,
     node: parent,
     data: {
+      technique: 'static',
       priority: Infinity,
       priorityWithinGroup: Infinity,
     },
   };
 
-  const left = {
+  const left = <Body>{
     minX: -parentThickness,
     minY: -parentThickness,
     maxX: parentMargin.left,
@@ -312,6 +333,7 @@ const addParent = (
     isStatic: true,
     node: parent,
     data: {
+      technique: 'static',
       priority: Infinity,
       priorityWithinGroup: Infinity,
     },
@@ -329,8 +351,8 @@ const addParent = (
 
 const serialize = (
   parent: Element,
-  labelGroups: LabelGroupNudge[],
-  options: OptionsNudge
+  labelGroups: LabelGroup[],
+  options: Options
 ) => {
   return JSON.stringify(
     {
@@ -355,23 +377,51 @@ const serialize = (
   );
 };
 
+const extendBodyDataNudge = (
+  bodyData: BodyDataGeneric,
+  labelGroup: LabelGroupNudge
+): BodyDataNudge => {
+  return {
+    ...bodyData,
+    technique: 'nudge',
+    nudgeStrategy: labelGroup.nudgeStrategy || 'shortest',
+    nudgeDirections: labelGroup.nudgeDirections || [
+      <Direction>'down',
+      <Direction>'right',
+      <Direction>'up',
+      <Direction>'left',
+    ],
+    render: labelGroup.render,
+  };
+};
+
+const extendBodyDataChoices = (
+  bodyData: BodyDataGeneric,
+  labelGroup: LabelGroupChoices
+): BodyDataChoices => {
+  return {
+    ...bodyData,
+    technique: 'choices',
+    choices: labelGroup.choices,
+  };
+};
+
 // Global id counter, incremented for each instance of an avoid overlap class
 let uid = 0;
 
-/* Avoid label collisions by nudging colliding labels
- *
- */
-export class AvoidOverlapNudge {
+export class AvoidOverlap {
   uid: number;
 
   constructor() {
     this.uid = uid++;
   }
 
-  run(parent: Element, labelGroups: LabelGroupNudge[], options: OptionsNudge) {
+  run(parent: Element, labelGroups: LabelGroup[], options: Options) {
     if (options.debug) {
       console.log(serialize(parent, labelGroups, options));
-      console.log('^ copy the above message into this project’s Storybook for more debugging')
+      console.log(
+        '^ copy the above message into this project’s Storybook for more debugging'
+      );
     }
 
     const tree: RBush<Body> = new RBush();
@@ -398,16 +448,8 @@ export class AvoidOverlapNudge {
         bottom: 0,
         left: 0,
       };
+
       const priority = labelGroup.priority || 0;
-      const nudgeStrategy = labelGroup.nudgeStrategy || 'shortest';
-      const nudgeDirections = labelGroup.nudgeDirections || [
-        <Direction>'down',
-        <Direction>'right',
-        <Direction>'up',
-        <Direction>'left',
-      ];
-      const maxDistance = labelGroup.maxDistance || Infinity;
-      const render = labelGroup.render;
 
       labelGroup.nodes.map((node, i) => {
         const bounds = getRelativeBounds(
@@ -420,7 +462,7 @@ export class AvoidOverlapNudge {
         const maxX = bounds.x + bounds.width + margin.left + margin.right;
         const maxY = bounds.y + bounds.height + margin.top + margin.bottom;
 
-        const body = {
+        const initialBody = {
           minX,
           minY,
           maxX,
@@ -428,182 +470,97 @@ export class AvoidOverlapNudge {
           positionHistory: [],
           isStatic: false,
           node,
-          data: {
-            priority,
-            priorityWithinGroup: labelGroup.nodes.length - i,
-            nudgeStrategy,
-            nudgeDirections,
-            maxDistance,
-            render,
-          },
         };
-        tree.insert(body);
-        savePositionHistory(body, 'initial');
+
+        const initialBodyData = {
+          priority,
+          priorityWithinGroup: labelGroup.nodes.length - i,
+        };
+
+        let body: Body | undefined = undefined;
+        if (labelGroup.technique === 'nudge') {
+          const bodyData = extendBodyDataNudge(initialBodyData, labelGroup);
+          body = {
+            ...initialBody,
+            data: bodyData,
+          };
+        } else if (labelGroup.technique === 'choices') {
+          const bodyData = extendBodyDataChoices(initialBodyData, labelGroup);
+          body = { ...initialBody, data: bodyData };
+        }
+
+        if (typeof body !== 'undefined') {
+          tree.insert(body!);
+          savePositionHistory(body!, 'initial');
+        }
       });
     });
 
     const handleCollision = (response: CollisionCandidate) => {
-      // TODO better type handling here. Can we assume `bodyToMove` is a DynamicBody?
-      const [bodyToMove, bodyToNotMove]: any[] = orderBodies(
-        response.a,
-        response.b
-      );
+      const [bodyToMove, bodyToNotMove] = orderBodies(response.a, response.b);
 
-      if (bodyToMove.data.nudgeStrategy === 'shortest') {
-        const closestPosition = bodyToMove.data.nudgeDirections
-          .map((direction: Direction) =>
-            getNudgedPosition(direction, bodyToMove, bodyToNotMove)
-          )
-          .sort(
-            (a: NudgedPosition, b: NudgedPosition) => a.distance - b.distance
-          )[0];
+      if (bodyToMove.data.technique === 'nudge') {
+        if (bodyToMove.data.nudgeStrategy === 'shortest') {
+          const closestPosition = bodyToMove.data.nudgeDirections
+            .map((direction: Direction) =>
+              getNudgedPosition(direction, bodyToMove, bodyToNotMove)
+            )
+            .sort(
+              (a: NudgedPosition, b: NudgedPosition) => a.distance - b.distance
+            )[0];
 
-        const newX = closestPosition.x;
-        const newY = closestPosition.y;
-        const diffX = newX - bodyToMove.minX;
-        const diffY = newY - bodyToMove.minY;
-
-        if (bodyToMove.data.render) {
-          bodyToMove.data.render(bodyToMove.node, diffX, diffY);
-          const newBody = updateTree(tree, bodyToMove, newX, newY);
-          savePositionHistory(newBody, 'nudge-shortest');
-        }
-      } else if (
-        bodyToMove.data.nudgeStrategy === 'ordered' &&
-        bodyToMove.data.nudgeDirections
-      ) {
-        for (const direction of bodyToMove.data.nudgeDirections) {
-          const position = getNudgedPosition(
-            direction,
-            bodyToMove,
-            bodyToNotMove
-          );
-          const newX = position.x;
-          const newY = position.y;
+          const newX = closestPosition.x;
+          const newY = closestPosition.y;
           const diffX = newX - bodyToMove.minX;
           const diffY = newY - bodyToMove.minY;
 
           if (bodyToMove.data.render) {
             bodyToMove.data.render(bodyToMove.node, diffX, diffY);
             const newBody = updateTree(tree, bodyToMove, newX, newY);
-            savePositionHistory(newBody, `nudge-ordered, ${direction}`);
+            savePositionHistory(newBody, 'nudge-shortest');
           }
+        } else if (
+          bodyToMove.data.nudgeStrategy === 'ordered' &&
+          bodyToMove.data.nudgeDirections
+        ) {
+          for (const direction of bodyToMove.data.nudgeDirections) {
+            const position = getNudgedPosition(
+              direction,
+              bodyToMove,
+              bodyToNotMove
+            );
+            const newX = position.x;
+            const newY = position.y;
+            const diffX = newX - bodyToMove.minX;
+            const diffY = newY - bodyToMove.minY;
 
-          // TODO only break if there is no longer a collision so that other nudgeDirections values are attempted?
-          break;
-        }
-      }
-    };
+            if (bodyToMove.data.render) {
+              bodyToMove.data.render(bodyToMove.node, diffX, diffY);
+              const newBody = updateTree(tree, bodyToMove, newX, newY);
+              savePositionHistory(newBody, `nudge-ordered, ${direction}`);
+            }
 
-    let attempts = 0;
-    while (attempts < maxAttempts) {
-      attempts++;
-      const collisions = getCollisions(tree);
-      if (collisions) {
-        collisions.map(handleCollision);
-      } else {
-        break;
-      }
-    }
-
-    removeCollisions(tree);
-
-    if (options.debug) {
-      if (options.debugFunc) {
-        options.debugFunc(tree, parentBounds, this.uid);
-      } else {
-        defaultDebugFunc(tree, parentBounds, this.uid);
-      }
-    }
-  }
-}
-
-/* Avoid label collisions by trying different label position choices
- */
-export class AvoidOverlapChoices {
-  uid: number;
-
-  constructor() {
-    this.uid = uid++;
-  }
-
-  run(
-    parent: Element,
-    labelGroups: LabelGroupChoices[],
-    options: OptionsNudge
-  ) {
-    const tree: RBush<Body> = new RBush();
-
-    const parentBounds = parent.getBoundingClientRect();
-
-    const maxAttempts = options.maxAttempts || 3;
-    const includeParent = options.includeParent || false;
-    const parentMargin = options.parentMargin || {
-      top: -2,
-      right: -2,
-      bottom: -2,
-      left: -2,
-    };
-
-    if (includeParent) {
-      addParent(tree, parent, parentBounds, parentMargin);
-    }
-
-    // Add everything to the system
-    labelGroups.map((labelGroup) => {
-      const margin = labelGroup.margin || {
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0,
-      };
-      const priority = labelGroup.priority || 0;
-      const choices = labelGroup.choices;
-
-      labelGroup.nodes.map((node, i) => {
-        const bounds = getRelativeBounds(
-          node.getBoundingClientRect(),
-          parentBounds
-        );
-
-        const body = {
-          minX: bounds.x - margin.left,
-          minY: bounds.y - margin.top,
-          maxX: bounds.x + bounds.width + margin.left + margin.right,
-          maxY: bounds.y + bounds.height + margin.top + margin.bottom,
-          positionHistory: [],
-
-          isStatic: false,
-          node,
-          data: {
-            priority,
-            priorityWithinGroup: labelGroup.nodes.length - i,
-            choices,
-          },
-        };
-        tree.insert(body);
-        savePositionHistory(body, 'initial');
-      });
-    });
-
-    const handleCollision = (response: CollisionCandidate) => {
-      const [bodyToMove, _bodyToNotMove] = orderBodies(response.a, response.b);
-
-      if (!bodyToMove.isStatic && bodyToMove.data.choices) {
-        // Loop through the positioning choices, finding one that works
-        for (const choice of bodyToMove.data.choices) {
-          choice(bodyToMove.node);
-
-          // Update the position of the body in the system
-          const bounds = bodyToMove.node.getBoundingClientRect();
-          const newBody = updateTree(tree, bodyToMove, bounds.x, bounds.y);
-          savePositionHistory(newBody, `choice, ${choice}`);
-
-          // Check if this position collides with anything else in the system
-          const collisions = checkOne(tree, newBody);
-          const stillCollides = !!collisions;
-          if (!stillCollides) {
+            // TODO only break if there is no longer a collision so that other nudgeDirections values are attempted?
             break;
+          }
+        }
+      } else if (bodyToMove.data.technique === 'choices') {
+        if (!bodyToMove.isStatic && bodyToMove.data.choices) {
+          // Loop through the positioning choices, finding one that works
+          for (const choice of bodyToMove.data.choices) {
+            choice(bodyToMove.node);
+
+            // Update the position of the body in the system
+            const bounds = bodyToMove.node.getBoundingClientRect();
+            const newBody = updateTree(tree, bodyToMove, bounds.x, bounds.y);
+            savePositionHistory(newBody, `choice, ${choice}`);
+
+            // Check if this position collides with anything else in the system
+            const collisions = checkOne(tree, newBody);
+            const stillCollides = !!collisions;
+            if (!stillCollides) {
+              break;
+            }
           }
         }
       }
