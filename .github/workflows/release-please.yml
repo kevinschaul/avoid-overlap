@@ -17,8 +17,6 @@ jobs:
         with:
           release-type: node
           package-name: avoid-overlap
-          bump-minor-pre-major: true
-          bump-patch-for-minor-pre-major: true
 
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
