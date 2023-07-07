@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/kevinschaul/avoid-overlap/compare/v0.1.1...v0.2.0) (2023-07-07)
+
+
+### Features
+
+* combine choices, nudge into same class ([#16](https://github.com/kevinschaul/avoid-overlap/issues/16)) ([44d3182](https://github.com/kevinschaul/avoid-overlap/commit/44d31822e965019db2c392a4e1d5f0aa12a3e6a9)), closes [#15](https://github.com/kevinschaul/avoid-overlap/issues/15)
+
+
+### Bug Fixes
+
+* fix version numbers ([7576043](https://github.com/kevinschaul/avoid-overlap/commit/75760431cb3325ef22521d65a326617c6ac751c4))
+
 ## [0.1.1](https://github.com/kevinschaul/avoid-overlap/compare/v0.1.0...v0.1.1) (2023-07-06)
 
 
