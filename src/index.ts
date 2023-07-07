@@ -54,7 +54,6 @@ type LabelGroupNudge = LabelGroupGeneric & {
   render: Function;
   nudgeStrategy: 'shortest' | 'ordered';
   nudgeDirections: Direction[];
-  maxDistance: number;
 };
 
 type LabelGroupChoices = LabelGroupGeneric & {
@@ -74,7 +73,6 @@ type BodyDataNudge = BodyDataGeneric & {
   render: Function;
   nudgeStrategy: 'shortest' | 'ordered';
   nudgeDirections: Direction[];
-  maxDistance: number;
 };
 
 type BodyDataChoices = BodyDataGeneric & {
@@ -393,7 +391,6 @@ const extendBodyDataNudge = (
       <Direction>'up',
       <Direction>'left',
     ],
-    maxDistance: labelGroup.maxDistance || Infinity,
     render: labelGroup.render,
   };
 };
