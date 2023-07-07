@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/html';
 
-import { render, play } from './util';
+import { render, play, labelGroupNudgeRender } from './util';
 
 const meta: Meta = {
   title: 'AvoidOverlapNudge',
@@ -17,7 +17,7 @@ const Default: StoryObj = {
   },
   render: render,
   play: play,
-}
+};
 
 /**
  * Subtitle should appear below title
@@ -35,6 +35,7 @@ export const TwoSetsOfNodes: StoryObj = {
     },
     labelGroups: [
       {
+        technique: 'nudge',
         nodes: [
           {
             coords: {
@@ -47,8 +48,10 @@ export const TwoSetsOfNodes: StoryObj = {
           },
         ],
         priority: 10,
+        render: labelGroupNudgeRender,
       },
       {
+        technique: 'nudge',
         nodes: [
           {
             coords: {
@@ -61,11 +64,10 @@ export const TwoSetsOfNodes: StoryObj = {
           },
         ],
         priority: 5,
+        render: labelGroupNudgeRender,
       },
     ],
-    options: {
-      technique: 'nudge',
-    },
+    options: {},
   },
 };
 
@@ -85,6 +87,7 @@ export const ShortestWithDirectionUp: StoryObj = {
     },
     labelGroups: [
       {
+        technique: 'nudge',
         nodes: [
           {
             coords: {
@@ -96,8 +99,10 @@ export const ShortestWithDirectionUp: StoryObj = {
           },
         ],
         priority: 10,
+        render: labelGroupNudgeRender,
       },
       {
+        technique: 'nudge',
         nodes: [
           {
             coords: {
@@ -109,13 +114,12 @@ export const ShortestWithDirectionUp: StoryObj = {
           },
         ],
         priority: 5,
+        render: labelGroupNudgeRender,
         nudgeStrategy: 'shortest',
         nudgeDirections: ['up'],
       },
     ],
-    options: {
-      technique: 'nudge'
-    },
+    options: {},
   },
 };
 
@@ -135,6 +139,7 @@ export const ShortestWithDirectionRight: StoryObj = {
     },
     labelGroups: [
       {
+        technique: 'nudge',
         nodes: [
           {
             coords: {
@@ -145,9 +150,11 @@ export const ShortestWithDirectionRight: StoryObj = {
             },
           },
         ],
+        render: labelGroupNudgeRender,
         priority: 10,
       },
       {
+        technique: 'nudge',
         nodes: [
           {
             coords: {
@@ -158,13 +165,12 @@ export const ShortestWithDirectionRight: StoryObj = {
             },
           },
         ],
+        render: labelGroupNudgeRender,
         priority: 5,
         nudgeStrategy: 'shortest',
         nudgeDirections: ['right'],
       },
     ],
-    options: {
-      technique: 'nudge'
-    },
+    options: {},
   },
 };

@@ -1,5 +1,5 @@
-import { AvoidOverlapChoices, AvoidOverlapNudge } from '../src/index';
-import type { LabelGroupNudge } from '../src/index';
+import { AvoidOverlap } from '../src/index';
+import type { LabelGroup } from '../src/index';
 
 interface TestNode {
   coords: {
@@ -14,7 +14,7 @@ interface TestNode {
   };
   textContent: string;
 }
-interface TestLabelGroupNudge extends Omit<LabelGroupNudge, 'nodes'> {
+interface TestLabelGroup extends Omit<LabelGroup, 'nodes'> {
   nodes: TestNode[];
 }
 
@@ -34,11 +34,6 @@ export const play = async ({ canvasElement, args }) => {
     node.remove();
   });
 
-  const avoidOverlap = {
-    nudge: new AvoidOverlapNudge(),
-    choices: new AvoidOverlapChoices(),
-  }[args.options.technique];
-
   parent.setAttributeNS(null, 'width', args.parent.coords.width);
   parent.setAttributeNS(null, 'height', args.parent.coords.height);
 
@@ -46,7 +41,7 @@ export const play = async ({ canvasElement, args }) => {
   const yOffset = parentBounds.y - args.parent.coords.y;
 
   const labelGroups = args.labelGroups.map(
-    (labelGroup: TestLabelGroupNudge) => {
+    (labelGroup: TestLabelGroup) => {
       const newLabelGroup = {
         ...labelGroup,
         nodes: labelGroup.nodes.map((node) => {
@@ -83,26 +78,30 @@ export const play = async ({ canvasElement, args }) => {
         }),
       };
 
-      if (args.options.technique === 'nudge') {
-        newLabelGroup.render = (element: Element, dx: number, dy: number) => {
-          const prevTransform =
-            element.getAttributeNS(null, 'transform') || 'translate(0, 0)';
-          const [x, y] = prevTransform.match(/([0-9]+)/g)!.map((d) => +d);
-
-          element.setAttributeNS(
-            null,
-            'transform',
-            `translate(${x + dx}, ${y + dy})`
-          );
-        };
-      }
       return newLabelGroup;
     }
   );
 
+  const avoidOverlap = new AvoidOverlap();
   avoidOverlap.run(parent, labelGroups, args.options);
 };
 
 export const playExportedArgs = async ({ canvasElement, args }) => {
-  return await play({ canvasElement, args: JSON.parse(args.exportedArgs) });
+  // Parse `exportedArgs` into an object
+  const parsed = JSON.parse(args.exportedArgs);
+  parsed.labelGroups = parsed.labelGroups.map((d: LabelGroup) => ({
+    // Override the render function for each label group
+    ...d,
+    render: labelGroupNudgeRender
+  }))
+
+  return await play({ canvasElement, args: parsed });
+};
+
+export const labelGroupNudgeRender = (element: Element, dx: number, dy: number) => {
+  const prevTransform =
+    element.getAttributeNS(null, 'transform') || 'translate(0, 0)';
+  const [x, y] = prevTransform.match(/([0-9]+)/g)!.map((d) => +d);
+
+  element.setAttributeNS(null, 'transform', `translate(${x + dx}, ${y + dy})`);
 };

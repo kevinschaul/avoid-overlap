@@ -35,6 +35,7 @@ export const AvoidViewboxBounds: StoryObj = {
     },
     labelGroups: [
       {
+        technique: 'choices',
         nodes: [
           {
             coords: {
@@ -54,7 +55,6 @@ export const AvoidViewboxBounds: StoryObj = {
       },
     ],
     options: {
-      technique: 'choices',
       includeParent: true,
       parentMargin: {
         // TODO why do we need -1 instead of 0?
