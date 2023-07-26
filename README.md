@@ -37,7 +37,7 @@ npm install --save avoid-overlap
 This library provides the class `AvoidOverlap`, which provides the function `.run()`. Each page should use just one `AvoidOverlap` instance.
 
 ```js
-import { avoidOverlap } from 'avoid-overlap';
+import { AvoidOverlap } from 'avoid-overlap';
 
 // Create an avoid-overlap instance
 const avoidOverlap = new AvoidOverlap();
