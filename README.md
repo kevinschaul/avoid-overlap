@@ -103,7 +103,7 @@ avoidOverlap.run(
         const selected = select(node);
         const [x, y] = selected
           .attr('transform')
-          .match(/([0-9]+)/g)
+          .match(/([0-9\-\.]+)/g)
           .map((d) => +d);
 
         select(node).attr('transform', `translate(${x + dx}, ${y + dy})`);

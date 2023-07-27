@@ -1,6 +1,6 @@
 import RBush from 'rbush';
 import uniqWith from 'lodash/uniqWith.js';
-import { defaultDebugFunc } from './debug';
+import { defaultDebugFunc } from './debug.js';
 
 export interface Bounds {
   x: number;
