@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/kevinschaul/avoid-overlap/compare/v0.2.0...v0.2.1) (2023-07-27)
+
+
+### Bug Fixes
+
+* import with .js extension ([#18](https://github.com/kevinschaul/avoid-overlap/issues/18)) ([b23edfd](https://github.com/kevinschaul/avoid-overlap/commit/b23edfdc42648c756e066fa15e01f4f141a878a8))
+
 ## [0.2.0](https://github.com/kevinschaul/avoid-overlap/compare/v0.1.1...v0.2.0) (2023-07-07)
 
 
