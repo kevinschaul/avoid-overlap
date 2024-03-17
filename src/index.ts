@@ -310,7 +310,7 @@ const addParent = (
   };
 
   const right = <Body>{
-    minX: parentBounds.width - parentMargin.left,
+    minX: parentBounds.width - parentMargin.right,
     minY: -parentThickness,
     maxX: parentBounds.width + parentThickness,
     maxY: parentBounds.height + parentThickness,
