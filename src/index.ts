@@ -551,7 +551,11 @@ export class AvoidOverlap {
             choice(bodyToMove.node);
 
             // Update the position of the body in the system
-            const bounds = bodyToMove.node.getBoundingClientRect();
+            const bounds = getRelativeBounds(
+              bodyToMove.node.getBoundingClientRect(),
+              parentBounds
+            );
+
             const newBody = updateTree(tree, bodyToMove, bounds.x, bounds.y);
             savePositionHistory(newBody, `choice, ${choice}`);
 
