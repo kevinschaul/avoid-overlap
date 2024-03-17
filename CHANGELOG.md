@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/kevinschaul/avoid-overlap/compare/v0.2.1...v0.2.2) (2024-03-17)
+
+
+### Bug Fixes
+
+* use parent margin right ([#20](https://github.com/kevinschaul/avoid-overlap/issues/20)) ([55fdecf](https://github.com/kevinschaul/avoid-overlap/commit/55fdecf66eb16262f09b4644a794ff702fe5b414))
+
 ## [0.2.1](https://github.com/kevinschaul/avoid-overlap/compare/v0.2.0...v0.2.1) (2023-07-27)
 
 
