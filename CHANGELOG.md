@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/kevinschaul/avoid-overlap/compare/v0.2.2...v0.2.3) (2024-03-17)
+
+
+### Bug Fixes
+
+* use relative bounds after choices render ([#22](https://github.com/kevinschaul/avoid-overlap/issues/22)) ([e0d6653](https://github.com/kevinschaul/avoid-overlap/commit/e0d66534bfb6f171ec40145245190a2e61dd7e61))
+
 ## [0.2.2](https://github.com/kevinschaul/avoid-overlap/compare/v0.2.1...v0.2.2) (2024-03-17)
 
 
