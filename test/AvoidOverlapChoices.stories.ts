@@ -75,19 +75,22 @@ export const PriorityBasedAssignment: StoryObj = {
 };
 
 /**
- * Realistic arrow-label scenario: up arrows prefer top-right → top-left →
- * bottom; down arrows prefer bottom-left → bottom-right → top.
+ * Realistic arrow-label scenario modelled on a map chart where triangles mark
+ * data points (▲ = up trend, ▽ = down trend). Labels sit BESIDE the triangle
+ * tip at the same vertical level — not above/below the whole triangle.
  *
- * Points A and B are close together (both up), competing for top positions.
- * Points C and D are close together (both down), competing for bottom positions.
- * Point E is isolated.
+ * Placement rules (label: 55 × 14 px, padding: 5 px, triangle height: 16 px):
+ *   ▲ up tip at (ax, ay):   left-of-tip → right-of-tip → below triangle
+ *   ▽ down tip at (ax, ay): right-of-tip → left-of-tip → above triangle
  *
- * Expected outcome with priority-ordered assignment:
- * - A (priority 3) → top-right ✓  (first pick)
- * - B (priority 2) → bottom       (top-right and top-left both blocked by A)
- * - C (priority 2) → bottom-left ✓ (first pick)
- * - D (priority 1) → bottom-right  (bottom-left blocked by C)
- * - E (priority 2) → top-right ✓  (isolated, no conflict)
+ * Three up-arrows cluster together, each forcing the next to fall back:
+ *   A ▲ (100,100) priority 3 → left-of-tip    (first pick, no conflict)
+ *   B ▲ (140, 97) priority 2 → right-of-tip   (left blocked by A)
+ *   C ▲ (170,103) priority 1 → below triangle (left blocked by A, right blocked by B)
+ *
+ * Two down-arrows cluster together:
+ *   D ▽ (250,110) priority 3 → right-of-tip   (first pick, no conflict)
+ *   E ▽ (290,105) priority 2 → above triangle (right and left both blocked by D)
  */
 export const ArrowLabels: StoryObj = {
   ...Default,
@@ -96,99 +99,99 @@ export const ArrowLabels: StoryObj = {
       coords: { x: 0, y: 0, width: 400, height: 200 },
     },
     labelGroups: [
-      // Up arrow at x=60, highest priority — keeps preferred top-right position
+      // ▲ up at (100,100), priority 3 — keeps preferred left-of-tip
       {
         technique: 'choices',
         priority: 3,
         nodes: [
           {
-            coords: { x: 60, y: 80, width: 60, height: 16 },
+            coords: { x: 40, y: 93, width: 55, height: 14 },
             textContent: 'Label A',
           },
         ],
         choices: [
           (el: Element) =>
-            el.setAttributeNS(null, 'transform', 'translate(60, 80)'), // top-right
+            el.setAttributeNS(null, 'transform', 'translate(40, 93)'), // left-of-tip
           (el: Element) =>
-            el.setAttributeNS(null, 'transform', 'translate(0, 80)'), // top-left
+            el.setAttributeNS(null, 'transform', 'translate(105, 93)'), // right-of-tip
           (el: Element) =>
-            el.setAttributeNS(null, 'transform', 'translate(30, 104)'), // bottom
+            el.setAttributeNS(null, 'transform', 'translate(73, 121)'), // below
         ],
       },
-      // Up arrow at x=110, close to A — top-right and top-left both blocked by A
+      // ▲ up at (140,97), priority 2 — left blocked by A, falls back to right-of-tip
       {
         technique: 'choices',
         priority: 2,
         nodes: [
           {
-            coords: { x: 110, y: 75, width: 60, height: 16 },
+            coords: { x: 80, y: 90, width: 55, height: 14 },
             textContent: 'Label B',
           },
         ],
         choices: [
           (el: Element) =>
-            el.setAttributeNS(null, 'transform', 'translate(110, 75)'), // top-right — overlaps A
+            el.setAttributeNS(null, 'transform', 'translate(80, 90)'), // left-of-tip — overlaps A
           (el: Element) =>
-            el.setAttributeNS(null, 'transform', 'translate(50, 75)'), // top-left — overlaps A
+            el.setAttributeNS(null, 'transform', 'translate(145, 90)'), // right-of-tip — clear
           (el: Element) =>
-            el.setAttributeNS(null, 'transform', 'translate(80, 99)'), // bottom — clear
+            el.setAttributeNS(null, 'transform', 'translate(113, 118)'), // below
         ],
       },
-      // Down arrow at x=200, gets first pick of bottom positions
-      {
-        technique: 'choices',
-        priority: 2,
-        nodes: [
-          {
-            coords: { x: 140, y: 109, width: 60, height: 16 },
-            textContent: 'Label C',
-          },
-        ],
-        choices: [
-          (el: Element) =>
-            el.setAttributeNS(null, 'transform', 'translate(140, 109)'), // bottom-left
-          (el: Element) =>
-            el.setAttributeNS(null, 'transform', 'translate(200, 109)'), // bottom-right
-          (el: Element) =>
-            el.setAttributeNS(null, 'transform', 'translate(170, 85)'), // top
-        ],
-      },
-      // Down arrow at x=245, close to C — bottom-left blocked, falls back to bottom-right
+      // ▲ up at (170,103), priority 1 — left blocked by A, right blocked by B, falls back below
       {
         technique: 'choices',
         priority: 1,
         nodes: [
           {
-            coords: { x: 185, y: 104, width: 60, height: 16 },
+            coords: { x: 110, y: 96, width: 55, height: 14 },
+            textContent: 'Label C',
+          },
+        ],
+        choices: [
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(110, 96)'), // left-of-tip — overlaps B
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(175, 96)'), // right-of-tip — overlaps B
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(143, 124)'), // below — clear
+        ],
+      },
+      // ▽ down at (250,110), priority 3 — keeps preferred right-of-tip
+      {
+        technique: 'choices',
+        priority: 3,
+        nodes: [
+          {
+            coords: { x: 255, y: 103, width: 55, height: 14 },
             textContent: 'Label D',
           },
         ],
         choices: [
           (el: Element) =>
-            el.setAttributeNS(null, 'transform', 'translate(185, 104)'), // bottom-left — overlaps C
+            el.setAttributeNS(null, 'transform', 'translate(255, 103)'), // right-of-tip
           (el: Element) =>
-            el.setAttributeNS(null, 'transform', 'translate(245, 104)'), // bottom-right — clear
+            el.setAttributeNS(null, 'transform', 'translate(190, 103)'), // left-of-tip
           (el: Element) =>
-            el.setAttributeNS(null, 'transform', 'translate(215, 80)'), // top
+            el.setAttributeNS(null, 'transform', 'translate(223, 75)'), // above
         ],
       },
-      // Up arrow at x=330, isolated — keeps top-right without conflict
+      // ▽ down at (290,105), priority 2 — right and left both blocked by D, falls back above
       {
         technique: 'choices',
         priority: 2,
         nodes: [
           {
-            coords: { x: 330, y: 70, width: 60, height: 16 },
+            coords: { x: 295, y: 98, width: 55, height: 14 },
             textContent: 'Label E',
           },
         ],
         choices: [
           (el: Element) =>
-            el.setAttributeNS(null, 'transform', 'translate(330, 70)'), // top-right
+            el.setAttributeNS(null, 'transform', 'translate(295, 98)'), // right-of-tip — overlaps D
           (el: Element) =>
-            el.setAttributeNS(null, 'transform', 'translate(270, 70)'), // top-left
+            el.setAttributeNS(null, 'transform', 'translate(230, 98)'), // left-of-tip — overlaps D
           (el: Element) =>
-            el.setAttributeNS(null, 'transform', 'translate(300, 94)'), // bottom
+            el.setAttributeNS(null, 'transform', 'translate(263, 70)'), // above — clear
         ],
       },
     ],
