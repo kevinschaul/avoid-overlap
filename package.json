@@ -26,10 +26,12 @@
     "@types/jest": "^29.5.0",
     "@types/lodash": "^4.14.194",
     "@types/rbush": "^3.0.0",
+    "@types/topojson-client": "^3.1.5",
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
     "chokidar": "^3.5.3",
     "chromatic": "^6.19.9",
+    "d3": "^7.9.0",
     "eslint": "^8.37.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.8.0",
@@ -42,6 +44,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "storybook": "^7.0.26",
+    "topojson-client": "^3.1.0",
     "typescript": "^5.0.3"
   },
   "scripts": {

@@ -1,0 +1,637 @@
+[
+  {
+    "rank": 1,
+    "city": "Chicago, IL",
+    "score": 89,
+    "lng": -87.6244,
+    "lat": 41.8756
+  },
+  {
+    "rank": 1,
+    "city": "New York, NY",
+    "score": 89,
+    "lng": -74.006,
+    "lat": 40.7127
+  },
+  {
+    "rank": 3,
+    "city": "Buffalo, NY",
+    "score": 85,
+    "lng": -78.8781,
+    "lat": 42.8864
+  },
+  {
+    "rank": 4,
+    "city": "Detroit, MI",
+    "score": 84,
+    "lng": -83.0466,
+    "lat": 42.3316
+  },
+  {
+    "rank": 5,
+    "city": "Philadelphia, PA",
+    "score": 83,
+    "lng": -75.1635,
+    "lat": 39.9527
+  },
+  {
+    "rank": 87,
+    "city": "Lubbock, TX",
+    "score": -78,
+    "lng": -101.847,
+    "lat": 33.5856
+  },
+  {
+    "rank": 88,
+    "city": "Gilbert, AZ",
+    "score": -79,
+    "lng": -111.789,
+    "lat": 33.3528
+  },
+  {
+    "rank": 89,
+    "city": "Honolulu, HI",
+    "score": -81,
+    "lng": -157.8557,
+    "lat": 21.3045
+  },
+  {
+    "rank": 90,
+    "city": "Corpus Christi, TX",
+    "score": -86,
+    "lng": -97.4033,
+    "lat": 27.7635
+  },
+  {
+    "rank": 91,
+    "city": "Laredo, TX",
+    "score": -88,
+    "lng": -99.507,
+    "lat": 27.5079
+  },
+  {
+    "rank": 6,
+    "city": "Newark, NJ",
+    "score": 79,
+    "lng": -74.1724,
+    "lat": 40.7357
+  },
+  {
+    "rank": 7,
+    "city": "Jersey City, NJ",
+    "score": 78,
+    "lng": -74.0475,
+    "lat": 40.7216
+  },
+  {
+    "rank": 8,
+    "city": "Boston, MA",
+    "score": 77,
+    "lng": -71.0578,
+    "lat": 42.3588
+  },
+  {
+    "rank": 9,
+    "city": "Pittsburgh, PA",
+    "score": 73,
+    "lng": -80.0026,
+    "lat": 40.4407
+  },
+  {
+    "rank": 10,
+    "city": "Milwaukee, WI",
+    "score": 71,
+    "lng": -87.9091,
+    "lat": 43.0386
+  },
+  {
+    "rank": 11,
+    "city": "Cleveland, OH",
+    "score": 69,
+    "lng": -81.6937,
+    "lat": 41.4997
+  },
+  {
+    "rank": 12,
+    "city": "Minneapolis, MN",
+    "score": 64,
+    "lng": -93.2655,
+    "lat": 44.9773
+  },
+  {
+    "rank": 13,
+    "city": "Columbus, OH",
+    "score": 62,
+    "lng": -83.0007,
+    "lat": 39.9623
+  },
+  {
+    "rank": 13,
+    "city": "Portland, OR",
+    "score": 62,
+    "lng": -122.6742,
+    "lat": 45.5202
+  },
+  {
+    "rank": 15,
+    "city": "St. Louis, MO",
+    "score": 59,
+    "lng": -90.19,
+    "lat": 38.6254
+  },
+  {
+    "rank": 16,
+    "city": "Baltimore, MD",
+    "score": 55,
+    "lng": -76.6108,
+    "lat": 39.2909
+  },
+  {
+    "rank": 16,
+    "city": "Cincinnati, OH",
+    "score": 55,
+    "lng": -84.5125,
+    "lat": 39.1015
+  },
+  {
+    "rank": 18,
+    "city": "San Francisco, CA",
+    "score": 54,
+    "lng": -122.4075,
+    "lat": 37.7879
+  },
+  {
+    "rank": 19,
+    "city": "Oakland, CA",
+    "score": 52,
+    "lng": -122.2714,
+    "lat": 37.8045
+  },
+  {
+    "rank": 20,
+    "city": "Madison, WI",
+    "score": 50,
+    "lng": -89.3842,
+    "lat": 43.0747
+  },
+  {
+    "rank": 21,
+    "city": "New Orleans, LA",
+    "score": 48,
+    "lng": -90.0734,
+    "lat": 29.9561
+  },
+  {
+    "rank": 22,
+    "city": "Indianapolis, IN",
+    "score": 45,
+    "lng": -86.1584,
+    "lat": 39.7683
+  },
+  {
+    "rank": 23,
+    "city": "Saint Paul, MN",
+    "score": 42,
+    "lng": -93.0931,
+    "lat": 44.9497
+  },
+  {
+    "rank": 24,
+    "city": "Kansas City, MO",
+    "score": 39,
+    "lng": -94.5781,
+    "lat": 39.1001
+  },
+  {
+    "rank": 25,
+    "city": "Seattle, WA",
+    "score": 37,
+    "lng": -122.3301,
+    "lat": 47.6038
+  },
+  {
+    "rank": 25,
+    "city": "Toledo, OH",
+    "score": 37,
+    "lng": -83.5378,
+    "lat": 41.6529
+  },
+  {
+    "rank": 27,
+    "city": "Atlanta, GA",
+    "score": 33,
+    "lng": -84.3898,
+    "lat": 33.7545
+  },
+  {
+    "rank": 27,
+    "city": "Los Angeles, CA",
+    "score": 33,
+    "lng": -118.2428,
+    "lat": 34.0537
+  },
+  {
+    "rank": 27,
+    "city": "Washington, DC",
+    "score": 33,
+    "lng": -77.0365,
+    "lat": 38.895
+  },
+  {
+    "rank": 30,
+    "city": "Louisville, KY",
+    "score": 32,
+    "lng": -85.7594,
+    "lat": 38.2542
+  },
+  {
+    "rank": 30,
+    "city": "Tampa, FL",
+    "score": 32,
+    "lng": -82.4583,
+    "lat": 27.945
+  },
+  {
+    "rank": 32,
+    "city": "Las Vegas, NV",
+    "score": 25,
+    "lng": -115.1484,
+    "lat": 36.1674
+  },
+  {
+    "rank": 33,
+    "city": "Omaha, NE",
+    "score": 24,
+    "lng": -95.9384,
+    "lat": 41.2587
+  },
+  {
+    "rank": 33,
+    "city": "Durham, NC",
+    "score": 24,
+    "lng": -78.9018,
+    "lat": 35.9967
+  },
+  {
+    "rank": 35,
+    "city": "Dallas, TX",
+    "score": 23,
+    "lng": -96.7969,
+    "lat": 32.7763
+  },
+  {
+    "rank": 36,
+    "city": "Austin, TX",
+    "score": 22,
+    "lng": -97.7437,
+    "lat": 30.2711
+  },
+  {
+    "rank": 36,
+    "city": "Nashville, TN",
+    "score": 22,
+    "lng": -86.7743,
+    "lat": 36.1623
+  },
+  {
+    "rank": 38,
+    "city": "San Jose, CA",
+    "score": 19,
+    "lng": -121.8906,
+    "lat": 37.3362
+  },
+  {
+    "rank": 39,
+    "city": "Memphis, TN",
+    "score": 16,
+    "lng": -90.0518,
+    "lat": 35.146
+  },
+  {
+    "rank": 40,
+    "city": "Houston, TX",
+    "score": 14,
+    "lng": -95.3677,
+    "lat": 29.7589
+  },
+  {
+    "rank": 41,
+    "city": "San Diego, CA",
+    "score": 8,
+    "lng": -117.1628,
+    "lat": 32.7174
+  },
+  {
+    "rank": 41,
+    "city": "Denver, CO",
+    "score": 8,
+    "lng": -104.9849,
+    "lat": 39.7392
+  },
+  {
+    "rank": 41,
+    "city": "Orlando, FL",
+    "score": 8,
+    "lng": -81.379,
+    "lat": 28.5421
+  },
+  {
+    "rank": 44,
+    "city": "St. Petersburg, FL",
+    "score": 2,
+    "lng": -82.634,
+    "lat": 27.7712
+  },
+  {
+    "rank": 45,
+    "city": "Charlotte, NC",
+    "score": -2,
+    "lng": -80.8431,
+    "lat": 35.2272
+  },
+  {
+    "rank": 46,
+    "city": "Sacramento, CA",
+    "score": -6,
+    "lng": -121.4939,
+    "lat": 38.5811
+  },
+  {
+    "rank": 47,
+    "city": "Raleigh, NC",
+    "score": -7,
+    "lng": -78.6391,
+    "lat": 35.7804
+  },
+  {
+    "rank": 48,
+    "city": "Fort Wayne, IN",
+    "score": -10,
+    "lng": -85.1386,
+    "lat": 41.08
+  },
+  {
+    "rank": 49,
+    "city": "Long Beach, CA",
+    "score": -11,
+    "lng": -118.1916,
+    "lat": 33.769
+  },
+  {
+    "rank": 49,
+    "city": "San Antonio, TX",
+    "score": -11,
+    "lng": -98.4951,
+    "lat": 29.4246
+  },
+  {
+    "rank": 49,
+    "city": "Jacksonville, FL",
+    "score": -11,
+    "lng": -81.6579,
+    "lat": 30.3262
+  },
+  {
+    "rank": 49,
+    "city": "Fort Worth, TX",
+    "score": -11,
+    "lng": -97.3327,
+    "lat": 32.7532
+  },
+  {
+    "rank": 53,
+    "city": "Tulsa, OK",
+    "score": -17,
+    "lng": -95.9928,
+    "lat": 36.1563
+  },
+  {
+    "rank": 53,
+    "city": "Phoenix, AZ",
+    "score": -17,
+    "lng": -112.0741,
+    "lat": 33.4484
+  },
+  {
+    "rank": 55,
+    "city": "Miami, FL",
+    "score": -18,
+    "lng": -80.1936,
+    "lat": 25.7742
+  },
+  {
+    "rank": 56,
+    "city": "Lexington, KY",
+    "score": -19,
+    "lng": -84.497,
+    "lat": 38.0464
+  },
+  {
+    "rank": 57,
+    "city": "Stockton, CA",
+    "score": -27,
+    "lng": -121.2908,
+    "lat": 37.9577
+  },
+  {
+    "rank": 58,
+    "city": "Aurora, CO",
+    "score": -28,
+    "lng": -104.831,
+    "lat": 39.7405
+  },
+  {
+    "rank": 59,
+    "city": "Reno, NV",
+    "score": -29,
+    "lng": -119.8127,
+    "lat": 39.5262
+  },
+  {
+    "rank": 60,
+    "city": "Santa Ana, CA",
+    "score": -30,
+    "lng": -117.8732,
+    "lat": 33.7495
+  },
+  {
+    "rank": 60,
+    "city": "Tucson, AZ",
+    "score": -30,
+    "lng": -110.9748,
+    "lat": 32.2229
+  },
+  {
+    "rank": 62,
+    "city": "Fresno, CA",
+    "score": -32,
+    "lng": -119.7848,
+    "lat": 36.7394
+  },
+  {
+    "rank": 63,
+    "city": "Oklahoma City, OK",
+    "score": -33,
+    "lng": -97.5171,
+    "lat": 35.473
+  },
+  {
+    "rank": 64,
+    "city": "Lincoln, NE",
+    "score": -36,
+    "lng": -96.7078,
+    "lat": 40.8089
+  },
+  {
+    "rank": 64,
+    "city": "Greensboro, NC",
+    "score": -36,
+    "lng": -79.792,
+    "lat": 36.0726
+  },
+  {
+    "rank": 66,
+    "city": "Virginia Beach, VA",
+    "score": -37,
+    "lng": -75.9761,
+    "lat": 36.8497
+  },
+  {
+    "rank": 67,
+    "city": "Plano, TX",
+    "score": -38,
+    "lng": -96.6925,
+    "lat": 33.0137
+  },
+  {
+    "rank": 67,
+    "city": "Glendale, AZ",
+    "score": -38,
+    "lng": -112.186,
+    "lat": 33.5387
+  },
+  {
+    "rank": 69,
+    "city": "Arlington, TX",
+    "score": -46,
+    "lng": -97.1071,
+    "lat": 32.7356
+  },
+  {
+    "rank": 70,
+    "city": "Winston Salem, NC",
+    "score": -47
+  },
+  {
+    "rank": 71,
+    "city": "Irving, TX",
+    "score": -48,
+    "lng": -96.9442,
+    "lat": 32.8295
+  },
+  {
+    "rank": 71,
+    "city": "Anaheim, CA",
+    "score": -48,
+    "lng": -117.9117,
+    "lat": 33.8348
+  },
+  {
+    "rank": 73,
+    "city": "Albuquerque, NM",
+    "score": -49,
+    "lng": -106.651,
+    "lat": 35.0841
+  },
+  {
+    "rank": 74,
+    "city": "Wichita, KS",
+    "score": -51,
+    "lng": -97.3375,
+    "lat": 37.6922
+  },
+  {
+    "rank": 75,
+    "city": "Chesapeake, VA",
+    "score": -53,
+    "lng": -76.2494,
+    "lat": 36.7168
+  },
+  {
+    "rank": 75,
+    "city": "Colorado Springs, CO",
+    "score": -53,
+    "lng": -104.8253,
+    "lat": 38.834
+  },
+  {
+    "rank": 77,
+    "city": "Mesa, AZ",
+    "score": -60,
+    "lng": -111.8315,
+    "lat": 33.4151
+  },
+  {
+    "rank": 77,
+    "city": "Chula Vista, CA",
+    "score": -60,
+    "lng": -117.0842,
+    "lat": 32.6401
+  },
+  {
+    "rank": 79,
+    "city": "Bakersfield, CA",
+    "score": -61,
+    "lng": -119.0195,
+    "lat": 35.3739
+  },
+  {
+    "rank": 80,
+    "city": "Chandler, AZ",
+    "score": -63,
+    "lng": -111.8412,
+    "lat": 33.3062
+  },
+  {
+    "rank": 81,
+    "city": "Henderson, NV",
+    "score": -67,
+    "lng": -114.9823,
+    "lat": 36.032
+  },
+  {
+    "rank": 82,
+    "city": "Riverside, CA",
+    "score": -69,
+    "lng": -117.3742,
+    "lat": 33.9825
+  },
+  {
+    "rank": 83,
+    "city": "North Las Vegas, NV",
+    "score": -70,
+    "lng": -115.1215,
+    "lat": 36.2005
+  },
+  {
+    "rank": 84,
+    "city": "Anchorage, AK",
+    "score": -71,
+    "lng": -149.8949,
+    "lat": 61.2163
+  },
+  {
+    "rank": 85,
+    "city": "El Paso, TX",
+    "score": -77,
+    "lng": -106.487,
+    "lat": 31.7601
+  },
+  {
+    "rank": 85,
+    "city": "Irvine, CA",
+    "score": -77,
+    "lng": -117.826,
+    "lat": 33.6857
+  }
+]
