@@ -43,7 +43,7 @@ interface CollisionCandidate {
 }
 
 type LabelGroupGeneric = {
-  technique: 'nudge' | 'choices';
+  technique: 'nudge' | 'choices' | 'annealing';
   nodes: Element[];
   margin: Margin;
   priority: number;
@@ -61,7 +61,12 @@ type LabelGroupChoices = LabelGroupGeneric & {
   choices: Function[];
 };
 
-export type LabelGroup = LabelGroupNudge | LabelGroupChoices;
+type LabelGroupAnnealing = LabelGroupGeneric & {
+  technique: 'annealing';
+  choices: Function[];
+};
+
+export type LabelGroup = LabelGroupNudge | LabelGroupChoices | LabelGroupAnnealing;
 
 type BodyDataGeneric = {
   priority: number;
@@ -80,11 +85,16 @@ type BodyDataChoices = BodyDataGeneric & {
   choices: Function[];
 };
 
+type BodyDataAnnealing = BodyDataGeneric & {
+  technique: 'annealing';
+  choices: Function[];
+};
+
 type BodyDataStatic = BodyDataGeneric & {
   technique: 'static';
 };
 
-export type BodyData = BodyDataNudge | BodyDataChoices | BodyDataStatic;
+export type BodyData = BodyDataNudge | BodyDataChoices | BodyDataAnnealing | BodyDataStatic;
 
 type Options = {
   includeParent?: boolean;
@@ -92,6 +102,7 @@ type Options = {
   maxAttempts?: number;
   debug?: boolean;
   debugFunc?: Function;
+  annealingSeed?: number;
 };
 
 type NudgedPosition = {
@@ -408,6 +419,101 @@ const extendBodyDataChoices = (
   };
 };
 
+const extendBodyDataAnnealing = (
+  bodyData: BodyDataGeneric,
+  labelGroup: LabelGroupAnnealing
+): BodyDataAnnealing => {
+  return {
+    ...bodyData,
+    technique: 'annealing',
+    choices: labelGroup.choices,
+  };
+};
+
+/* Simulated annealing solver for bodies with discrete candidate positions.
+ *
+ * Energy = overlappingPairs * 10000 + Σ choiceIndex
+ *   - The large overlap penalty ensures the solver strongly prefers
+ *     collision-free configurations.
+ *   - The sum of choice indices biases toward earlier (more-preferred) choices.
+ *
+ * A seeded PRNG (mulberry32) is used so Storybook snapshots are reproducible.
+ */
+const runAnnealing = (
+  tree: RBush<Body>,
+  annealingBodies: Body[],
+  parentBounds: Bounds,
+  seed: number
+): void => {
+  const n = annealingBodies.length;
+  if (n === 0) return;
+
+  // mulberry32 seeded PRNG
+  let s = seed;
+  const random = (): number => {
+    s |= 0;
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+
+  // current[i] tracks the latest Body ref (updateTree returns a new object)
+  const current: Body[] = [...annealingBodies];
+  const choiceIdx: number[] = new Array(n).fill(0);
+
+  const applyChoice = (i: number, idx: number): void => {
+    const body = current[i];
+    const { choices } = body.data as BodyDataAnnealing;
+    choices[idx](body.node);
+    const bounds = getRelativeBounds(
+      body.node.getBoundingClientRect(),
+      parentBounds
+    );
+    current[i] = updateTree(tree, body, bounds.x, bounds.y);
+    savePositionHistory(current[i], `annealing choice ${idx}`);
+    choiceIdx[i] = idx;
+  };
+
+  // Start with every label at its first (most preferred) choice
+  for (let i = 0; i < n; i++) applyChoice(i, 0);
+
+  const energy = (): number => {
+    const overlaps = getCollisions(tree).length;
+    return overlaps * 10000 + choiceIdx.reduce((sum, v) => sum + v, 0);
+  };
+
+  let T = 2;
+  const coolingRate = 0.99;
+  const T_min = 0.01;
+  const stepsPerTemp = n * 10;
+
+  let E = energy();
+
+  while (T > T_min) {
+    for (let step = 0; step < stepsPerTemp; step++) {
+      const i = Math.floor(random() * n);
+      const numChoices = (current[i].data as BodyDataAnnealing).choices.length;
+      if (numChoices <= 1) continue;
+
+      const oldIdx = choiceIdx[i];
+      const newIdx = Math.floor(random() * numChoices);
+      if (newIdx === oldIdx) continue;
+
+      applyChoice(i, newIdx);
+      const newE = energy();
+      const deltaE = newE - E;
+
+      if (deltaE <= 0 || random() < Math.exp(-deltaE / T)) {
+        E = newE;
+      } else {
+        applyChoice(i, oldIdx);
+      }
+    }
+    T *= coolingRate;
+  }
+};
+
 // Global id counter, incremented for each instance of an avoid overlap class
 let uid = 0;
 
@@ -488,6 +594,9 @@ export class AvoidOverlap {
           };
         } else if (labelGroup.technique === 'choices') {
           const bodyData = extendBodyDataChoices(initialBodyData, labelGroup);
+          body = { ...initialBody, data: bodyData };
+        } else if (labelGroup.technique === 'annealing') {
+          const bodyData = extendBodyDataAnnealing(initialBodyData, labelGroup);
           body = { ...initialBody, data: bodyData };
         }
 
@@ -571,6 +680,20 @@ export class AvoidOverlap {
         }
       }
     };
+
+    // Annealing bodies are solved jointly via simulated annealing, which can
+    // find globally better configurations than the greedy choices pass.
+    const annealingBodies = tree
+      .all()
+      .filter(
+        (b): b is Body => !b.isStatic && b.data.technique === 'annealing'
+      );
+
+    if (annealingBodies.length > 0) {
+      const seed =
+        options.annealingSeed !== undefined ? options.annealingSeed : 42;
+      runAnnealing(tree, annealingBodies, parentBounds, seed);
+    }
 
     // For choices bodies, use a single priority-ordered pass: highest priority
     // gets first pick, each body commits before the next is processed. This
