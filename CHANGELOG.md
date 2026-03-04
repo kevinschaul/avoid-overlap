@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.0](https://github.com/kevinschaul/avoid-overlap/compare/v0.2.3...v0.3.0) (2026-03-04)
+
+
+### Features
+
+* add `disable` callback, `technique: 'static'`, and fix removeCollisions cap ([ec5b271](https://github.com/kevinschaul/avoid-overlap/commit/ec5b2713a1b5eab54a1f8c0adb1e0c9996810380))
+* add simulated annealing technique for joint label placement ([a33d8b0](https://github.com/kevinschaul/avoid-overlap/commit/a33d8b05dff9f2e3c44a7e242201db62964512c8))
+* resolve choices bodies in priority order ([786a0bf](https://github.com/kevinschaul/avoid-overlap/commit/786a0bf709c5c980262ebad2c7a81c1ba7f2c93d))
+
+
+### Bug Fixes
+
+* correct collision deduplication and margin expansion bugs ([f467393](https://github.com/kevinschaul/avoid-overlap/commit/f4673936443a186a49038c17361e31bacd9a0ba0))
+* guard against empty choices in annealing initialization ([5c94259](https://github.com/kevinschaul/avoid-overlap/commit/5c94259435e0e2dca9d718a82099bf363c503476))
+
 ## [0.2.3](https://github.com/kevinschaul/avoid-overlap/compare/v0.2.2...v0.2.3) (2024-03-17)
 
 
