@@ -178,7 +178,9 @@ const getCollisions = (tree: RBush<Body>): CollisionCandidate[] => {
   const uniqueCollisions = uniqWith(
     collisions,
     (a: CollisionCandidate, b: CollisionCandidate) => {
-      return a.a === b.a || a.a === b.b;
+      return (
+        (a.a === b.a && a.b === b.b) || (a.a === b.b && a.b === b.a)
+      );
     }
   );
   return uniqueCollisions;
@@ -459,8 +461,8 @@ export class AvoidOverlap {
 
         const minX = bounds.x - margin.left;
         const minY = bounds.y - margin.top;
-        const maxX = bounds.x + bounds.width + margin.left + margin.right;
-        const maxY = bounds.y + bounds.height + margin.top + margin.bottom;
+        const maxX = bounds.x + bounds.width + margin.right;
+        const maxY = bounds.y + bounds.height + margin.bottom;
 
         const initialBody = {
           minX,
