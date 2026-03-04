@@ -20,6 +20,61 @@ const Default: StoryObj = {
 };
 
 /**
+ * Two labels compete for the same first-choice position (above the anchor).
+ * The higher-priority label (priority: 2) should keep "above"; the
+ * lower-priority label (priority: 1) should fall back to "below".
+ * This verifies the sequential priority-ordered assignment for choices.
+ */
+export const PriorityBasedAssignment: StoryObj = {
+  ...Default,
+  args: {
+    parent: {
+      coords: {
+        x: 0,
+        y: 0,
+        width: 200,
+        height: 200,
+      },
+    },
+    labelGroups: [
+      {
+        technique: 'choices',
+        priority: 2,
+        nodes: [
+          {
+            coords: { x: 80, y: 100, width: 40, height: 20 },
+            textContent: 'hi-pri',
+          },
+        ],
+        choices: [
+          (element: Element) =>
+            element.setAttributeNS(null, 'transform', 'translate(80, 75)'),
+          (element: Element) =>
+            element.setAttributeNS(null, 'transform', 'translate(80, 125)'),
+        ],
+      },
+      {
+        technique: 'choices',
+        priority: 1,
+        nodes: [
+          {
+            coords: { x: 80, y: 100, width: 40, height: 20 },
+            textContent: 'lo-pri',
+          },
+        ],
+        choices: [
+          (element: Element) =>
+            element.setAttributeNS(null, 'transform', 'translate(80, 75)'),
+          (element: Element) =>
+            element.setAttributeNS(null, 'transform', 'translate(80, 125)'),
+        ],
+      },
+    ],
+    options: {},
+  },
+};
+
+/**
  * Square should appear at top left corner
  */
 export const AvoidViewboxBounds: StoryObj = {

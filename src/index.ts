@@ -570,6 +570,40 @@ export class AvoidOverlap {
       }
     };
 
+    // For choices bodies, use a single priority-ordered pass: highest priority
+    // gets first pick, each body commits before the next is processed. This
+    // prevents lower-priority bodies from "claiming" a position that a
+    // higher-priority body would have taken.
+    const choicesBodies = tree
+      .all()
+      .filter((b): b is Body => !b.isStatic && b.data.technique === 'choices');
+
+    choicesBodies.sort((a, b) => {
+      if (b.data.priority !== a.data.priority) {
+        return b.data.priority - a.data.priority;
+      }
+      return b.data.priorityWithinGroup - a.data.priorityWithinGroup;
+    });
+
+    for (const body of choicesBodies) {
+      const { choices } = body.data as BodyDataChoices;
+      let currentBody = body;
+      for (const choice of choices) {
+        choice(currentBody.node);
+        const bounds = getRelativeBounds(
+          currentBody.node.getBoundingClientRect(),
+          parentBounds
+        );
+        const newBody = updateTree(tree, currentBody, bounds.x, bounds.y);
+        savePositionHistory(newBody, `choice, ${choice}`);
+        if (!checkOne(tree, newBody)) {
+          break;
+        }
+        currentBody = newBody;
+      }
+    }
+
+    // Nudge bodies are still resolved iteratively.
     let attempts = 0;
     while (attempts < maxAttempts) {
       attempts++;
