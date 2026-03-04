@@ -476,7 +476,10 @@ const runAnnealing = (
   };
 
   // Start with every label at its first (most preferred) choice
-  for (let i = 0; i < n; i++) applyChoice(i, 0);
+  for (let i = 0; i < n; i++) {
+    const numChoices = (current[i].data as BodyDataAnnealing).choices.length;
+    if (numChoices > 0) applyChoice(i, 0);
+  }
 
   const energy = (): number => {
     const overlaps = getCollisions(tree).length;
