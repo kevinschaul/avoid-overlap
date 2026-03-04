@@ -200,6 +200,146 @@ export const ArrowLabels: StoryObj = {
 };
 
 /**
+ * Six cities on a US map. Each city has candidate label positions ordered by
+ * preference; avoidOverlap picks the first conflict-free option.
+ *
+ * Label: H=16 px, gap from dot: 5 px. Preferred sides reflect geography:
+ *   left-coast cities prefer right-of-dot; east-coast cities prefer left-of-dot.
+ *
+ * Conflicts and expected outcome:
+ *   Seattle  (p=3) → right       (no conflict, keeps first choice)
+ *   Portland (p=2) → left        (right overlaps Seattle's label)
+ *   Chicago  (p=4) → right       (isolated, keeps first choice)
+ *   New York (p=4) → left        (no conflict, keeps first choice)
+ *   Philadelphia (p=3) → left    (no conflict with New York)
+ *   Washington   (p=2) → right   (left overlaps Philadelphia's label)
+ *
+ * Dot positions (not rendered) and label geometry used to engineer conflicts:
+ *   Seattle    dot (80, 70): right label (85,62)-(133,78)
+ *   Portland   dot (76, 80): right label (81,72)-(137,88) → y-overlap with Seattle ✓
+ *   Philadelphia dot (408,110): left label (339,102)-(403,118)
+ *   Washington   dot (405,124): left label (336,116)-(400,132) → y-overlap with Philly ✓
+ */
+export const CityLabels: StoryObj = {
+  ...Default,
+  args: {
+    parent: {
+      coords: { x: 0, y: 0, width: 520, height: 220 },
+    },
+    labelGroups: [
+      // Pacific Northwest — two vertically close cities on the left coast
+      {
+        technique: 'choices',
+        priority: 3,
+        nodes: [
+          { coords: { x: 85, y: 62, width: 48, height: 16 }, textContent: 'Seattle' },
+        ],
+        choices: [
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(85, 62)'), // right
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(27, 62)'), // left
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(56, 75)'), // below
+        ],
+      },
+      {
+        technique: 'choices',
+        priority: 2,
+        nodes: [
+          { coords: { x: 81, y: 72, width: 56, height: 16 }, textContent: 'Portland' },
+        ],
+        choices: [
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(81, 72)'), // right — overlaps Seattle
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(15, 72)'), // left — clear
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(48, 85)'), // below
+        ],
+      },
+      // Midwest — isolated, keeps first choice
+      {
+        technique: 'choices',
+        priority: 4,
+        nodes: [
+          { coords: { x: 290, y: 100, width: 50, height: 16 }, textContent: 'Chicago' },
+        ],
+        choices: [
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(290, 100)'), // right
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(230, 100)'), // left
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(260, 82)'), // above
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(260, 116)'), // below
+        ],
+      },
+      // Northeast corridor — left-side preference, cascading conflict
+      {
+        technique: 'choices',
+        priority: 4,
+        nodes: [
+          { coords: { x: 359, y: 82, width: 56, height: 16 }, textContent: 'New York' },
+        ],
+        choices: [
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(359, 82)'), // left
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(425, 82)'), // right
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(392, 63)'), // above
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(392, 98)'), // below
+        ],
+      },
+      {
+        technique: 'choices',
+        priority: 3,
+        nodes: [
+          {
+            coords: { x: 339, y: 102, width: 64, height: 16 },
+            textContent: 'Philadelphia',
+          },
+        ],
+        choices: [
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(339, 102)'), // left
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(413, 102)'), // right
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(376, 83)'), // above
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(376, 118)'), // below
+        ],
+      },
+      {
+        technique: 'choices',
+        priority: 2,
+        nodes: [
+          {
+            coords: { x: 336, y: 116, width: 64, height: 16 },
+            textContent: 'Washington',
+          },
+        ],
+        choices: [
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(336, 116)'), // left — overlaps Philadelphia
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(410, 116)'), // right — clear
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(373, 97)'), // above
+          (el: Element) =>
+            el.setAttributeNS(null, 'transform', 'translate(373, 132)'), // below
+        ],
+      },
+    ],
+    options: {},
+  },
+};
+
+/**
  * Square should appear at top left corner
  */
 export const AvoidViewboxBounds: StoryObj = {
