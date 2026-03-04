@@ -2,9 +2,9 @@
 
 Utilities for chart-makers to avoid text overlaps in their graphics. The utilities were build with [D3.js](https://github.com/d3/d3) and [React](https://react.dev/) in mind but likely work with other frameworks.
 
-## Two techniques to avoid overlaps: Nudge and Choices
+## Techniques to avoid overlaps
 
-Labeling charts, maps and other graphics is more art than science, but there are some general rules we can follow to achieve good results programmatically. This library provides two label-avoidance techniques: `nudge` and `choices`.
+Labeling charts, maps and other graphics is more art than science, but there are some general rules we can follow to achieve good results programmatically. This library provides several label-avoidance techniques: `nudge`, `choices`, `annealing` and `static`.
 
 ### Nudge
 
@@ -25,6 +25,26 @@ In the following example, the labels were passed to `avoid-overlap` with a list 
 | Before                                                         | After                                                                                                                                        |
 | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | ![Chart with labels overlapping](assets/example-choices-0.png) | ![Same chart with the overlapping labels rendered using one of the provided choices so they no longer collide](assets/example-choices-1.png) |
+
+### Annealing
+
+The `annealing` technique uses simulated annealing to jointly optimize label placement across all labels in the group. Like `choices`, you provide candidate positions, but instead of greedily assigning them one at a time, the solver explores many configurations to find a globally better solution. This technique works well when labels are densely packed and greedy assignment would fail.
+
+### Static
+
+The `static` technique registers elements as immovable obstacles in the collision system. Static bodies will never be moved or removed — other labels will be repositioned to avoid them. This is useful for elements like highlighted regions or fixed annotations that labels should not overlap.
+
+```js
+avoidOverlap.run(parent, [
+  {
+    technique: 'static',
+    nodes: highlightRects.nodes(),
+    priority: 10,
+    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+  },
+  // ... other label groups
+]);
+```
 
 ## Installation
 
@@ -58,14 +78,15 @@ Call this after you have positioned all of your labels.
 | ----------------------------- | ----------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | parent                        | `Element`                           |                                            | The parent element, that contains all labels. This can be a `div`, an `svg`, etc.                                                                                                                                                                                                                                         |
 | labelGroups                   | `object[]`                          |                                            | An array of label groups that define how to resolve overlaps                                                                                                                                                                                                                                                              |
-| labelGroups[].technique       | `string`                            |                                            | The overlap avoidance technique to use ("nudge" or "choices")                                                                                                                                                                                                                                                             |
+| labelGroups[].technique       | `string`                            |                                            | The overlap avoidance technique to use (`"nudge"`, `"choices"`, `"annealing"` or `"static"`)                                                                                                                                                                                                                              |
 | labelGroups[].nodes           | `Element[]`                         |                                            | An array of elements to avoid overlaps                                                                                                                                                                                                                                                                                    |
 | labelGroups[].margin          | `object`                            | `{ top: 0, right: 0, bottom: 0, left: 0 }` | How much extra spacing to consider for collisions with these nodes                                                                                                                                                                                                                                                        |
 | labelGroups[].priority        | `number`                            |                                            | What priority to give this label group in case of collision. Generally nodes with lower priority values will not be moved if they collide with nodes with higher priority values. Note that 1 is a lower priority value than 10.                                                                                          |
 | labelGroups[].render          | `function(node, dx, dy)`            |                                            | Function that applies the given nudged position (`dx`, `dy`) to the `node`. Required for technique `nudge`.                                                                                                                                                                                                               |
 | labelGroups[].nudgeStrategy   | `string`                            | `"shortest"`                               | Strategy to choose which direction to nudge toward. `"shortest"` will nudge in the direction requiring the least movement, while `"ordered"` will use the first direction that works as specified in `labelGroups[].nudgeDirections`. Optional for technique `nudge`.                                                     |
 | labelGroups[].nudgeDirections | `string[]`                          | `["down", "right", "up", "left"]`          | Which directions to consider nudging. Optional for technique `nudge`.                                                                                                                                                                                                                                                     |
-| labelGroups[].choices         | `function(node)[]`                  |                                            | An array of functions that apply a new potential positioning for the `node`. Each choice will be tried in order until a solution is found. Required for technique `choices`.                                                                                                                                              |
+| labelGroups[].choices         | `function(node)[]`                  |                                            | An array of functions that apply a new potential positioning for the `node`. For technique `choices`, each choice is tried in order until a collision-free position is found. For technique `annealing`, all choices are jointly optimized via simulated annealing. Required for techniques `choices` and `annealing`.       |
+| labelGroups[].disable         | `function(node)`                    |                                            | Called instead of `node.remove()` when a label cannot be placed without overlaps. Use this to perform custom cleanup (e.g. removing related elements). Optional for techniques `choices` and `annealing`.                                                                                                                 |
 | options                       | `object`                            |                                            | Global options                                                                                                                                                                                                                                                                                                            |
 | [options.includeParent]       | `boolean`                           | `false`                                    | Whether to consider the parent as part of the bounds                                                                                                                                                                                                                                                                      |
 | [options.parentMargin]        | `object`                            | `{ top: 0, right: 0, bottom: 0, left: 0 }` | How much extra spacing to consider for collisions with the parent                                                                                                                                                                                                                                                         |

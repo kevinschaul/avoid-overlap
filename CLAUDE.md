@@ -43,7 +43,11 @@ Uses **RBush** (R-tree) for O(log n) bounding-box collision detection. All label
 
 ### Collision Resolution
 
-After technique-specific passes run, a nudge retry loop runs up to `maxAttempts` times (default `3`). Any labels still overlapping after all attempts are removed from the DOM by `removeCollisions()`.
+After technique-specific passes run, a nudge retry loop runs up to `maxAttempts` times (default `3`). Any labels still overlapping after all attempts are handled by `removeCollisions()`: if the label group has a `disable` callback, it is called with the node; otherwise the node is removed from the DOM via `node.remove()`.
+
+### Static Obstacles
+
+`technique: 'static'` registers elements as immovable obstacles. Static bodies are never moved or removed — other labels reposition to avoid them. Use this instead of the old `technique: 'choices', choices: []` workaround.
 
 ### Parent Boundary Support
 

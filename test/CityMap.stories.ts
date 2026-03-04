@@ -370,6 +370,8 @@ function buildCityMap(
     (el: Element) => posUp(el, d.x, d.y - offset - 3, 'middle'),            // above
   ];
 
+  const disabledNodes = new Set<Element>();
+
   const avoidLabelGroups: LabelGroup[] = (
     labelNodes.nodes() as Element[]
   ).map((node, i) => {
@@ -395,6 +397,10 @@ function buildCityMap(
       choices,
       priority: getPriority(d),
       margin: { top: 2, right: 2, bottom: 2, left: 2 },
+      disable: (el: Element) => {
+        el.remove();
+        disabledNodes.add(el);
+      },
     };
   });
 
@@ -412,8 +418,7 @@ function buildCityMap(
       // Highlight visible labels' markers (matches real component)
       labelNodes.each(function () {
         const el = this as Element;
-        // Nodes removed by avoid-overlap are no longer in the DOM
-        if (!svgNode.contains(el)) return;
+        if (disabledNodes.has(el)) return;
         const ld = d3.select<Element, (typeof labelData)[0]>(el).datum();
         svg
           .selectAll('path.city-marker')

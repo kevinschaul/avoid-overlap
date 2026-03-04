@@ -43,7 +43,7 @@ interface CollisionCandidate {
 }
 
 type LabelGroupGeneric = {
-  technique: 'nudge' | 'choices' | 'annealing';
+  technique: 'nudge' | 'choices' | 'annealing' | 'static';
   nodes: Element[];
   margin: Margin;
   priority: number;
@@ -59,14 +59,20 @@ type LabelGroupNudge = LabelGroupGeneric & {
 type LabelGroupChoices = LabelGroupGeneric & {
   technique: 'choices';
   choices: Function[];
+  disable?: (node: Element) => void;
 };
 
 type LabelGroupAnnealing = LabelGroupGeneric & {
   technique: 'annealing';
   choices: Function[];
+  disable?: (node: Element) => void;
 };
 
-export type LabelGroup = LabelGroupNudge | LabelGroupChoices | LabelGroupAnnealing;
+type LabelGroupStatic = LabelGroupGeneric & {
+  technique: 'static';
+};
+
+export type LabelGroup = LabelGroupNudge | LabelGroupChoices | LabelGroupAnnealing | LabelGroupStatic;
 
 type BodyDataGeneric = {
   priority: number;
@@ -83,11 +89,13 @@ type BodyDataNudge = BodyDataGeneric & {
 type BodyDataChoices = BodyDataGeneric & {
   technique: 'choices';
   choices: Function[];
+  disable?: (node: Element) => void;
 };
 
 type BodyDataAnnealing = BodyDataGeneric & {
   technique: 'annealing';
   choices: Function[];
+  disable?: (node: Element) => void;
 };
 
 type BodyDataStatic = BodyDataGeneric & {
@@ -268,15 +276,21 @@ const orderBodies = (a: Body, b: Body): [Body, Body] => {
 };
 
 const removeCollisions = (tree: RBush<Body>) => {
+  const maxRemovals = tree.all().length;
   let attempts = 0;
   let hasCollisions = true;
-  while (hasCollisions && attempts <= 5) {
+  while (hasCollisions && attempts <= maxRemovals) {
     attempts++;
     const collisions = getCollisions(tree);
     if (collisions.length) {
       const response = collisions[0];
       const [bodyToMove, _bodyToNotMove] = orderBodies(response.a, response.b);
-      bodyToMove.node.remove();
+      const disable = (bodyToMove.data as BodyDataChoices | BodyDataAnnealing).disable;
+      if (disable) {
+        disable(bodyToMove.node);
+      } else {
+        bodyToMove.node.remove();
+      }
       tree.remove(bodyToMove);
     } else {
       break;
@@ -416,6 +430,7 @@ const extendBodyDataChoices = (
     ...bodyData,
     technique: 'choices',
     choices: labelGroup.choices,
+    disable: labelGroup.disable,
   };
 };
 
@@ -427,6 +442,7 @@ const extendBodyDataAnnealing = (
     ...bodyData,
     technique: 'annealing',
     choices: labelGroup.choices,
+    disable: labelGroup.disable,
   };
 };
 
@@ -601,6 +617,12 @@ export class AvoidOverlap {
         } else if (labelGroup.technique === 'annealing') {
           const bodyData = extendBodyDataAnnealing(initialBodyData, labelGroup);
           body = { ...initialBody, data: bodyData };
+        } else if (labelGroup.technique === 'static') {
+          body = {
+            ...initialBody,
+            isStatic: true,
+            data: { ...initialBodyData, technique: 'static' },
+          };
         }
 
         if (typeof body !== 'undefined') {

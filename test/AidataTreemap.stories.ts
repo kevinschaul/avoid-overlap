@@ -325,6 +325,7 @@ function buildTreemap(
       ];
 
       // Choices technique for domain arrow annotations
+      const domainRectNodes = nodeDomainRectGroups.nodes() as Element[];
       const choicesGroups: LabelGroup[] = (nodeDomainText.nodes() as Element[]).map((node, i) => {
         const d = dataDomain[i];
         // Start with the preferred direction, then try the rest in order
@@ -336,14 +337,17 @@ function buildTreemap(
           choices: ordered.map((dir) => makeChoice(dir, d)),
           priority: 1,
           margin: { top: 2, right: 4, bottom: 2, left: 4 },
+          disable: (el: Element) => {
+            el.remove();
+            domainRectNodes[i]?.remove();
+          },
         };
       });
 
       // Fixed domain rect bodies — annotations must not overlap the highlighted tiles
       const rectGroups: LabelGroup[] = [{
-        technique: 'choices',
+        technique: 'static',
         nodes: nodeDomainRectGroups.nodes() as Element[],
-        choices: [],
         priority: 10,
         margin: { top: -2, right: -2, bottom: -2, left: -2 },
       }];
