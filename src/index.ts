@@ -22,6 +22,7 @@ interface PositionHistoryEntry {
   maxX: number;
   maxY: number;
   message: string;
+  step: number;
 }
 
 export interface Body {
@@ -213,13 +214,14 @@ const updateTree = (tree: RBush<Body>, body: Body, x: number, y: number) => {
   return newBody;
 };
 
-const savePositionHistory = (body: Body, message: string) => {
+const savePositionHistory = (body: Body, message: string, step: number) => {
   body.positionHistory.push({
     minX: body.minX,
     minY: body.minY,
     maxX: body.maxX,
     maxY: body.maxY,
     message,
+    step,
   });
 };
 
@@ -288,7 +290,8 @@ const addParent = (
   tree: RBush<Body>,
   parent: Element,
   parentBounds: Bounds,
-  parentMargin: Margin
+  parentMargin: Margin,
+  stepCounter: { value: number }
 ) => {
   const parentThickness = 200;
 
@@ -356,10 +359,10 @@ const addParent = (
   tree.insert(bottom);
   tree.insert(left);
   tree.insert(right);
-  savePositionHistory(top, 'initial');
-  savePositionHistory(bottom, 'initial');
-  savePositionHistory(left, 'initial');
-  savePositionHistory(right, 'initial');
+  savePositionHistory(top, 'initial', stepCounter.value++);
+  savePositionHistory(bottom, 'initial', stepCounter.value++);
+  savePositionHistory(left, 'initial', stepCounter.value++);
+  savePositionHistory(right, 'initial', stepCounter.value++);
 };
 
 const serialize = (
@@ -443,7 +446,8 @@ const runAnnealing = (
   tree: RBush<Body>,
   annealingBodies: Body[],
   parentBounds: Bounds,
-  seed: number
+  seed: number,
+  stepCounter: { value: number }
 ): void => {
   const n = annealingBodies.length;
   if (n === 0) return;
@@ -471,7 +475,7 @@ const runAnnealing = (
       parentBounds
     );
     current[i] = updateTree(tree, body, bounds.x, bounds.y);
-    savePositionHistory(current[i], `annealing choice ${idx}`);
+    savePositionHistory(current[i], `annealing choice ${idx}`, stepCounter.value++);
     choiceIdx[i] = idx;
   };
 
@@ -537,6 +541,7 @@ export class AvoidOverlap {
 
     const tree: RBush<Body> = new RBush();
     const parentBounds = parent.getBoundingClientRect();
+    const stepCounter = { value: 0 };
 
     const maxAttempts = options.maxAttempts || 3;
     const includeParent = options.includeParent || false;
@@ -548,7 +553,7 @@ export class AvoidOverlap {
     };
 
     if (includeParent) {
-      addParent(tree, parent, parentBounds, parentMargin);
+      addParent(tree, parent, parentBounds, parentMargin, stepCounter);
     }
 
     // Add everything to the system
@@ -605,7 +610,7 @@ export class AvoidOverlap {
 
         if (typeof body !== 'undefined') {
           tree.insert(body!);
-          savePositionHistory(body!, 'initial');
+          savePositionHistory(body!, 'initial', stepCounter.value++);
         }
       });
     });
@@ -631,7 +636,7 @@ export class AvoidOverlap {
           if (bodyToMove.data.render) {
             bodyToMove.data.render(bodyToMove.node, diffX, diffY);
             const newBody = updateTree(tree, bodyToMove, newX, newY);
-            savePositionHistory(newBody, 'nudge-shortest');
+            savePositionHistory(newBody, 'nudge-shortest', stepCounter.value++);
           }
         } else if (
           bodyToMove.data.nudgeStrategy === 'ordered' &&
@@ -651,7 +656,7 @@ export class AvoidOverlap {
             if (bodyToMove.data.render) {
               bodyToMove.data.render(bodyToMove.node, diffX, diffY);
               const newBody = updateTree(tree, bodyToMove, newX, newY);
-              savePositionHistory(newBody, `nudge-ordered, ${direction}`);
+              savePositionHistory(newBody, `nudge-ordered, ${direction}`, stepCounter.value++);
             }
 
             // TODO only break if there is no longer a collision so that other nudgeDirections values are attempted?
@@ -671,7 +676,7 @@ export class AvoidOverlap {
             );
 
             const newBody = updateTree(tree, bodyToMove, bounds.x, bounds.y);
-            savePositionHistory(newBody, `choice, ${choice}`);
+            savePositionHistory(newBody, `choice, ${choice}`, stepCounter.value++);
 
             // Check if this position collides with anything else in the system
             const collisions = checkOne(tree, newBody);
@@ -695,7 +700,7 @@ export class AvoidOverlap {
     if (annealingBodies.length > 0) {
       const seed =
         options.annealingSeed !== undefined ? options.annealingSeed : 42;
-      runAnnealing(tree, annealingBodies, parentBounds, seed);
+      runAnnealing(tree, annealingBodies, parentBounds, seed, stepCounter);
     }
 
     // For choices bodies, use a single priority-ordered pass: highest priority
@@ -723,7 +728,7 @@ export class AvoidOverlap {
           parentBounds
         );
         const newBody = updateTree(tree, currentBody, bounds.x, bounds.y);
-        savePositionHistory(newBody, `choice, ${choice}`);
+        savePositionHistory(newBody, `choice, ${choice}`, stepCounter.value++);
         if (!checkOne(tree, newBody)) {
           break;
         }
