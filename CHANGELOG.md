@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/kevinschaul/avoid-overlap/compare/v0.2.3...v0.3.0) (2026-03-09)
+
+
+### Features
+
+* add onRemove function ([#29](https://github.com/kevinschaul/avoid-overlap/issues/29)) ([6ca921b](https://github.com/kevinschaul/avoid-overlap/commit/6ca921bbfc34907bf6e473e7dd565606b41d8aae))
+
 ## [0.2.3](https://github.com/kevinschaul/avoid-overlap/compare/v0.2.2...v0.2.3) (2024-03-17)
 
 
