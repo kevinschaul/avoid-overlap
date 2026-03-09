@@ -1,0 +1,692 @@
+name,parent,level,main_category,tokens
+C4,,0,C4,
+Law & Government,C4,1,Law & Government,
+News & Media,C4,1,News & Media,
+Science & Health,C4,1,Science & Health,
+Jobs & Education,C4,1,Jobs & Education,
+Business & Industrial,C4,1,Business & Industrial,
+Technology,C4,1,Technology,
+Travel,C4,1,Travel,
+Arts & Entertainment,C4,1,Arts & Entertainment,
+NA,C4,1,,
+Community,C4,1,Community,
+Hobbies & Leisure,C4,1,Hobbies & Leisure,
+Home & Garden,C4,1,Home & Garden,
+Legal,Law & Government,2,Law & Government,
+Reference,News & Media,2,News & Media,
+Books,News & Media,2,News & Media,
+News,News & Media,2,News & Media,
+Science,Science & Health,2,Science & Health,
+Online Learning,Jobs & Education,2,Jobs & Education,
+Finance,Business & Industrial,2,Business & Industrial,
+Medical Resources,Science & Health,2,Science & Health,
+Hardware,Technology,2,Technology,
+Software,Technology,2,Technology,
+Booking,Travel,2,Travel,
+Business Services,Business & Industrial,2,Business & Industrial,
+Real Estate,Business & Industrial,2,Business & Industrial,
+Blogs,Technology,2,Technology,
+Government,Law & Government,2,Law & Government,
+Movies & TV,Arts & Entertainment,2,Arts & Entertainment,
+Entertainment Industry,Arts & Entertainment,2,Arts & Entertainment,
+Family,Community,2,Community,
+Education,Jobs & Education,2,Jobs & Education,
+Social Media,Technology,2,Technology,
+Destinations,Travel,2,Travel,
+Events,Arts & Entertainment,2,Arts & Entertainment,
+Retail,Business & Industrial,2,Business & Industrial,
+Religious,Community,2,Community,
+Music,Arts & Entertainment,2,Arts & Entertainment,
+Military,Law & Government,2,Law & Government,
+Art & Design,Arts & Entertainment,2,Arts & Entertainment,
+Fun & Trivia,Arts & Entertainment,2,Arts & Entertainment,
+Arts & Crafts,Hobbies & Leisure,2,Hobbies & Leisure,
+Internet Services,Technology,2,Technology,
+Construction,Business & Industrial,2,Business & Industrial,
+Accommodations,Travel,2,Travel,
+Dining & Nightlife,Arts & Entertainment,2,Arts & Entertainment,
+Garden & Yard,Home & Garden,2,Home & Garden,
+Travel Media,Travel,2,Travel,
+Recreation,Hobbies & Leisure,2,Hobbies & Leisure,
+Community Orgs.,Community,2,Community,
+Cooking,Hobbies & Leisure,2,Hobbies & Leisure,
+Research,Law & Government,2,Law & Government,
+Motor Vehicles,Home & Garden,2,Home & Garden,
+Toys & Games,Hobbies & Leisure,2,Hobbies & Leisure,
+Sports & Fitness,Hobbies & Leisure,2,Hobbies & Leisure,
+Industry,Business & Industrial,2,Business & Industrial,
+Home Decor,Home & Garden,2,Home & Garden,
+Nutrition & Dieting,Science & Health,2,Science & Health,
+Gambling,Hobbies & Leisure,2,Hobbies & Leisure,
+Career Services,Jobs & Education,2,Jobs & Education,
+Job Listings,Jobs & Education,2,Jobs & Education,
+Health Care Services,Science & Health,2,Science & Health,
+Cleaning,Home & Garden,2,Home & Garden,
+Home Improvement,Home & Garden,2,Home & Garden,
+Apparel & Beauty,Home & Garden,2,Home & Garden,
+Pets & Animals,Hobbies & Leisure,2,Hobbies & Leisure,
+Weather,News & Media,2,News & Media,
+Occasions & Gifts,Home & Garden,2,Home & Garden,
+Law Enforcement,Law & Government,2,Law & Government,
+Other,Art & Design,3,Arts & Entertainment,2194214146
+cbr.com,Art & Design,3,Arts & Entertainment,9343874
+comicvine.gamespot.com,Art & Design,3,Arts & Entertainment,6287277
+community.canvaslms.com,Art & Design,3,Arts & Entertainment,5814915
+deviantart.com,Art & Design,3,Arts & Entertainment,15390344
+novelall.com,Art & Design,3,Arts & Entertainment,8661566
+novelonlinefull.com,Art & Design,3,Arts & Entertainment,7216003
+novelzec.com,Art & Design,3,Arts & Entertainment,8278334
+ranker.com,Art & Design,3,Arts & Entertainment,5822731
+wetcanvas.com,Art & Design,3,Arts & Entertainment,8403576
+wuxiaworld.com,Art & Design,3,Arts & Entertainment,7981471
+Other,Dining & Nightlife,3,Arts & Entertainment,397075660
+bostonmagazine.com,Dining & Nightlife,3,Arts & Entertainment,3010336
+menupages.com,Dining & Nightlife,3,Arts & Entertainment,8559892
+opentable.com,Dining & Nightlife,3,Arts & Entertainment,13547301
+pizza.dominos.com,Dining & Nightlife,3,Arts & Entertainment,5835336
+postmates.com,Dining & Nightlife,3,Arts & Entertainment,6155065
+restaurantlistings.com,Dining & Nightlife,3,Arts & Entertainment,3013745
+slicelife.com,Dining & Nightlife,3,Arts & Entertainment,2608844
+theurbanlist.com,Dining & Nightlife,3,Arts & Entertainment,4656535
+thevintageitalianrestaurant.com,Dining & Nightlife,3,Arts & Entertainment,3591527
+torontolife.com,Dining & Nightlife,3,Arts & Entertainment,2755553
+Other,Entertainment Industry,3,Arts & Entertainment,710965531
+bravotv.com,Entertainment Industry,3,Arts & Entertainment,7823625
+bustle.com,Entertainment Industry,3,Arts & Entertainment,25452816
+chestofbooks.com,Entertainment Industry,3,Arts & Entertainment,7018980
+deadline.com,Entertainment Industry,3,Arts & Entertainment,13982391
+globalnews.ca,Entertainment Industry,3,Arts & Entertainment,6017169
+hellogiggles.com,Entertainment Industry,3,Arts & Entertainment,7380404
+hollywoodreporter.com,Entertainment Industry,3,Arts & Entertainment,16079690
+itv.com,Entertainment Industry,3,Arts & Entertainment,6562383
+mtv.com,Entertainment Industry,3,Arts & Entertainment,8135365
+variety.com,Entertainment Industry,3,Arts & Entertainment,13218048
+Other,Events,3,Arts & Entertainment,909293749
+broadwayworld.com,Events,3,Arts & Entertainment,4151130
+citypages.com,Events,3,Arts & Entertainment,2962492
+dallas.culturemap.com,Events,3,Arts & Entertainment,2991394
+dcmetrotheaterarts.com,Events,3,Arts & Entertainment,3306891
+eventbrite.co.uk,Events,3,Arts & Entertainment,8527381
+eventbrite.com,Events,3,Arts & Entertainment,17532396
+gigsalad.com,Events,3,Arts & Entertainment,5315628
+inlander.com,Events,3,Arts & Entertainment,4963075
+sandiegoreader.com,Events,3,Arts & Entertainment,6141846
+theartsdesk.com,Events,3,Arts & Entertainment,3271206
+Other,Fun & Trivia,3,Arts & Entertainment,262879523
+barrypopik.com,Fun & Trivia,3,Arts & Entertainment,3641924
+buzzfeed.com,Fun & Trivia,3,Arts & Entertainment,15078134
+dailydot.com,Fun & Trivia,3,Arts & Entertainment,3888465
+elitedaily.com,Fun & Trivia,3,Arts & Entertainment,12667610
+heavy.com,Fun & Trivia,3,Arts & Entertainment,3978084
+kids.kiddle.co,Fun & Trivia,3,Arts & Entertainment,4157160
+mentalfloss.com,Fun & Trivia,3,Arts & Entertainment,5454548
+rd.com,Fun & Trivia,3,Arts & Entertainment,4325014
+stokesentinel.co.uk,Fun & Trivia,3,Arts & Entertainment,4950256
+theodysseyonline.com,Fun & Trivia,3,Arts & Entertainment,8233709
+Other,Movies & TV,3,Arts & Entertainment,4481913730
+cinemablend.com,Movies & TV,3,Arts & Entertainment,16734468
+fanpop.com,Movies & TV,3,Arts & Entertainment,17563392
+imdb.com,Movies & TV,3,Arts & Entertainment,12123521
+machinenoveltranslation.com,Movies & TV,3,Arts & Entertainment,12304533
+pbs.org,Movies & TV,3,Arts & Entertainment,25770551
+refinery29.com,Movies & TV,3,Arts & Entertainment,10360164
+screenrant.com,Movies & TV,3,Arts & Entertainment,18809714
+statscrop.com,Movies & TV,3,Arts & Entertainment,10159723
+wikimili.com,Movies & TV,3,Arts & Entertainment,10299571
+wikivisually.com,Movies & TV,3,Arts & Entertainment,20627464
+Other,Music,3,Arts & Entertainment,4171687165
+complex.com,Music,3,Arts & Entertainment,7645055
+gearslutz.com,Music,3,Arts & Entertainment,8008028
+itunes.apple.com,Music,3,Arts & Entertainment,15974438
+mtled-novels.com,Music,3,Arts & Entertainment,6427741
+musicweb-international.com,Music,3,Arts & Entertainment,9888753
+nme.com,Music,3,Arts & Entertainment,8221252
+pearltrees.com,Music,3,Arts & Entertainment,8249790
+radionz.co.nz,Music,3,Arts & Entertainment,7467823
+rollingstone.com,Music,3,Arts & Entertainment,7936417
+store.cdbaby.com,Music,3,Arts & Entertainment,10838832
+Other,Business Services,3,Business & Industrial,9053827632
+adweek.com,Business Services,3,Business & Industrial,14223283
+entrepreneur.com,Business Services,3,Business & Industrial,24658095
+factbites.com,Business Services,3,Business & Industrial,17100768
+globalresearch.ca,Business Services,3,Business & Industrial,19104124
+globenewswire.com,Business Services,3,Business & Industrial,11982881
+inc.com,Business Services,3,Business & Industrial,13629213
+marketwired.com,Business Services,3,Business & Industrial,35034913
+myemail.constantcontact.com,Business Services,3,Business & Industrial,31543216
+prnewswire.com,Business Services,3,Business & Industrial,16337975
+prweb.com,Business Services,3,Business & Industrial,26052084
+Other,Construction,3,Business & Industrial,2104874618
+angieslist.com,Construction,3,Business & Industrial,10267428
+architecturalantiques.com,Construction,3,Business & Industrial,3794755
+building.co.uk,Construction,3,Business & Industrial,4334905
+ecode360.com,Construction,3,Business & Industrial,14338285
+fhwa.dot.gov,Construction,3,Business & Industrial,4187676
+forums.moneysavingexpert.com,Construction,3,Business & Industrial,4208406
+homestars.com,Construction,3,Business & Industrial,6169800
+houzz.com,Construction,3,Business & Industrial,13548458
+lumberjocks.com,Construction,3,Business & Industrial,6256560
+woodworkingnetwork.com,Construction,3,Business & Industrial,3891255
+Other,Finance,3,Business & Industrial,2959678871
+ato.gov.au,Finance,3,Business & Industrial,7157860
+finance.yahoo.com,Finance,3,Business & Industrial,28804332
+fool.com,Finance,3,Business & Industrial,52152412
+getfilings.com,Finance,3,Business & Industrial,14554020
+investopedia.com,Finance,3,Business & Industrial,8993021
+kickstarter.com,Finance,3,Business & Industrial,39481380
+patreon.com,Finance,3,Business & Industrial,3044657
+sec.gov,Finance,3,Business & Industrial,35739996
+staging.patreon.com,Finance,3,Business & Industrial,7051280
+thesimpledollar.com,Finance,3,Business & Industrial,9492403
+zerohedge.com,Finance,3,Business & Industrial,7985760
+Other,Industry,3,Business & Industrial,3603085902
+dumpsterator.com,Industry,3,Business & Industrial,8182532
+eco-business.com,Industry,3,Business & Industrial,5153569
+forum.allaboutcircuits.com,Industry,3,Business & Industrial,5649913
+greentechmedia.com,Industry,3,Business & Industrial,5331230
+iqsdirectory.com,Industry,3,Business & Industrial,6112326
+mrpottyrental.com,Industry,3,Business & Industrial,5106369
+oilandgas360.com,Industry,3,Business & Industrial,5031961
+osha.gov,Industry,3,Business & Industrial,5236972
+sumobrain.com,Industry,3,Business & Industrial,5848963
+wind-watch.org,Industry,3,Business & Industrial,5660556
+Other,Real Estate,3,Business & Industrial,1898092357
+agreatertown.com,Real Estate,3,Business & Industrial,13390708
+biggerpockets.com,Real Estate,3,Business & Industrial,9432976
+city-data.com,Real Estate,3,Business & Industrial,33912378
+countrylife.co.uk,Real Estate,3,Business & Industrial,3516018
+floridaparcels.com,Real Estate,3,Business & Industrial,4839246
+housepricecrash.co.uk,Real Estate,3,Business & Industrial,3902480
+inman.com,Real Estate,3,Business & Industrial,5785497
+ozremovalists.com.au,Real Estate,3,Business & Industrial,3181149
+rentfinder.co,Real Estate,3,Business & Industrial,4661916
+sykescottages.co.uk,Real Estate,3,Business & Industrial,6984492
+Other,Retail,3,Business & Industrial,278006081
+alibaba.com,Retail,3,Business & Industrial,17049850
+amazon.com,Retail,3,Business & Industrial,4836414
+amazon.com.au,Retail,3,Business & Industrial,3741704
+bluepromocode.com,Retail,3,Business & Industrial,3599493
+ebay.co.uk,Retail,3,Business & Industrial,5670724
+ebay.com,Retail,3,Business & Industrial,7444992
+gistgear.com,Retail,3,Business & Industrial,9020768
+groupon.com,Retail,3,Business & Industrial,4387195
+hotukdeals.com,Retail,3,Business & Industrial,3585644
+insiderpages.com,Retail,3,Business & Industrial,12289516
+Other,Community Orgs.,3,Community,780987503
+accessgenealogy.com,Community Orgs.,3,Community,4324323
+care2.com,Community Orgs.,3,Community,5470390
+change.org,Community Orgs.,3,Community,8841670
+freedomoutpost.com,Community Orgs.,3,Community,4753349
+gofundme.com,Community Orgs.,3,Community,6041059
+laitman.com,Community Orgs.,3,Community,4836771
+probonoaustralia.com.au,Community Orgs.,3,Community,4040604
+realclimate.org,Community Orgs.,3,Community,3801732
+ssa.gov,Community Orgs.,3,Community,4636494
+wattsupwiththat.com,Community Orgs.,3,Community,10564784
+Other,Family,3,Community,1204500634
+babygaga.com,Family,3,Community,3252917
+babyology.com.au,Family,3,Community,3308025
+brides.com,Family,3,Community,3579459
+dignitymemorial.com,Family,3,Community,8289697
+heritagecremationprovider.com,Family,3,Community,5421303
+imortuary.com,Family,3,Community,3456195
+parents.com,Family,3,Community,7284063
+romper.com,Family,3,Community,6286111
+selfgrowth.com,Family,3,Community,5080392
+weddingwire.com,Family,3,Community,22436929
+Other,Religious,3,Community,4540969647
+bibleforums.org,Religious,3,Community,6387726
+biblehub.com,Religious,3,Community,9253623
+gty.org,Religious,3,Community,15555333
+jewishworldreview.com,Religious,3,Community,10207985
+lds.org,Religious,3,Community,8745107
+liveprayer.com,Religious,3,Community,9012453
+patheos.com,Religious,3,Community,16091196
+thekingdomcollective.com,Religious,3,Community,9697296
+wacriswell.com,Religious,3,Community,8056673
+wdtprs.com,Religious,3,Community,7555789
+Other,Arts & Crafts,3,Hobbies & Leisure,553082551
+bellaonline.com,Arts & Crafts,3,Hobbies & Leisure,2911448
+craftster.org,Arts & Crafts,3,Hobbies & Leisure,1921089
+etsy.com,Arts & Crafts,3,Hobbies & Leisure,14994137
+geeksquad.fixya.com,Arts & Crafts,3,Hobbies & Leisure,2549253
+happyquiltingmelissa.com,Arts & Crafts,3,Hobbies & Leisure,1578952
+needlenthread.com,Arts & Crafts,3,Hobbies & Leisure,5103480
+quiltingboard.com,Arts & Crafts,3,Hobbies & Leisure,2358123
+ravelry.com,Arts & Crafts,3,Hobbies & Leisure,1600370
+shop.mybluprint.com,Arts & Crafts,3,Hobbies & Leisure,1762123
+thesprucecrafts.com,Arts & Crafts,3,Hobbies & Leisure,2706433
+Other,Cooking,3,Hobbies & Leisure,2891635730
+brit.co,Cooking,3,Hobbies & Leisure,6681124
+epicurious.com,Cooking,3,Hobbies & Leisure,8377960
+food52.com,Cooking,3,Hobbies & Leisure,10550128
+foodandwine.com,Cooking,3,Hobbies & Leisure,9013389
+foodnetwork.com,Cooking,3,Hobbies & Leisure,8592244
+io9.gizmodo.com,Cooking,3,Hobbies & Leisure,6982870
+myrecipes.com,Cooking,3,Hobbies & Leisure,7384376
+paleohacks.com,Cooking,3,Hobbies & Leisure,5530716
+seriouseats.com,Cooking,3,Hobbies & Leisure,5169639
+thespruceeats.com,Cooking,3,Hobbies & Leisure,5165719
+Other,Gambling,3,Hobbies & Leisure,290309660
+capperspicks.com,Gambling,3,Hobbies & Leisure,1863065
+cardschat.com,Gambling,3,Hobbies & Leisure,2033107
+casinocitytimes.com,Gambling,3,Hobbies & Leisure,4586234
+gamblingsites.org,Gambling,3,Hobbies & Leisure,2502118
+gamingtoday.com,Gambling,3,Hobbies & Leisure,2337570
+mybookie.ag,Gambling,3,Hobbies & Leisure,2931921
+sbo.net,Gambling,3,Hobbies & Leisure,1975894
+sportsbookreview.com,Gambling,3,Hobbies & Leisure,2655933
+sportschatplace.com,Gambling,3,Hobbies & Leisure,2688359
+statisticsports.com,Gambling,3,Hobbies & Leisure,6113480
+Other,Pets & Animals,3,Hobbies & Leisure,1127338198
+animallaw.info,Pets & Animals,3,Hobbies & Leisure,3373248
+animals.mom.me,Pets & Animals,3,Hobbies & Leisure,2561581
+bmcvetres.biomedcentral.com,Pets & Animals,3,Hobbies & Leisure,3414591
+dogcare.dailypuppy.com,Pets & Animals,3,Hobbies & Leisure,2422659
+equisearch.com,Pets & Animals,3,Hobbies & Leisure,2523719
+fishlore.com,Pets & Animals,3,Hobbies & Leisure,2667320
+meownowfl.org,Pets & Animals,3,Hobbies & Leisure,3020730
+thedodo.com,Pets & Animals,3,Hobbies & Leisure,3599313
+trustedhousesitters.com,Pets & Animals,3,Hobbies & Leisure,4752675
+wagwalking.com,Pets & Animals,3,Hobbies & Leisure,4827215
+Other,Recreation,3,Hobbies & Leisure,773315533
+aeroscale.co.uk,Recreation,3,Hobbies & Leisure,3401964
+ancestry.com,Recreation,3,Hobbies & Leisure,4101027
+familytreemagazine.com,Recreation,3,Hobbies & Leisure,4192827
+magic.wizards.com,Recreation,3,Hobbies & Leisure,3409556
+myarmoury.com,Recreation,3,Hobbies & Leisure,3216569
+planetary.org,Recreation,3,Hobbies & Leisure,3181752
+snewsnet.com,Recreation,3,Hobbies & Leisure,5909225
+space.com,Recreation,3,Hobbies & Leisure,11650047
+universetoday.com,Recreation,3,Hobbies & Leisure,8769497
+whiteblaze.net,Recreation,3,Hobbies & Leisure,4202425
+Other,Sports & Fitness,3,Hobbies & Leisure,3015167597
+backcountry.com,Sports & Fitness,3,Hobbies & Leisure,4855344
+balonparado.es,Sports & Fitness,3,Hobbies & Leisure,4846722
+bicycling.com,Sports & Fitness,3,Hobbies & Leisure,5128104
+bikeradar.com,Sports & Fitness,3,Hobbies & Leisure,6755084
+bodybuilding.com,Sports & Fitness,3,Hobbies & Leisure,6151327
+cyclingweekly.com,Sports & Fitness,3,Hobbies & Leisure,5054956
+golfdigest.com,Sports & Fitness,3,Hobbies & Leisure,7544505
+livestrong.com,Sports & Fitness,3,Hobbies & Leisure,8987894
+outsideonline.com,Sports & Fitness,3,Hobbies & Leisure,5208065
+runnersworld.com,Sports & Fitness,3,Hobbies & Leisure,4850492
+Other,Toys & Games,3,Hobbies & Leisure,775707895
+blog.seattlepi.com,Toys & Games,3,Hobbies & Leisure,3738332
+boardgamegeek.com,Toys & Games,3,Hobbies & Leisure,4195777
+boardgaming.com,Toys & Games,3,Hobbies & Leisure,2283491
+bulbapedia.bulbagarden.net,Toys & Games,3,Hobbies & Leisure,9082700
+cio.co.nz,Toys & Games,3,Hobbies & Leisure,3915129
+eurobricks.com,Toys & Games,3,Hobbies & Leisure,2706667
+geekdad.com,Toys & Games,3,Hobbies & Leisure,2161207
+groupthink.kinja.com,Toys & Games,3,Hobbies & Leisure,2235291
+live.acbl.org,Toys & Games,3,Hobbies & Leisure,7105590
+news.ladbrokes.com,Toys & Games,3,Hobbies & Leisure,2385358
+Other,Apparel & Beauty,3,Home & Garden,2709575585
+bccustomjewelry.com,Apparel & Beauty,3,Home & Garden,4303170
+byrdie.com,Apparel & Beauty,3,Home & Garden,3706700
+fasqu.com,Apparel & Beauty,3,Home & Garden,5008014
+forum.purseblog.com,Apparel & Beauty,3,Home & Garden,3863700
+forums.longhaircommunity.com,Apparel & Beauty,3,Home & Garden,3565892
+jckonline.com,Apparel & Beauty,3,Home & Garden,3972471
+kellyspants.com,Apparel & Beauty,3,Home & Garden,3606378
+thezoereport.com,Apparel & Beauty,3,Home & Garden,3843203
+wunderstore.co.uk,Apparel & Beauty,3,Home & Garden,4673488
+zapatosmx.com,Apparel & Beauty,3,Home & Garden,4977251
+Other,Cleaning,3,Home & Garden,55173513
+cleanersliverpool.org.uk,Cleaning,3,Home & Garden,818524
+cleanipedia.com,Cleaning,3,Home & Garden,765540
+cleanproguttercleaning.com,Cleaning,3,Home & Garden,5114645
+gracecleansbest.co.uk,Cleaning,3,Home & Garden,940005
+home.howstuffworks.com,Cleaning,3,Home & Garden,2126505
+lotuscleaning.com.au,Cleaning,3,Home & Garden,2750430
+lotuscleaningmelbourne.com.au,Cleaning,3,Home & Garden,2287064
+nationwideukcleaning.co.uk,Cleaning,3,Home & Garden,724788
+southwestrda.org.uk,Cleaning,3,Home & Garden,1987613
+zenithcleaningservices.com.au,Cleaning,3,Home & Garden,889914
+Other,Garden & Yard,3,Home & Garden,401740452
+artificialturfguys.net,Garden & Yard,3,Home & Garden,2842395
+backyardpondguys.com,Garden & Yard,3,Home & Garden,2849959
+gardenguides.com,Garden & Yard,3,Home & Garden,4704403
+gardeningknowhow.com,Garden & Yard,3,Home & Garden,2587709
+helpfulgardener.com,Garden & Yard,3,Home & Garden,4354609
+homeguides.sfgate.com,Garden & Yard,3,Home & Garden,13538382
+prefabbuildingguys.com,Garden & Yard,3,Home & Garden,2473049
+succulentsource.com,Garden & Yard,3,Home & Garden,10605716
+thespruce.com,Garden & Yard,3,Home & Garden,4609751
+thriftyfun.com,Garden & Yard,3,Home & Garden,3897704
+Other,Home Decor,3,Home & Garden,616514846
+bedbathandbeyond.com,Home Decor,3,Home & Garden,7891981
+chairmoldingexperts.com,Home Decor,3,Home & Garden,3021314
+fgontheweb.com,Home Decor,3,Home & Garden,2239279
+gotohomerepair.com,Home Decor,3,Home & Garden,2300082
+housebeautiful.com,Home Decor,3,Home & Garden,3018328
+lovebedsheets.com,Home Decor,3,Home & Garden,6656918
+menterarchitects.com,Home Decor,3,Home & Garden,3961959
+mydomaine.com,Home Decor,3,Home & Garden,2518205
+overstock.com,Home Decor,3,Home & Garden,3954777
+projectnursery.com,Home Decor,3,Home & Garden,2631639
+247drainageuk.com,Home Improvement,3,Home & Garden,3983102
+247roofingkent.co.uk,Home Improvement,3,Home & Garden,4063754
+Other,Home Improvement,3,Home & Garden,1048084068
+addicted2decorating.com,Home Improvement,3,Home & Garden,3565849
+basementinsulationguys.com,Home Improvement,3,Home & Garden,3171767
+bobvila.com,Home Improvement,3,Home & Garden,3742938
+homeadvisor.com,Home Improvement,3,Home & Garden,3319738
+homedepot.ca,Home Improvement,3,Home & Garden,3741374
+homeservices.co,Home Improvement,3,Home & Garden,2878597
+hunker.com,Home Improvement,3,Home & Garden,5028621
+realsimple.com,Home Improvement,3,Home & Garden,3402835
+Other,Motor Vehicles,3,Home & Garden,2939974861
+autonews.com,Motor Vehicles,3,Home & Garden,5869962
+caranddriver.com,Motor Vehicles,3,Home & Garden,5918375
+curbsideclassic.com,Motor Vehicles,3,Home & Garden,5323705
+europe.autonews.com,Motor Vehicles,3,Home & Garden,5734212
+insideevs.com,Motor Vehicles,3,Home & Garden,5848693
+jalopnik.com,Motor Vehicles,3,Home & Garden,9282880
+local.firestonecompleteautocare.com,Motor Vehicles,3,Home & Garden,7395325
+members.sailing.org,Motor Vehicles,3,Home & Garden,7638992
+store.vioc.com,Motor Vehicles,3,Home & Garden,7807939
+thedrive.com,Motor Vehicles,3,Home & Garden,7087257
+Other,Occasions & Gifts,3,Home & Garden,266021162
+almanac.com,Occasions & Gifts,3,Home & Garden,1236690
+auschristmaslighting.com,Occasions & Gifts,3,Home & Garden,1760670
+goodhousekeeping.com,Occasions & Gifts,3,Home & Garden,1563197
+orientaltrading.com,Occasions & Gifts,3,Home & Garden,1299738
+punchbowl.com,Occasions & Gifts,3,Home & Garden,3105027
+serenataflowers.com,Occasions & Gifts,3,Home & Garden,1264172
+thegrommet.com,Occasions & Gifts,3,Home & Garden,2612761
+uncommongoods.com,Occasions & Gifts,3,Home & Garden,1122589
+web.sonoma.edu,Occasions & Gifts,3,Home & Garden,1152077
+whatnationaldayisit.com,Occasions & Gifts,3,Home & Garden,1935498
+Other,Career Services,3,Jobs & Education,180590449
+assignmentpoint.com,Career Services,3,Jobs & Education,5415814
+business.linkedin.com,Career Services,3,Jobs & Education,2350396
+cleverism.com,Career Services,3,Jobs & Education,3145063
+europa.eu,Career Services,3,Jobs & Education,4125708
+hireitpeople.com,Career Services,3,Jobs & Education,4789747
+livecareer.com,Career Services,3,Jobs & Education,5358391
+thebalancecareers.com,Career Services,3,Jobs & Education,4731515
+themuse.com,Career Services,3,Jobs & Education,2607691
+visualcv.com,Career Services,3,Jobs & Education,6100416
+wisdomjobs.com,Career Services,3,Jobs & Education,4933062
+Other,Education,3,Jobs & Education,7110636422
+answers.com,Education,3,Jobs & Education,7763301
+blogs.edweek.org,Education,3,Jobs & Education,14717335
+cambridge.org,Education,3,Jobs & Education,9658731
+edweek.org,Education,3,Jobs & Education,22090286
+forum.duolingo.com,Education,3,Jobs & Education,8644722
+smore.com,Education,3,Jobs & Education,7615305
+thestudentroom.co.uk,Education,3,Jobs & Education,6324265
+thoughtco.com,Education,3,Jobs & Education,13817339
+ukessays.com,Education,3,Jobs & Education,8444456
+zespec.sokp.pl,Education,3,Jobs & Education,8868201
+Other,Job Listings,3,Jobs & Education,1115931389
+arabianbusiness.com,Job Listings,3,Jobs & Education,4137906
+glassdoor.com,Job Listings,3,Jobs & Education,5814655
+indeed.com,Job Listings,3,Jobs & Education,3827527
+insider.co.uk,Job Listings,3,Jobs & Education,4625878
+jobs.livecareer.com,Job Listings,3,Jobs & Education,3933550
+jobs.theguardian.com,Job Listings,3,Jobs & Education,5379540
+learn.org,Job Listings,3,Jobs & Education,4526502
+pagosdefamilia.com,Job Listings,3,Jobs & Education,5278836
+stjobs.sg,Job Listings,3,Jobs & Education,4005128
+tes.com,Job Listings,3,Jobs & Education,4851551
+Other,Online Learning,3,Jobs & Education,610625230
+allnurses.com,Online Learning,3,Jobs & Education,2323168
+australiabesttutors.com,Online Learning,3,Jobs & Education,2325999
+certbus.com,Online Learning,3,Jobs & Education,3152390
+certkingdom.com,Online Learning,3,Jobs & Education,4674579
+coursera.org,Online Learning,3,Jobs & Education,52608186
+lynda.com,Online Learning,3,Jobs & Education,7323659
+simplilearn.com,Online Learning,3,Jobs & Education,2734968
+softmath.com,Online Learning,3,Jobs & Education,3779330
+varsitytutors.com,Online Learning,3,Jobs & Education,3182355
+wyzant.com,Online Learning,3,Jobs & Education,2149594
+Other,Government,3,Law & Government,976360431
+api.parliament.uk,Government,3,Law & Government,26229411
+brookings.edu,Government,3,Law & Government,12008715
+clintonwhitehouse6.archives.gov,Government,3,Law & Government,10341754
+eur-lex.europa.eu,Government,3,Law & Government,20014131
+hansard.parliament.uk,Government,3,Law & Government,11338981
+obamawhitehouse.archives.gov,Government,3,Law & Government,12021974
+ola.org,Government,3,Law & Government,12005894
+pmg.org.za,Government,3,Law & Government,12103422
+theamericanconservative.com,Government,3,Law & Government,7826299
+unispal.un.org,Government,3,Law & Government,15008549
+Other,Law Enforcement,3,Law & Government,89311044
+corrections.com,Law Enforcement,3,Law & Government,845162
+deadiversion.usdoj.gov,Law Enforcement,3,Law & Government,1238471
+fbi.gov,Law Enforcement,3,Law & Government,1761327
+forum.officer.com,Law Enforcement,3,Law & Government,1022077
+lapdonline.org,Law Enforcement,3,Law & Government,744277
+odmp.org,Law Enforcement,3,Law & Government,1487663
+policeone.com,Law Enforcement,3,Law & Government,2139914
+pontefractandcastlefordexpress.co.uk,Law Enforcement,3,Law & Government,825599
+prisonlegalnews.org,Law Enforcement,3,Law & Government,840352
+stopthedrugwar.org,Law Enforcement,3,Law & Government,2379625
+Other,Legal,3,Law & Government,2655220502
+caselaw.findlaw.com,Legal,3,Law & Government,40800357
+casetext.com,Legal,3,Law & Government,18511991
+freepatentsonline.com,Legal,3,Law & Government,36788545
+law.justia.com,Legal,3,Law & Government,24539668
+patents.com,Legal,3,Law & Government,64174918
+patents.google.com,Legal,3,Law & Government,716124558
+patents.justia.com,Legal,3,Law & Government,35960763
+patentsencyclopedia.com,Legal,3,Law & Government,26917053
+publications.parliament.uk,Legal,3,Law & Government,38872113
+supreme.justia.com,Legal,3,Law & Government,30819787
+Other,Military,3,Law & Government,303790929
+armscontrol.org,Military,3,Law & Government,2453339
+army.mil,Military,3,Law & Government,6542969
+aspistrategist.org.au,Military,3,Law & Government,2614357
+dod.defense.gov,Military,3,Law & Government,2983749
+globalsecurity.org,Military,3,Law & Government,9780933
+history.navy.mil,Military,3,Law & Government,3071962
+livingwarbirds.com,Military,3,Law & Government,3054795
+military.com,Military,3,Law & Government,15836666
+nationalinterest.org,Military,3,Law & Government,3475130
+strategypage.com,Military,3,Law & Government,3979238
+Other,Research,3,Law & Government,280144
+billybiggs.com,Research,3,Law & Government,249951
+canon-igs.org,Research,3,Law & Government,325520
+cpr.unu.edu,Research,3,Law & Government,100914
+datausa.io,Research,3,Law & Government,9674243
+govconwire.com,Research,3,Law & Government,267050
+governmentcontractslawblog.com,Research,3,Law & Government,70679
+onthinktanks.org,Research,3,Law & Government,182205
+pewresearch.org,Research,3,Law & Government,2095275
+rand.org,Research,3,Law & Government,1624198
+ted.europa.eu,Research,3,Law & Government,259622
+Other,Books,3,News & Media,2231347439
+audible.com,Books,3,News & Media,18756142
+b-ok.org,Books,3,News & Media,14244929
+barnesandnoble.com,Books,3,News & Media,22409154
+goodreads.com,Books,3,News & Media,24711133
+hotfreebooks.com,Books,3,News & Media,22253460
+issuu.com,Books,3,News & Media,24586026
+lrb.co.uk,Books,3,News & Media,11566982
+scribd.com,Books,3,News & Media,104138976
+wattpad.com,Books,3,News & Media,11800426
+wikisource.org,Books,3,News & Media,30610567
+Other,News,3,News & Media,8914388705
+aljazeera.com,News,3,News & Media,39706976
+breitbart.com,News,3,News & Media,15809494
+businessinsider.com,News,3,News & Media,48382822
+chicagotribune.com,News,3,News & Media,48064028
+forbes.com,News,3,News & Media,72916329
+huffpost.com,News,3,News & Media,68188998
+latimes.com,News,3,News & Media,84684320
+nytimes.com,News,3,News & Media,100168869
+rt.com,News,3,News & Media,25998612
+theatlantic.com,News,3,News & Media,45161577
+theguardian.com,News,3,News & Media,83343083
+thriveglobal.com,News,3,News & Media,15018522
+vdare.com,News,3,News & Media,5151790
+washingtonpost.com,News,3,News & Media,54798214
+Other,Reference,3,News & Media,4316886302
+britannica.com,Reference,3,News & Media,16256393
+coloradovoters.info,Reference,3,News & Media,35643809
+encyclopedia.com,Reference,3,News & Media,30627792
+flvoters.com,Reference,3,News & Media,24615403
+hubpages.com,Reference,3,News & Media,38800897
+infogalactic.com,Reference,3,News & Media,16089086
+theconversation.com,Reference,3,News & Media,16117722
+wiki2.org,Reference,3,News & Media,19179518
+wikihow.com,Reference,3,News & Media,35641159
+wikipedia.org,Reference,3,News & Media,291517878
+Other,Weather,3,News & Media,203991420
+chicoer.com,Weather,3,News & Media,2969975
+climateaudit.org,Weather,3,News & Media,3566163
+eadt.co.uk,Weather,3,News & Media,2529992
+forum.arctic-sea-ice.net,Weather,3,News & Media,1970106
+interactivehailmaps.com,Weather,3,News & Media,4300159
+northcoastjournal.com,Weather,3,News & Media,2696437
+sunshinecoastdaily.com.au,Weather,3,News & Media,1974998
+swissinfo.ch,Weather,3,News & Media,3465410
+weatherman.com,Weather,3,News & Media,2027338
+worldweatheronline.com,Weather,3,News & Media,2063571
+24hourdental.org,Health Care Services,3,Science & Health,4232969
+Other,Health Care Services,3,Science & Health,2003910442
+affordabledentalimplantsx.com,Health Care Services,3,Science & Health,3770930
+kvd8.ru,Health Care Services,3,Science & Health,4824707
+massagebook.com,Health Care Services,3,Science & Health,3500262
+modernhealthcare.com,Health Care Services,3,Science & Health,3389581
+reviews.solutionreach.com,Health Care Services,3,Science & Health,3783302
+senioradvisor.com,Health Care Services,3,Science & Health,3928118
+seniorlivingmap.org,Health Care Services,3,Science & Health,3686727
+southyarraosteopathy.com.au,Health Care Services,3,Science & Health,5338230
+zocdoc.com,Health Care Services,3,Science & Health,5629930
+Other,Medical Resources,3,Science & Health,5068505693
+bmcgenomics.biomedcentral.com,Medical Resources,3,Science & Health,12961819
+bmcpublichealth.biomedcentral.com,Medical Resources,3,Science & Health,11923690
+drugs.com,Medical Resources,3,Science & Health,12373850
+elifesciences.org,Medical Resources,3,Science & Health,17913679
+eurekalert.org,Medical Resources,3,Science & Health,18286768
+frontiersin.org,Medical Resources,3,Science & Health,50325702
+journals.lww.com,Medical Resources,3,Science & Health,13044484
+ncbi.nlm.nih.gov,Medical Resources,3,Science & Health,41564286
+rd.springer.com,Medical Resources,3,Science & Health,17919279
+scielo.br,Medical Resources,3,Science & Health,11347247
+3fatchicks.com,Nutrition & Dieting,3,Science & Health,2901786
+Other,Nutrition & Dieting,3,Science & Health,283558571
+dietdoctor.com,Nutrition & Dieting,3,Science & Health,2969321
+eatingwell.com,Nutrition & Dieting,3,Science & Health,2165529
+hcgdrops.surfinthespirit.com,Nutrition & Dieting,3,Science & Health,6365081
+healthfully.com,Nutrition & Dieting,3,Science & Health,2478706
+healthyeating.sfgate.com,Nutrition & Dieting,3,Science & Health,2095054
+marksdailyapple.com,Nutrition & Dieting,3,Science & Health,3503889
+nutritionfacts.org,Nutrition & Dieting,3,Science & Health,3424032
+prevention.com,Nutrition & Dieting,3,Science & Health,5498415
+sparkpeople.com,Nutrition & Dieting,3,Science & Health,6927658
+0-bmccancer-biomedcentral-com.brum.beds.ac.uk,Science,3,Science & Health,10598247
+Other,Science,3,Science & Health,3390692447
+file.scirp.org,Science,3,Science & Health,12344871
+hindawi.com,Science,3,Science & Health,28205773
+intechopen.com,Science,3,Science & Health,10441165
+journals.plos.org,Science,3,Science & Health,86518503
+jov.arvojournals.org,Science,3,Science & Health,14924049
+link.springer.com,Science,3,Science & Health,43756378
+mdpi.com,Science,3,Science & Health,19849367
+nature.com,Science,3,Science & Health,31325808
+oatd.org,Science,3,Science & Health,28206263
+Other,Blogs,3,Technology,5945211362
+charleshughsmith.blogspot.com,Blogs,3,Technology,2152669
+covermongolia.blogspot.com,Blogs,3,Technology,2665431
+danieljmitchell.wordpress.com,Blogs,3,Technology,2599225
+gonzaloraffoinfonews.blogspot.com,Blogs,3,Technology,3057556
+irjci.blogspot.com,Blogs,3,Technology,2498314
+medium.com,Blogs,3,Technology,33010438
+ruscumag.wordpress.com,Blogs,3,Technology,4195907
+sciencesprings.wordpress.com,Blogs,3,Technology,3239371
+strategicstudyindia.blogspot.com,Blogs,3,Technology,4339072
+whyevolutionistrue.wordpress.com,Blogs,3,Technology,2900846
+Other,Hardware,3,Technology,2007183455
+bestbuy.com,Hardware,3,Technology,11584957
+computerweekly.com,Hardware,3,Technology,10673493
+gsmarena.com,Hardware,3,Technology,19565716
+hackaday.com,Hardware,3,Technology,10042489
+instructables.com,Hardware,3,Technology,50311618
+notebookcheck.net,Hardware,3,Technology,11142680
+pcworld.com,Hardware,3,Technology,21416030
+phonearena.com,Hardware,3,Technology,12698333
+tweaktown.com,Hardware,3,Technology,8807477
+venturebeat.com,Hardware,3,Technology,10049259
+Other,Internet Services,3,Technology,886691098
+app.lead411.com,Internet Services,3,Technology,4102157
+crtc.gc.ca,Internet Services,3,Technology,5543202
+domainmarket.com,Internet Services,3,Technology,8706790
+maplandia.com,Internet Services,3,Technology,5298013
+premium.wpmudev.org,Internet Services,3,Technology,13392581
+sitejabber.com,Internet Services,3,Technology,3860254
+unitedstateszipcodes.org,Internet Services,3,Technology,6004594
+web.archive.org,Internet Services,3,Technology,14365552
+wordpress.org,Internet Services,3,Technology,8612516
+yellowpages.com,Internet Services,3,Technology,4610581
+Other,Social Media,3,Technology,252181810
+answers.yahoo.com,Social Media,3,Technology,4858544
+aol.com,Social Media,3,Technology,15756708
+litchickshow.com,Social Media,3,Technology,3438200
+meetup.com,Social Media,3,Technology,4500529
+news.ycombinator.com,Social Media,3,Technology,5052038
+reddit.com,Social Media,3,Technology,7916708
+rediff.com,Social Media,3,Technology,13313587
+yahoo.com,Social Media,3,Technology,12959329
+yesichat.com,Social Media,3,Technology,5663181
+youtube.com,Social Media,3,Technology,20306647
+Other,Software,3,Technology,9868707313
+androidheadlines.com,Software,3,Technology,20721898
+docs.microsoft.com,Software,3,Technology,36291701
+forums.macrumors.com,Software,3,Technology,33411960
+ipfs.io,Software,3,Technology,50183732
+makeuseof.com,Software,3,Technology,24055110
+mashable.com,Software,3,Technology,20820890
+pcmag.com,Software,3,Technology,18198984
+s3.amazonaws.com,Software,3,Technology,21939335
+sites.google.com,Software,3,Technology,22763763
+slideshare.net,Software,3,Technology,22423966
+wowhead.com,Software,3,Technology,14765724
+Other,Accommodations,3,Travel,2110341842
+carrentals.com,Accommodations,3,Travel,6628494
+devonlive.com,Accommodations,3,Travel,4644940
+disneyparksmomspanel.disney.go.com,Accommodations,3,Travel,9836107
+emirates247.com,Accommodations,3,Travel,4466212
+homeaway.co.uk,Accommodations,3,Travel,4786189
+homeaway.com,Accommodations,3,Travel,13676068
+homeaway.com.au,Accommodations,3,Travel,4127478
+smresidences.com.ph,Accommodations,3,Travel,8653512
+vrbo.com,Accommodations,3,Travel,4327582
+washingtonian.com,Accommodations,3,Travel,4320259
+Other,Booking,3,Travel,1052365843
+agoda.com,Booking,3,Travel,13068827
+bestwestern.fr,Booking,3,Travel,10090218
+booking.com,Booking,3,Travel,46506404
+hotels.com,Booking,3,Travel,7426065
+marriott.com,Booking,3,Travel,4842807
+phnompenhpost.com,Booking,3,Travel,4699867
+skift.com,Booking,3,Travel,8093855
+streetdirectory.com,Booking,3,Travel,3803095
+taipeitimes.com,Booking,3,Travel,4734987
+tripadvisor.com,Booking,3,Travel,12053450
+Other,Destinations,3,Travel,3561162646
+barbadostoday.bb,Destinations,3,Travel,6268569
+british-history.ac.uk,Destinations,3,Travel,19276848
+fs.usda.gov,Destinations,3,Travel,6530514
+mvhm.org,Destinations,3,Travel,9069485
+nps.gov,Destinations,3,Travel,9316767
+piquenewsmagazine.com,Destinations,3,Travel,10041157
+stargeo.it,Destinations,3,Travel,10360768
+timeout.com,Destinations,3,Travel,10650020
+usa.indettaglio.it,Destinations,3,Travel,9274789
+viator.com,Destinations,3,Travel,7241077
+Other,Travel Media,3,Travel,871977314
+amcostarica.com,Travel Media,3,Travel,8553577
+cntraveler.com,Travel Media,3,Travel,5969910
+fodors.com,Travel Media,3,Travel,12960677
+lonelyplanet.com,Travel Media,3,Travel,8899768
+theculturetrip.com,Travel Media,3,Travel,6113170
+ticotimes.net,Travel Media,3,Travel,5328418
+travelandleisure.com,Travel Media,3,Travel,8266291
+traveltips.usatoday.com,Travel Media,3,Travel,11115589
+traveltriangle.com,Travel Media,3,Travel,6971992
+tripsavvy.com,Travel Media,3,Travel,11696659

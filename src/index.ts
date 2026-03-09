@@ -47,6 +47,7 @@ type LabelGroupGeneric = {
   nodes: Element[];
   margin: Margin;
   priority: number;
+  onRemove?: (node: Element) => void;
 };
 
 type LabelGroupNudge = LabelGroupGeneric & {
@@ -66,6 +67,7 @@ export type LabelGroup = LabelGroupNudge | LabelGroupChoices;
 type BodyDataGeneric = {
   priority: number;
   priorityWithinGroup: number;
+  onRemove?: (node: Element) => void;
 };
 
 type BodyDataNudge = BodyDataGeneric & {
@@ -106,14 +108,12 @@ export interface Point {
   y: number;
 }
 
-const getRelativeBounds = (child: Bounds, parent: Bounds) => {
-  return <Bounds>{
+const getRelativeBounds = (child: Bounds, parent: Bounds) => <Bounds>{
     x: child.x - parent.x,
     y: child.y - parent.y,
     width: child.width,
     height: child.height,
   };
-};
 
 const first = <T>(
   array: T[],
@@ -133,7 +133,7 @@ const all = <T>(
   array: T[],
   callback: (item: T, index: number) => unknown
 ): any => {
-  let ret: any[] = [];
+  const ret: any[] = [];
   for (let i = 0, l = array.length; i < l; i++) {
     const value = callback(array[i], i);
     if (value) {
@@ -170,16 +170,12 @@ const checkOne = (tree: RBush<Body>, body: Body) => {
 
 const getCollisions = (tree: RBush<Body>): CollisionCandidate[] => {
   const bodies = tree.all();
-  const check = (body: Body) => {
-    return checkOne(tree, body);
-  };
+  const check = (body: Body) => checkOne(tree, body);
 
   const collisions = all(bodies, check);
   const uniqueCollisions = uniqWith(
     collisions,
-    (a: CollisionCandidate, b: CollisionCandidate) => {
-      return a.a === b.a || a.a === b.b;
-    }
+    (a: CollisionCandidate, b: CollisionCandidate) => a.a === b.a || a.a === b.b
   );
   return uniqueCollisions;
 };
@@ -245,29 +241,28 @@ const getNudgedPosition = (
 const orderBodies = (a: Body, b: Body): [Body, Body] => {
   if (b.data.priority > a.data.priority) {
     return [a, b];
-  } else if (a.data.priority > b.data.priority) {
+  } if (a.data.priority > b.data.priority) {
     return [b, a];
-  } else if (b.data.priorityWithinGroup > a.data.priorityWithinGroup) {
+  } if (b.data.priorityWithinGroup > a.data.priorityWithinGroup) {
     return [a, b];
-  } else {
+  } 
     return [b, a];
-  }
+  
 };
 
 const removeCollisions = (tree: RBush<Body>) => {
+  const maxAttempts = tree.all().length;
   let attempts = 0;
-  let hasCollisions = true;
-  while (hasCollisions && attempts <= 5) {
+  while (attempts < maxAttempts) {
     attempts++;
     const collisions = getCollisions(tree);
-    if (collisions.length) {
-      const response = collisions[0];
-      const [bodyToMove, _bodyToNotMove] = orderBodies(response.a, response.b);
-      bodyToMove.node.remove();
-      tree.remove(bodyToMove);
-    } else {
+    if (!collisions.length) {
       break;
     }
+    const [bodyToMove] = orderBodies(collisions[0].a, collisions[0].b);
+    bodyToMove.data.onRemove?.(bodyToMove.node);
+    bodyToMove.node.remove();
+    tree.remove(bodyToMove);
   }
 };
 
@@ -353,35 +348,28 @@ const serialize = (
   parent: Element,
   labelGroups: LabelGroup[],
   options: Options
-) => {
-  return JSON.stringify(
+) => JSON.stringify(
     {
       parent: {
         bounds: parent.getBoundingClientRect(),
       },
-      labelGroups: labelGroups.map((group) => {
-        return {
+      labelGroups: labelGroups.map((group) => ({
           ...group,
-          nodes: group.nodes.map((node) => {
-            return {
+          nodes: group.nodes.map((node) => ({
               coords: node.getBoundingClientRect(),
               textContent: node.textContent,
-            };
-          }),
-        };
-      }),
-      options: options,
+            })),
+        })),
+      options,
     },
     null,
     2
   );
-};
 
 const extendBodyDataNudge = (
   bodyData: BodyDataGeneric,
   labelGroup: LabelGroupNudge
-): BodyDataNudge => {
-  return {
+): BodyDataNudge => ({
     ...bodyData,
     technique: 'nudge',
     nudgeStrategy: labelGroup.nudgeStrategy || 'shortest',
@@ -392,19 +380,16 @@ const extendBodyDataNudge = (
       <Direction>'left',
     ],
     render: labelGroup.render,
-  };
-};
+  });
 
 const extendBodyDataChoices = (
   bodyData: BodyDataGeneric,
   labelGroup: LabelGroupChoices
-): BodyDataChoices => {
-  return {
+): BodyDataChoices => ({
     ...bodyData,
     technique: 'choices',
     choices: labelGroup.choices,
-  };
-};
+  });
 
 // Global id counter, incremented for each instance of an avoid overlap class
 let uid = 0;
@@ -475,9 +460,10 @@ export class AvoidOverlap {
         const initialBodyData = {
           priority,
           priorityWithinGroup: labelGroup.nodes.length - i,
+          onRemove: labelGroup.onRemove,
         };
 
-        let body: Body | undefined = undefined;
+        let body: Body | undefined;
         if (labelGroup.technique === 'nudge') {
           const bodyData = extendBodyDataNudge(initialBodyData, labelGroup);
           body = {
