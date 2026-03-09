@@ -1,5 +1,6 @@
 # Start the Storybook server
-dev: npm run dev
+dev:
+    npm run dev
 
 # Publish an alpha release: just publish-alpha 0.3.0-alpha.0
 publish-alpha version:
