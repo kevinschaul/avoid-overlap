@@ -8,3 +8,4 @@ publish-alpha version:
     npm run build
     npm publish --tag alpha
     git checkout package.json
+    git checkout package-lock.json
