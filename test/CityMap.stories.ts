@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import { AvoidOverlap } from '../src/index.js';
 import type { LabelGroup } from '../src/index.js';
+import { displayRunStats } from './util';
 
 import citiesPizza from './data/cities_pizza.json';
 import usTopoJson from './data/us-states-10m.json';
@@ -403,10 +404,11 @@ function buildCityMap(
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       const avoidOverlap = new AvoidOverlap();
-      avoidOverlap.run(svgNode, avoidLabelGroups, {
+      const stats = avoidOverlap.run(svgNode, avoidLabelGroups, {
         includeParent: true,
         parentMargin: { top: -5, right: -5, bottom: -5, left: -5 },
       });
+      displayRunStats(stats, container);
 
       // Highlight visible labels' markers (matches real component)
       labelNodes.each(function () {

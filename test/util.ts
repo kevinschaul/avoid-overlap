@@ -1,5 +1,5 @@
 import { AvoidOverlap } from '../src/index';
-import type { LabelGroup } from '../src/index';
+import type { LabelGroup, RunStats } from '../src/index';
 
 interface TestNode {
   coords: {
@@ -83,7 +83,8 @@ export const play = async ({ canvasElement, args }) => {
   );
 
   const avoidOverlap = new AvoidOverlap();
-  avoidOverlap.run(parent, labelGroups, args.options);
+  const stats = avoidOverlap.run(parent, labelGroups, args.options);
+  displayRunStats(stats, canvasElement);
 };
 
 export const playExportedArgs = async ({ canvasElement, args }) => {
@@ -104,4 +105,16 @@ export const labelGroupNudgeRender = (element: Element, dx: number, dy: number) 
   const [x, y] = prevTransform.match(/([0-9]+)/g)!.map((d) => +d);
 
   element.setAttributeNS(null, 'transform', `translate(${x + dx}, ${y + dy})`);
+};
+
+export const displayRunStats = (stats: RunStats, container: Element) => {
+  container.querySelectorAll('.avoid-overlap-stats').forEach((el) => el.remove());
+
+  const el = document.createElement('p');
+  el.className = 'avoid-overlap-stats';
+  el.style.fontFamily = 'monospace';
+  el.style.fontSize = '12px';
+  el.style.color = '#666';
+  el.textContent = `avoid-overlap: ${stats.executionTimeMs.toFixed(2)}ms`;
+  container.appendChild(el);
 };

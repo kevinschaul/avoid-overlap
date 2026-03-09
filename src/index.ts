@@ -103,6 +103,10 @@ type NudgedPosition = {
   distance: number;
 };
 
+export interface RunStats {
+  executionTimeMs: number;
+}
+
 export interface Point {
   x: number;
   y: number;
@@ -401,11 +405,13 @@ export class AvoidOverlap {
     this.uid = uid++;
   }
 
-  run(parent: Element, labelGroups: LabelGroup[], options: Options) {
+  run(parent: Element, labelGroups: LabelGroup[], options: Options): RunStats {
+    const startTime = performance.now();
+
     if (options.debug) {
       console.log(serialize(parent, labelGroups, options));
       console.log(
-        '^ copy the above message into this project’s Storybook for more debugging'
+        "^ copy the above message into this project's Storybook for more debugging"
       );
     }
 
@@ -569,6 +575,8 @@ export class AvoidOverlap {
 
     removeCollisions(tree);
 
+    const executionTimeMs = performance.now() - startTime;
+
     if (options.debug) {
       if (options.debugFunc) {
         options.debugFunc(tree, parentBounds, this.uid);
@@ -576,5 +584,7 @@ export class AvoidOverlap {
         defaultDebugFunc(tree, parentBounds, this.uid);
       }
     }
+
+    return { executionTimeMs };
   }
 }

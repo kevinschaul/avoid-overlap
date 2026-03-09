@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/html';
 import * as d3 from 'd3';
 import { AvoidOverlap } from '../src/index.js';
 import type { LabelGroup } from '../src/index.js';
+import { displayRunStats } from './util';
 
 // @ts-ignore — Vite raw import
 import hierarchyRaw from './data/hierarchy.csv?raw';
@@ -370,10 +371,11 @@ function buildTreemap(
       } as any];
 
       const avoidOverlap = new AvoidOverlap();
-      avoidOverlap.run(svgNode, [...rectGroups, ...choicesGroups, ...nudgeGroups], {
+      const stats = avoidOverlap.run(svgNode, [...rectGroups, ...choicesGroups, ...nudgeGroups], {
         includeParent: true,
         parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
       });
+      displayRunStats(stats, container);
     });
   });
 }
