@@ -809,28 +809,29 @@ export class AvoidOverlap {
       return 0;
     });
 
-    // ── Score helper ──────────────────────────────────────────────────────────
-    const scoreState = (s: number[]): number => {
-      let score = 0;
-      for (let i = 0; i < bodies.length; i++) {
-        if (s[i] >= 0) score += bodyWeight(bodies[i].data.priority, scoreExp);
-      }
-      score -= getCollisions(tree).length * overlapPenalty;
-      return score;
-    };
-
-    let curScore  = scoreState(state);
-    let bestState = [...state];
-    let bestScore = curScore;
+    // ── Incremental score tracking ────────────────────────────────────────────
+    // Rather than rescoring the entire tree each iteration (O(n²)), track two
+    // accumulators that can be updated in O(log n) per step:
+    //   visibleWeight — sum of bodyWeight() for all currently visible bodies.
+    //   overlapCount  — getCollisions()-style count (double-counts each pair).
+    // curScore = visibleWeight - overlapCount * overlapPenalty
+    let visibleWeight = bodies.reduce(
+      (s, b) => s + bodyWeight(b.data.priority, scoreExp),
+      0
+    );
+    let overlapCount = getCollisions(tree).length; // double-counted pairs
+    let curScore     = visibleWeight - overlapCount * overlapPenalty;
+    let bestState    = [...state];
+    let bestScore    = curScore;
 
     // ── Simulated Annealing ───────────────────────────────────────────────────
     let temp = initTemp;
 
     for (let iter = 0; iter < iterations; iter++) {
       // Pick a random body to perturb
-      const i        = Math.floor(Math.random() * bodies.length);
+      const i         = Math.floor(Math.random() * bodies.length);
       const oldChoice = state[i];
-      const nChoices  = allChoicePositions[i].length; // 1 for nudge, ≥1 for choices
+      const nChoices  = allChoicePositions[i].length; // ≥1 for choices, 1 for nudge
       const nStates   = nChoices + 1;                  // +1 for the "hidden" state
 
       if (nStates < 2) {
@@ -845,27 +846,41 @@ export class AvoidOverlap {
         newChoice = Math.floor(Math.random() * nStates) - 1; // range: -1 .. nChoices-1
       } while (newChoice === oldChoice);
 
-      // ── Mutate tree (remove old, insert new) ─────────────────────────────
-      if (oldChoice >= 0 && inTree[i]) {
+      // ── Compute delta score incrementally ─────────────────────────────────
+      const w           = bodyWeight(bodies[i].data.priority, scoreExp);
+      const deltaWeight = (newChoice >= 0 ? w : 0) - (oldChoice >= 0 ? w : 0);
+
+      // Count overlaps the OLD position contributes (body i is still in tree;
+      // search returns self too, so subtract 1).
+      let oldOverlaps = 0;
+      if (inTree[i]) {
+        oldOverlaps = tree.search(inTree[i]!).length - 1;
         tree.remove(inTree[i]!, (a: Body, b: Body) => a.node === b.node);
       }
 
+      // Insert new position and count its overlaps (body i is not in tree yet).
       let newBodyInTree: Body | null = null;
+      let newOverlaps = 0;
       if (newChoice >= 0) {
         const pos = allChoicePositions[i][newChoice];
         newBodyInTree = { ...bodies[i], ...pos };
+        newOverlaps   = tree.search(newBodyInTree).length;
         tree.insert(newBodyInTree);
       }
 
-      // ── Evaluate new state ────────────────────────────────────────────────
-      state[i] = newChoice;
-      const newScore = scoreState(state);
-      const delta    = newScore - curScore;
+      // getCollisions double-counts each pair (once from each side), so scale
+      // the per-body overlap counts by 2 to stay consistent.
+      const newOverlapCount = overlapCount - 2 * oldOverlaps + 2 * newOverlaps;
+      const newScore        = (visibleWeight + deltaWeight) - newOverlapCount * overlapPenalty;
+      const delta           = newScore - curScore;
 
       if (delta > 0 || Math.random() < Math.exp(delta / temp)) {
         // Accept the move
-        inTree[i] = newBodyInTree;
-        curScore   = newScore;
+        inTree[i]     = newBodyInTree;
+        state[i]      = newChoice;
+        curScore      = newScore;
+        visibleWeight += deltaWeight;
+        overlapCount  = newOverlapCount;
 
         if (curScore > bestScore) {
           bestScore = curScore;
@@ -873,8 +888,6 @@ export class AvoidOverlap {
         }
       } else {
         // Reject — revert tree to previous state
-        state[i] = oldChoice;
-
         if (newBodyInTree) {
           tree.remove(newBodyInTree, (a: Body, b: Body) => a.node === b.node);
         }
