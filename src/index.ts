@@ -1,6 +1,9 @@
 import RBush from 'rbush';
 import uniqWith from 'lodash/uniqWith';
 import defaultDebugFunc from './debug';
+import { defaultScoredDebugFunc } from './debug';
+import type { ScoredDebugLabel, ScoredDebugInfo } from './debug';
+export type { ScoredDebugLabel, ScoredDebugInfo };
 
 export interface Bounds {
   x: number;
@@ -795,6 +798,11 @@ export class AvoidOverlap {
 
     if (!bodies.length) return;
 
+    // ── Save original transforms for debug toggling ──────────────────────────
+    const debugOriginalTransforms = options.debug
+      ? bodies.map(b => b.node.getAttribute('transform') || '')
+      : [];
+
     // ── Pre-compute choice positions (transiently modifies DOM) ───────────────
     // For each body we get an array of bounding boxes – one per choice (or just
     // the initial box for nudge bodies).  After this loop each node is left in
@@ -817,8 +825,14 @@ export class AvoidOverlap {
     // for a label whose bodyWeight is only 4).
     //
     // When choicePriorities is absent (or for 'nudge' bodies) a small
-    // displacement penalty of -0.5 is applied to all non-zero choices so that
+    // displacement penalty is applied to all non-zero choices so that
     // SA drifts back to the natural position whenever the layout allows it.
+    //
+    // For nudge bodies the penalty is scaled by bodyWeight so that a
+    // high-priority label resists being nudged proportionally more than a
+    // low-priority one.  A flat absolute penalty would be negligible for high
+    // weights (e.g. -0.5 out of 121) and dominant for low weights, causing SA
+    // to move high-priority labels just as freely as low-priority ones.
     const defaultChoiceScore = (k: number): number => (k === 0 ? 0 : -0.5);
     const allChoiceScores: number[][] = bodies.map((body, bi) =>
       allChoicePositions[bi].map((_, k) => {
@@ -826,7 +840,9 @@ export class AvoidOverlap {
           const cp = (body.data as BodyDataChoices).choicePriorities;
           return cp !== undefined ? (cp[k] ?? 0) : defaultChoiceScore(k);
         }
-        return defaultChoiceScore(k);
+        // Nudge: scale the displacement penalty by bodyWeight so resistance to
+        // nudging is proportional to priority.
+        return k === 0 ? 0 : -0.5 * bodyWeight(body.data.priority, scoreExp);
       })
     );
 
@@ -971,30 +987,43 @@ export class AvoidOverlap {
     }
 
     // ── Apply best state to DOM ───────────────────────────────────────────────
-    for (let i = 0; i < bodies.length; i += 1) {
-      const choice = bestState[i];
-      const body   = bodies[i];
+    const applyFinalState = () => {
+      for (let i = 0; i < bodies.length; i += 1) {
+        const choice = bestState[i];
+        const body   = bodies[i];
 
-      if (choice < 0) {
-        // Label was hidden by SA — remove it
-        body.data.onRemove?.(body.node);
-        body.node.remove();
-      } else if (body.data.technique === 'choices') {
-        // Re-apply the winning choice (DOM was left in an arbitrary state after
-        // pre-computation).  Fixed obstacles have choices:[] so there is no
-        // function to call — their position never changes.
-        const fn = (body.data as BodyDataChoices).choices[choice];
-        if (fn) fn(body.node);
-      } else if (body.data.technique === 'nudge') {
-        // Translate by the offset encoded in the winning synthetic position
-        const winPos = allChoicePositions[i][choice];
-        const diffX  = winPos.minX - body.minX;
-        const diffY  = winPos.minY - body.minY;
-        if (diffX !== 0 || diffY !== 0) {
-          (body.data as BodyDataNudge).render(body.node, diffX, diffY);
+        if (choice < 0) {
+          if (options.debug) {
+            // In debug mode, hide via display:none so we can toggle back
+            (body.node as HTMLElement).style.display = 'none';
+          } else {
+            body.data.onRemove?.(body.node);
+            body.node.remove();
+          }
+        } else {
+          if (options.debug) {
+            (body.node as HTMLElement).style.display = '';
+          }
+          if (body.data.technique === 'choices') {
+            const fn = (body.data as BodyDataChoices).choices[choice];
+            if (fn) fn(body.node);
+          } else if (body.data.technique === 'nudge') {
+            // Restore original transform first, then apply the SA-determined offset
+            if (options.debug) {
+              body.node.setAttribute('transform', debugOriginalTransforms[i]);
+            }
+            const winPos = allChoicePositions[i][choice];
+            const diffX  = winPos.minX - body.minX;
+            const diffY  = winPos.minY - body.minY;
+            if (diffX !== 0 || diffY !== 0) {
+              (body.data as BodyDataNudge).render(body.node, diffX, diffY);
+            }
+          }
         }
       }
-    }
+    };
+
+    applyFinalState();
 
     // ── Safety net: greedy collision removal ──────────────────────────────────
     // Rebuild tree with the winning positions and remove any residual overlaps
@@ -1011,14 +1040,64 @@ export class AvoidOverlap {
         tree.insert(b);
       }
     }
-    removeCollisions(tree);
+    if (!options.debug) {
+      removeCollisions(tree);
+    }
 
     // ── Debug ─────────────────────────────────────────────────────────────────
     if (options.debug) {
       if (options.debugFunc) {
+        // Legacy custom debug function
         options.debugFunc(tree, parentBounds, this.uid);
       } else {
-        defaultDebugFunc(tree, parentBounds, this.uid);
+        // Build per-label score breakdown
+        const debugLabels: ScoredDebugLabel[] = bodies.map((body, i) => {
+          const w = bodyWeight(body.data.priority, scoreExp);
+          const ch = bestState[i];
+          const cs = ch >= 0 ? allChoiceScores[i][ch] : 0;
+          return {
+            text: body.node.textContent || '',
+            technique: body.data.technique,
+            priority: body.data.priority,
+            weight: w,
+            bestChoice: ch,
+            choiceScore: cs,
+            totalContribution: ch >= 0 ? w + cs : 0,
+            nChoices: allChoicePositions[i].length,
+          };
+        });
+
+        const maxPossibleScore = bodies.reduce((s, b, i) => {
+          const maxBonus = allChoiceScores[i].length
+            ? Math.max(0, ...allChoiceScores[i])
+            : 0;
+          return s + bodyWeight(b.data.priority, scoreExp) + maxBonus;
+        }, 0);
+
+        const applyOriginal = () => {
+          bodies.forEach((body, i) => {
+            (body.node as HTMLElement).style.display = '';
+            if (body.data.technique === 'choices') {
+              // Restore by calling the first choice (natural position)
+              const fn = (body.data as BodyDataChoices).choices[0];
+              if (fn) fn(body.node);
+            } else {
+              // Nudge / static: restore the saved transform
+              body.node.setAttribute('transform', debugOriginalTransforms[i]);
+            }
+          });
+        };
+
+        const debugInfo: ScoredDebugInfo = {
+          uid: this.uid,
+          labels: debugLabels,
+          bestScore,
+          maxPossibleScore,
+          applyOriginal,
+          applyFinal: applyFinalState,
+        };
+
+        defaultScoredDebugFunc(debugInfo);
       }
     }
   }

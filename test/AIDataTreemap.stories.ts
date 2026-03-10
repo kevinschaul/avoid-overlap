@@ -423,6 +423,7 @@ function buildTreemap(
         const scoredOptions: ScoredOptions = {
           ...sharedOptions,
           scoreExponent: 2,
+          debug: true,
         };
         avoidOverlap.runScored(
           svgNode,
@@ -555,7 +556,7 @@ function buildBusinessNudge(container: HTMLElement, useScored = false) {
     .join('text')
     .attr('class', 'node-sub-category-text')
     .attr('transform', (d: any) => `translate(${d.x0},${d.y0})`)
-    .style('font-size', `${FONT_MAIN}px`)
+    .style('font-size', `${FONT_DOMAIN}px`)
     .style('fill', '#1a1a1a')
     .style('stroke', 'rgba(255,255,255,0.7)')
     .style('stroke-width', 3)
@@ -589,7 +590,6 @@ function buildBusinessNudge(container: HTMLElement, useScored = false) {
           render: nudgeRender,
           margin: { top: 0, right: 2, bottom: 0, left: 2 },
           priority: 0,
-          maxDistance: 48,
           nudgeStrategy: 'shortest',
           nudgeDirections: ['down', 'right'],
         } as any,
@@ -599,7 +599,6 @@ function buildBusinessNudge(container: HTMLElement, useScored = false) {
           render: nudgeRender,
           margin: { top: 0, right: 0, bottom: 0, left: 0 },
           priority: 10,
-          maxDistance: 40,
           nudgeStrategy: 'shortest',
           nudgeDirections: ['down', 'right'],
         } as any,
@@ -609,6 +608,7 @@ function buildBusinessNudge(container: HTMLElement, useScored = false) {
       const sharedOptions = {
         includeParent: true,
         parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
+        nudgeOffsets: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
       };
       if (useScored) {
         avoidOverlap.runScored(svgNode, nudgeGroups, {
