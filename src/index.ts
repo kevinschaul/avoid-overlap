@@ -844,6 +844,11 @@ export class AvoidOverlap {
       }
     }
     let curScore     = visibleWeight - overlapCount * overlapPenalty;
+    // Small penalty per visible body that is not at its preferred (index-0) position.
+    // Must be less than the minimum bodyWeight so SA never hides a label just to
+    // avoid displacement; must be > 0 so SA returns to position 0 when possible.
+    const displacementPenalty = 0.5;
+    let displacementCount = 0; // all bodies start at choice 0 = preferred
     let bestState    = [...state];
     let bestScore    = curScore;
 
@@ -893,17 +898,24 @@ export class AvoidOverlap {
 
       // getCollisions double-counts each pair (once from each side), so scale
       // the per-body overlap counts by 2 to stay consistent.
-      const newOverlapCount = overlapCount - 2 * oldOverlaps + 2 * newOverlaps;
-      const newScore        = (visibleWeight + deltaWeight) - newOverlapCount * overlapPenalty;
-      const delta           = newScore - curScore;
+      const newOverlapCount      = overlapCount - 2 * oldOverlaps + 2 * newOverlaps;
+      // Displacement: +1 for each visible body not at its preferred position (index 0).
+      // Hidden bodies (choice=-1) are not counted; choice=0 is preferred.
+      const newDisplacementCount = displacementCount
+        + (newChoice > 0 ? 1 : 0) - (oldChoice > 0 ? 1 : 0);
+      const newScore = (visibleWeight + deltaWeight)
+        - newOverlapCount * overlapPenalty
+        - newDisplacementCount * displacementPenalty;
+      const delta = newScore - curScore;
 
       if (delta > 0 || Math.random() < Math.exp(delta / temp)) {
         // Accept the move
-        inTree[i]     = newBodyInTree;
-        state[i]      = newChoice;
-        curScore      = newScore;
-        visibleWeight += deltaWeight;
-        overlapCount  = newOverlapCount;
+        inTree[i]          = newBodyInTree;
+        state[i]           = newChoice;
+        curScore           = newScore;
+        visibleWeight      += deltaWeight;
+        overlapCount       = newOverlapCount;
+        displacementCount  = newDisplacementCount;
 
         if (curScore > bestScore) {
           bestScore = curScore;
