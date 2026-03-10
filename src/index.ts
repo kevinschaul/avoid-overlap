@@ -1,5 +1,5 @@
 import RBush from 'rbush';
-import uniqWith from 'lodash/uniqWith';
+import seedrandom from 'seedrandom';
 import defaultDebugFunc from './debug';
 import type { DebugLabel, DebugInfo } from './debug';
 
@@ -19,14 +19,6 @@ interface Margin {
   left: number;
 }
 
-interface PositionHistoryEntry {
-  minX: number;
-  minY: number;
-  maxX: number;
-  maxY: number;
-  message: string;
-}
-
 type Direction = 'up' | 'right' | 'down' | 'left';
 
 type BodyDataGeneric = {
@@ -38,7 +30,6 @@ type BodyDataGeneric = {
 type BodyDataNudge = BodyDataGeneric & {
   technique: 'nudge';
   render: (el: Element, deltaX: number, deltaY: number) => void;
-  nudgeStrategy: 'shortest' | 'ordered';
   nudgeDirections: Direction[];
 };
 
@@ -59,7 +50,6 @@ export interface Body {
   minY: number;
   maxX: number;
   maxY: number;
-  positionHistory: PositionHistoryEntry[];
   isStatic: boolean;
   node: Element;
   data: BodyData;
@@ -81,7 +71,6 @@ type LabelGroupGeneric = {
 type LabelGroupNudge = LabelGroupGeneric & {
   technique: 'nudge';
   render: (el: Element, deltaX: number, deltaY: number) => void;
-  nudgeStrategy: 'shortest' | 'ordered';
   nudgeDirections: Direction[];
 };
 
@@ -146,12 +135,13 @@ export type Options = {
    * Default: [2, 4, 8, 16, 32, 64]
    */
   nudgeOffsets?: number[];
+  /**
+   * Seed for the random number generator to enable deterministic results.
+   * The same seed will produce identical label placements across multiple runs.
+   * Default: 42 (for reproducibility)
+   */
+  seed?: string | number;
 };
-
-export interface Point {
-  x: number;
-  y: number;
-}
 
 const getRelativeBounds = (child: Bounds, parent: Bounds) =>
   <Bounds>{
@@ -161,75 +151,19 @@ const getRelativeBounds = (child: Bounds, parent: Bounds) =>
     height: child.height,
   };
 
-const first = <T>(
-  array: T[],
-  callback: (_item: T, _index: number) => unknown
-): any => {
-  for (let i = 0, l = array.length; i < l; i += 1) {
-    const value = callback(array[i], i);
-    if (value) {
-      return value;
-    }
-  }
-
-  return null;
-};
-
-const all = <T>(
-  array: T[],
-  callback: (_item: T, _index: number) => unknown
-): any => {
-  const ret: any[] = [];
-  for (let i = 0, l = array.length; i < l; i += 1) {
-    const value = callback(array[i], i);
-    if (value) {
-      ret.push(value);
-    }
-  }
-
-  return ret;
-};
-
-const checkOne = (tree: RBush<Body>, body: Body) => {
-  if (body.isStatic) {
-    return false;
-  }
-
-  const bodies = tree.search(body);
-
-  const checkCollision = (candidate: Body): CollisionCandidate | undefined => {
-    if (candidate !== body) {
-      return {
-        a: body,
-        b: candidate,
-      };
-    }
-    return undefined;
-  };
-
-  return first(bodies, checkCollision);
-};
-
-const getCollisions = (tree: RBush<Body>): CollisionCandidate[] => {
+/** Find the first collision involving a non-static body, if any. */
+const findCollision = (tree: RBush<Body>): CollisionCandidate | null => {
   const bodies = tree.all();
-  const check = (body: Body) => checkOne(tree, body);
-
-  const collisions = all(bodies, check);
-  const uniqueCollisions = uniqWith(
-    collisions,
-    (a: CollisionCandidate, b: CollisionCandidate) => a.a === b.a || a.a === b.b
-  );
-  return uniqueCollisions;
-};
-
-const savePositionHistory = (body: Body, message: string) => {
-  body.positionHistory.push({
-    minX: body.minX,
-    minY: body.minY,
-    maxX: body.maxX,
-    maxY: body.maxY,
-    message,
-  });
+  for (const body of bodies) {
+    if (body.isStatic) continue;
+    const overlapping = tree.search(body);
+    for (const candidate of overlapping) {
+      if (candidate !== body) {
+        return { a: body, b: candidate };
+      }
+    }
+  }
+  return null;
 };
 
 /* Return the two bodies in order according to their priority values
@@ -252,11 +186,9 @@ const removeCollisions = (tree: RBush<Body>) => {
   let attempts = 0;
   while (attempts < maxAttempts) {
     attempts += 1;
-    const collisions = getCollisions(tree);
-    if (!collisions.length) {
-      break;
-    }
-    const [bodyToMove] = orderBodies(collisions[0].a, collisions[0].b);
+    const collision = findCollision(tree);
+    if (!collision) break;
+    const [bodyToMove] = orderBodies(collision.a, collision.b);
     bodyToMove.data.onRemove?.(bodyToMove.node);
     bodyToMove.node.remove();
     tree.remove(bodyToMove);
@@ -269,76 +201,32 @@ const addParent = (
   parentBounds: Bounds,
   parentMargin: Margin
 ) => {
-  const parentThickness = 200;
+  const t = 200; // thickness of boundary walls
+  const w = parentBounds.width;
+  const h = parentBounds.height;
 
-  const top = <Body>{
-    minX: -parentThickness,
-    minY: -parentThickness,
-    maxX: parentBounds.width + parentThickness,
-    maxY: parentMargin.top,
-    positionHistory: [],
-    isStatic: true,
-    node: parent,
-    data: {
-      technique: 'static',
-      priority: Infinity,
-      priorityWithinGroup: Infinity,
-    },
-  };
+  const sides: [number, number, number, number][] = [
+    [-t, -t, w + t, parentMargin.top], // top
+    [-t, h - parentMargin.bottom, w + t, h + t], // bottom
+    [-t, -t, parentMargin.left, h + t], // left
+    [w - parentMargin.right, -t, w + t, h + t], // right
+  ];
 
-  const bottom = <Body>{
-    minX: -parentThickness,
-    minY: parentBounds.height - parentMargin.bottom,
-    maxX: parentBounds.width + parentThickness,
-    maxY: parentBounds.height + parentThickness,
-    positionHistory: [],
-    isStatic: true,
-    node: parent,
-    data: {
-      technique: 'static',
-      priority: Infinity,
-      priorityWithinGroup: Infinity,
-    },
-  };
-
-  const right = <Body>{
-    minX: parentBounds.width - parentMargin.right,
-    minY: -parentThickness,
-    maxX: parentBounds.width + parentThickness,
-    maxY: parentBounds.height + parentThickness,
-    positionHistory: [],
-    isStatic: true,
-    node: parent,
-    data: {
-      technique: 'static',
-      priority: Infinity,
-      priorityWithinGroup: Infinity,
-    },
-  };
-
-  const left = <Body>{
-    minX: -parentThickness,
-    minY: -parentThickness,
-    maxX: parentMargin.left,
-    maxY: parentBounds.height + parentThickness,
-    positionHistory: [],
-    isStatic: true,
-    node: parent,
-    data: {
-      technique: 'static',
-      priority: Infinity,
-      priorityWithinGroup: Infinity,
-    },
-  };
-
-  tree.insert(top);
-  tree.insert(bottom);
-  tree.insert(left);
-  tree.insert(right);
-  savePositionHistory(top, 'initial');
-  savePositionHistory(bottom, 'initial');
-  savePositionHistory(left, 'initial');
-  savePositionHistory(right, 'initial');
+  for (const [minX, minY, maxX, maxY] of sides) {
+    tree.insert(<Body>{
+      minX,
+      minY,
+      maxX,
+      maxY,
+      isStatic: true,
+      node: parent,
+      data: {
+        technique: 'static',
+        priority: Infinity,
+        priorityWithinGroup: Infinity,
+      },
+    });
+  }
 };
 
 const extendBodyDataNudge = (
@@ -347,7 +235,6 @@ const extendBodyDataNudge = (
 ): BodyDataNudge => ({
   ...bodyData,
   technique: 'nudge',
-  nudgeStrategy: labelGroup.nudgeStrategy || 'shortest',
   nudgeDirections: labelGroup.nudgeDirections || [
     <Direction>'down',
     <Direction>'right',
@@ -457,15 +344,14 @@ const precomputePositions = (
   ];
 };
 
-// Global id counter, incremented for each instance of an avoid overlap class
-let uid = 0;
-
 export class AvoidOverlap {
+  private static nextUid = 0;
+
   uid: number;
 
   constructor() {
-    this.uid = uid;
-    uid += 1;
+    this.uid = AvoidOverlap.nextUid;
+    AvoidOverlap.nextUid += 1;
   }
 
   /**
@@ -501,6 +387,9 @@ export class AvoidOverlap {
       left: -2,
     };
 
+    // Create a random function: use provided seed or default to 42 for deterministic results
+    const random = seedrandom(options.seed ?? 42);
+
     // ── Build spatial tree ───────────────────────────────────────────────────
     const tree: RBush<Body> = new RBush();
     if (includeParent) {
@@ -535,14 +424,12 @@ export class AvoidOverlap {
         const body: Body = {
           minX: b.x - margin.left,
           minY: b.y - margin.top,
-          maxX: b.x + b.width + margin.left + margin.right,
-          maxY: b.y + b.height + margin.top + margin.bottom,
-          positionHistory: [],
+          maxX: b.x + b.width + margin.right,
+          maxY: b.y + b.height + margin.bottom,
           isStatic: false,
           node,
           data,
         };
-        savePositionHistory(body, 'initial');
         bodies.push(body);
       });
     });
@@ -604,16 +491,19 @@ export class AvoidOverlap {
         s + bodyWeight(b.data.priority, scoreExp) + allChoiceScores[i][0],
       0
     );
+    // Count initial overlaps incrementally: insert bodies one by one and count
+    // how many existing items each new body overlaps.  Multiplied by 2 to match
+    // the convention used in the SA loop's incremental tracking.
     let overlapCount = 0;
     {
-      const initTree: RBush<Body> = new RBush();
+      const countTree: RBush<Body> = new RBush();
       if (includeParent) {
-        addParent(initTree, parent, parentBounds, parentMargin);
+        addParent(countTree, parent, parentBounds, parentMargin);
       }
       for (let i = 0; i < bodies.length; i += 1) {
         if (inTree[i]) {
-          overlapCount += 2 * initTree.search(inTree[i]!).length;
-          initTree.insert(inTree[i]!);
+          overlapCount += 2 * countTree.search(inTree[i]!).length;
+          countTree.insert(inTree[i]!);
         }
       }
     }
@@ -626,7 +516,7 @@ export class AvoidOverlap {
 
     for (let iter = 0; iter < iterations; iter += 1) {
       // Pick a random body to perturb
-      const i = Math.floor(Math.random() * bodies.length);
+      const i = Math.floor(random() * bodies.length);
       const oldChoice = state[i];
       const nChoices = allChoicePositions[i].length; // ≥1 for choices, 1 for nudge
       const nStates = nChoices + 1; // +1 for the "hidden" state
@@ -635,7 +525,7 @@ export class AvoidOverlap {
         // Pick a different state uniformly at random
         let newChoice: number;
         do {
-          newChoice = Math.floor(Math.random() * nStates) - 1; // range: -1 .. nChoices-1
+          newChoice = Math.floor(random() * nStates) - 1; // range: -1 .. nChoices-1
         } while (newChoice === oldChoice);
 
         // ── Compute delta score incrementally ─────────────────────────────────
@@ -667,7 +557,7 @@ export class AvoidOverlap {
           visibleScore + deltaScore - newOverlapCount * overlapPenalty;
         const delta = newScore - curScore;
 
-        if (delta > 0 || Math.random() < Math.exp(delta / temp)) {
+        if (delta > 0 || random() < Math.exp(delta / temp)) {
           // Accept the move
           inTree[i] = newBodyInTree;
           state[i] = newChoice;
@@ -703,11 +593,11 @@ export class AvoidOverlap {
         const body = bodies[i];
 
         if (choice < 0) {
+          body.data.onRemove?.(body.node);
           if (options.debug) {
             // In debug mode, hide via display:none so we can toggle back
             (body.node as HTMLElement).style.display = 'none';
           } else {
-            body.data.onRemove?.(body.node);
             body.node.remove();
           }
         } else {
@@ -736,21 +626,19 @@ export class AvoidOverlap {
     applyFinalState();
 
     // ── Safety net: greedy collision removal ──────────────────────────────────
+    // Skip nodes already removed from the DOM (e.g. by onRemove side effects).
     tree.clear();
     if (includeParent) {
       addParent(tree, parent, parentBounds, parentMargin);
     }
     for (let i = 0; i < bodies.length; i += 1) {
-      if (bestState[i] >= 0) {
+      if (bestState[i] >= 0 && bodies[i].node.isConnected) {
         const pos = allChoicePositions[i][bestState[i]];
         const b: Body = { ...bodies[i], ...pos };
-        savePositionHistory(b, `best-choice-${bestState[i]}`);
         tree.insert(b);
       }
     }
-    if (!options.debug) {
-      removeCollisions(tree);
-    }
+    removeCollisions(tree);
 
     // ── Debug ─────────────────────────────────────────────────────────────────
     if (options.debug) {

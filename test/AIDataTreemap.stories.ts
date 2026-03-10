@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import * as d3 from 'd3';
 import { AvoidOverlap } from '../src/index.js';
 import type { LabelGroup, Options } from '../src/index.js';
@@ -8,6 +8,12 @@ import hierarchyRaw from './data/hierarchy.csv?raw';
 
 const meta: Meta = {
   title: 'Real-world/AidataTreemap',
+  args: {
+    debug: false,
+  },
+  argTypes: {
+    debug: { control: 'boolean' },
+  },
 };
 export default meta;
 
@@ -171,9 +177,11 @@ function pickDirection(
 function buildTreemap(
   container: HTMLElement,
   activeDomains: string[] = ACTIVE_DOMAINS,
+  debug = false,
 ) {
+  document.querySelectorAll('[id^="avoid-overlap-scored-debug"]').forEach((n) => n.remove());
   const margin = { top: 10, right: 16, bottom: 10, left: 16 };
-  const totalWidth = Math.min(container.clientWidth || 800, 960);
+  const totalWidth = 960;
   const totalHeight = Math.round(totalWidth * 0.55);
   const chartWidth = totalWidth - margin.left - margin.right;
   const chartHeight = totalHeight - margin.top - margin.bottom;
@@ -380,6 +388,7 @@ function buildTreemap(
       });
 
       // Fixed domain rect bodies — annotations must not overlap the highlighted tiles
+      const textNodes = nodeDomainText.nodes() as Element[];
       const rectGroups: LabelGroup[] = [
         {
           technique: 'choices',
@@ -387,6 +396,13 @@ function buildTreemap(
           choices: [],
           priority: 10,
           margin: { top: -2, right: -2, bottom: -2, left: -2 },
+          onRemove: (el) => {
+            // When a rect is removed, hide the associated annotation
+            const rectIndex = (nodeDomainRectGroups.nodes() as Element[]).indexOf(el);
+            if (rectIndex >= 0 && textNodes[rectIndex]) {
+              textNodes[rectIndex].remove();
+            }
+          },
         },
       ];
 
@@ -408,7 +424,7 @@ function buildTreemap(
           margin: { top: 0, right: 0, bottom: 0, left: 0 },
           priority: 10,
           maxDistance: 40,
-          nudgeStrategy: 'shortest',
+
           nudgeDirections: ['down', 'right', 'up', 'left'],
         } as any,
       ];
@@ -418,7 +434,7 @@ function buildTreemap(
         includeParent: true,
         parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
         scoreExponent: 2,
-        debug: true,
+        debug,
       };
       avoidOverlap.run(
         svgNode,
@@ -434,9 +450,10 @@ const ACTIVE_CATEGORY = 'Business & Industrial';
 const NON_BIZ_OPACITY = 0.55; // dim non-business tiles
 const LABEL_DIM_COLOR = '#9aa0a6'; // lighter text for non-business categories
 
-function buildBusinessNudge(container: HTMLElement) {
+function buildBusinessNudge(container: HTMLElement, debug = false) {
+  document.querySelectorAll('[id^="avoid-overlap-scored-debug"]').forEach((n) => n.remove());
   const margin = { top: 10, right: 16, bottom: 10, left: 16 };
-  const totalWidth = Math.min(container.clientWidth || 800, 960);
+  const totalWidth = 960;
   const totalHeight = Math.round(totalWidth * 0.55);
   const chartWidth = totalWidth - margin.left - margin.right;
   const chartHeight = totalHeight - margin.top - margin.bottom;
@@ -578,7 +595,7 @@ function buildBusinessNudge(container: HTMLElement) {
           render: nudgeRender,
           margin: { top: 0, right: 2, bottom: 0, left: 2 },
           priority: 0,
-          nudgeStrategy: 'shortest',
+
           nudgeDirections: ['down', 'right'],
         } as any,
         {
@@ -587,7 +604,7 @@ function buildBusinessNudge(container: HTMLElement) {
           render: nudgeRender,
           margin: { top: 0, right: 0, bottom: 0, left: 0 },
           priority: 10,
-          nudgeStrategy: 'shortest',
+
           nudgeDirections: ['down', 'right'],
         } as any,
       ];
@@ -598,6 +615,7 @@ function buildBusinessNudge(container: HTMLElement) {
         parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
         nudgeOffsets: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
         scoreExponent: 2,
+        debug,
       };
       avoidOverlap.run(svgNode, nudgeGroups, options);
     });
@@ -605,40 +623,37 @@ function buildBusinessNudge(container: HTMLElement) {
 }
 
 // ── Stories ─────────────────────────────────────────────────────────────────
-const storyDefaults = {
+function makeContainer(): HTMLDivElement {
+  const div = document.createElement('div');
+  div.style.width = '100%';
+  div.style.maxWidth = '960px';
+  div.style.margin = '0 auto';
+  return div;
+}
+
+export const TopSites: StoryObj = {
   parameters: { docs: { story: { autoplay: true } } },
-  render: () => {
-    const div = document.createElement('div');
-    div.style.width = '100%';
-    div.style.maxWidth = '960px';
-    div.style.margin = '0 auto';
+  render: (args) => {
+    const div = makeContainer();
+    requestAnimationFrame(() => buildTreemap(div, ACTIVE_DOMAINS, args.debug));
     return div;
   },
 };
 
-export const TopSites: StoryObj = {
-  ...storyDefaults,
-  play: async ({ canvasElement }) => {
-    const div = canvasElement.querySelector('div') as HTMLElement;
-    div.innerHTML = '';
-    buildTreemap(div, ACTIVE_DOMAINS);
-  },
-};
-
 export const ManySites: StoryObj = {
-  ...storyDefaults,
-  play: async ({ canvasElement }) => {
-    const div = canvasElement.querySelector('div') as HTMLElement;
-    div.innerHTML = '';
-    buildTreemap(div, ACTIVE_DOMAINS_MANY);
+  parameters: { docs: { story: { autoplay: true } } },
+  render: (args) => {
+    const div = makeContainer();
+    requestAnimationFrame(() => buildTreemap(div, ACTIVE_DOMAINS_MANY, args.debug));
+    return div;
   },
 };
 
 export const BusinessCategoryNudge: StoryObj = {
-  ...storyDefaults,
-  play: async ({ canvasElement }) => {
-    const div = canvasElement.querySelector('div') as HTMLElement;
-    div.innerHTML = '';
-    buildBusinessNudge(div);
+  parameters: { docs: { story: { autoplay: true } } },
+  render: (args) => {
+    const div = makeContainer();
+    requestAnimationFrame(() => buildBusinessNudge(div, args.debug));
+    return div;
   },
 };

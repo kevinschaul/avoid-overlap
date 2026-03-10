@@ -1,11 +1,16 @@
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 
-import { render, play } from './util';
+import { render } from './util';
 
 const meta: Meta = {
   title: 'AvoidOverlapChoices',
   tags: ['autodocs'],
-  argTypes: {},
+  args: {
+    debug: false,
+  },
+  argTypes: {
+    debug: { control: 'boolean' },
+  },
 };
 export default meta;
 
@@ -15,8 +20,7 @@ const Default: StoryObj = {
       story: { autoplay: true },
     },
   },
-  render: render,
-  play: play,
+  render,
 };
 
 /**
@@ -57,7 +61,8 @@ export const AvoidViewboxBounds: StoryObj = {
     options: {
       includeParent: true,
       parentMargin: {
-        // TODO why do we need -1 instead of 0?
+        // Negative margins so that labels touching (but not crossing) the
+        // parent edge are not treated as collisions by the spatial tree.
         top: -1,
         right: -1,
         bottom: -1,

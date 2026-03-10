@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import { AvoidOverlap } from '../src/index.js';
@@ -9,6 +9,12 @@ import usTopoJson from './data/us-states-10m.json';
 
 const meta: Meta = {
   title: 'Real-world/CityMap',
+  args: {
+    debug: false,
+  },
+  argTypes: {
+    debug: { control: 'boolean' },
+  },
 };
 export default meta;
 
@@ -38,7 +44,9 @@ function buildCityMap(
   legendMinLabel: string,
   legendMaxLabel: string,
   priorityCities: string[] = [],
+  debug = false,
 ) {
+  document.querySelectorAll('[id^="avoid-overlap-scored-debug"]').forEach((n) => n.remove());
   const priorityCitiesSet = new Set(priorityCities);
   const majorCities = new Set([
     'New York, NY',
@@ -58,7 +66,7 @@ function buildCityMap(
     .filter((d) => d.lng && d.lat)
     .map((d) => ({ ...d, longitude: d.lng!, latitude: d.lat! }));
 
-  const mapWidth = Math.min(container.clientWidth || 672, 672);
+  const mapWidth = 672;
   const mapHeight = mapWidth * 0.625;
   const radius = 7;
   const highlightStrokeWidth = 1.5;
@@ -407,6 +415,7 @@ function buildCityMap(
         includeParent: true,
         parentMargin: { top: -5, right: -5, bottom: -5, left: -5 },
         scoreExponent: 2,
+        debug,
       };
       avoidOverlap.run(svgNode, avoidLabelGroups, options);
 
@@ -457,26 +466,22 @@ function buildCityMap(
   container.appendChild(wrapper);
 }
 
-const storyDefaults = {
+export const Pizza: StoryObj = {
   parameters: { docs: { story: { autoplay: true } } },
-  render: () => {
+  render: (args) => {
     const div = document.createElement('div');
     div.style.width = '100%';
-    return div;
-  },
-};
-
-export const Pizza: StoryObj = {
-  ...storyDefaults,
-  play: async ({ canvasElement }) => {
-    const div = canvasElement.querySelector('div') as HTMLElement;
-    div.innerHTML = '';
-    buildCityMap(
-      div,
-      citiesPizza as CityDatum[],
-      'The cities with the best (and worst) pizza',
-      'Worst pizza',
-      'Best pizza'
+    requestAnimationFrame(() =>
+      buildCityMap(
+        div,
+        citiesPizza as CityDatum[],
+        'The cities with the best (and worst) pizza',
+        'Worst pizza',
+        'Best pizza',
+        [],
+        args.debug,
+      )
     );
+    return div;
   },
 };

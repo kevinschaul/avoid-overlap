@@ -1,11 +1,16 @@
-import type { Meta, StoryObj } from '@storybook/html';
+import type { Meta, StoryObj } from '@storybook/html-vite';
 
-import { render, play, labelGroupNudgeRender } from './util';
+import { render, labelGroupNudgeRender } from './util';
 
 const meta: Meta = {
   title: 'AvoidOverlapNudge',
   tags: ['autodocs'],
-  argTypes: {},
+  args: {
+    debug: false,
+  },
+  argTypes: {
+    debug: { control: 'boolean' },
+  },
 };
 export default meta;
 
@@ -15,8 +20,7 @@ const Default: StoryObj = {
       story: { autoplay: true },
     },
   },
-  render: render,
-  play: play,
+  render,
 };
 
 /**
@@ -115,7 +119,7 @@ export const ShortestWithDirectionUp: StoryObj = {
         ],
         priority: 5,
         render: labelGroupNudgeRender,
-        nudgeStrategy: 'shortest',
+
         nudgeDirections: ['up'],
       },
     ],
@@ -167,7 +171,7 @@ export const ShortestWithDirectionRight: StoryObj = {
         ],
         render: labelGroupNudgeRender,
         priority: 5,
-        nudgeStrategy: 'shortest',
+
         nudgeDirections: ['right'],
       },
     ],

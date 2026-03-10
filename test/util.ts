@@ -20,20 +20,14 @@ interface TestLabelGroup extends Omit<LabelGroup, 'nodes'> {
 
 const svgNamespace = 'http://www.w3.org/2000/svg';
 
-export const render = () => document.createElementNS(svgNamespace, 'svg');
-
-export const play = async ({ canvasElement, args }) => {
-  const parent = canvasElement.querySelector('svg');
-  const parentBounds = parent.getBoundingClientRect();
-
+function buildSimpleStory(parent: SVGElement, args: any) {
   parent.innerHTML = '';
-  document.querySelectorAll('.avoid-overlap-debugger').forEach((node) => {
-    node.remove();
-  });
+  document.querySelectorAll('[id^="avoid-overlap-scored-debug"]').forEach((n) => n.remove());
 
   parent.setAttributeNS(null, 'width', args.parent.coords.width);
   parent.setAttributeNS(null, 'height', args.parent.coords.height);
 
+  const parentBounds = parent.getBoundingClientRect();
   const xOffset = parentBounds.x - args.parent.coords.x;
   const yOffset = parentBounds.y - args.parent.coords.y;
 
@@ -79,15 +73,22 @@ export const play = async ({ canvasElement, args }) => {
     }
   );
 
-  const runOptions: Options = { ...args.options, ...args.scoredOptions };
+  const runOptions: Options = { ...args.options, ...args.scoredOptions, debug: args.debug ?? false };
   const avoidOverlap = new AvoidOverlap();
   avoidOverlap.run(parent, labelGroups, runOptions);
+}
+
+export const render = (args: any) => {
+  const parent = document.createElementNS(svgNamespace, 'svg');
+  // Wait for DOM attachment so getBoundingClientRect works
+  requestAnimationFrame(() => buildSimpleStory(parent, args));
+  return parent;
 };
 
 export const labelGroupNudgeRender = (element: Element, dx: number, dy: number) => {
   const prevTransform =
     element.getAttributeNS(null, 'transform') || 'translate(0, 0)';
-  const [x, y] = prevTransform.match(/([0-9]+)/g)!.map((d) => +d);
+  const [x, y] = prevTransform.match(/-?[0-9]+\.?[0-9]*/g)!.map((d) => +d);
 
   element.setAttributeNS(null, 'transform', `translate(${x + dx}, ${y + dy})`);
 };
