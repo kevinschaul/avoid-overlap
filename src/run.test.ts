@@ -1,5 +1,5 @@
 /**
- * Tests for runScored using jsdom with mocked getBoundingClientRect.
+ * Tests for run() (simulated annealing) using jsdom with mocked getBoundingClientRect.
  * Tests that the SA resolves overlapping labels to a non-overlapping state.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -24,7 +24,7 @@ function rectsOverlap(a: Rect, b: Rect): boolean {
            a.y + a.height <= b.y || b.y + b.height <= a.y);
 }
 
-describe('runScored', () => {
+describe('run', () => {
   let parent: HTMLElement;
 
   beforeEach(() => {
@@ -63,7 +63,7 @@ describe('runScored', () => {
     mockBCR(nodeB, () => bPositions[bChoice]);
 
     const avoidOverlap = new AvoidOverlap();
-    avoidOverlap.runScored(parent, [
+    avoidOverlap.run(parent, [
       {
         technique: 'choices' as const,
         nodes: [nodeA],
@@ -121,7 +121,7 @@ describe('runScored', () => {
     mockBCR(nodeC, () => cPositions[cChoice]);
 
     const avoidOverlap = new AvoidOverlap();
-    avoidOverlap.runScored(parent, [
+    avoidOverlap.run(parent, [
       {
         technique: 'choices' as const,
         nodes: [nodeA],
@@ -185,7 +185,7 @@ describe('runScored', () => {
     mockBCR(nodeB, () => bPositions[bChoice]);
 
     const avoidOverlap = new AvoidOverlap();
-    avoidOverlap.runScored(parent, [
+    avoidOverlap.run(parent, [
       {
         technique: 'choices' as const,
         nodes: [nodeA],
@@ -247,7 +247,7 @@ describe('runScored', () => {
     mockBCR(nodeB, () => ({ x: 10, y: 10, width: 40, height: 20 }));
 
     const avoidOverlap = new AvoidOverlap();
-    avoidOverlap.runScored(parent, [
+    avoidOverlap.run(parent, [
       {
         technique: 'choices' as const,
         nodes: [nodeA],

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import * as d3 from 'd3';
 import { AvoidOverlap } from '../src/index.js';
-import type { LabelGroup, ScoredOptions } from '../src/index.js';
+import type { LabelGroup, Options } from '../src/index.js';
 
-// @ts-ignore — Vite raw import
+// @ts-expect-error — Vite raw import
 import hierarchyRaw from './data/hierarchy.csv?raw';
 
 const meta: Meta = {
@@ -70,8 +70,8 @@ type ArrowConfig = {
 
 function getArrowConfig(
   direction: string,
-  chartWidth: number,
-  chartHeight: number
+  _chartWidth: number,
+  _chartHeight: number
 ): ArrowConfig {
   const s = SWOOP;
   const p = SWOOP_PAD;
@@ -171,7 +171,6 @@ function pickDirection(
 function buildTreemap(
   container: HTMLElement,
   activeDomains: string[] = ACTIVE_DOMAINS,
-  useScored = false
 ) {
   const margin = { top: 10, right: 16, bottom: 10, left: 16 };
   const totalWidth = Math.min(container.clientWidth || 800, 960);
@@ -415,28 +414,17 @@ function buildTreemap(
       ];
 
       const avoidOverlap = new AvoidOverlap();
-      const sharedOptions = {
+      const options: Options = {
         includeParent: true,
         parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
+        scoreExponent: 2,
+        debug: true,
       };
-      if (useScored) {
-        const scoredOptions: ScoredOptions = {
-          ...sharedOptions,
-          scoreExponent: 2,
-          debug: true,
-        };
-        avoidOverlap.runScored(
-          svgNode,
-          [...rectGroups, ...choicesGroups, ...nudgeGroups],
-          scoredOptions
-        );
-      } else {
-        avoidOverlap.run(
-          svgNode,
-          [...rectGroups, ...choicesGroups, ...nudgeGroups],
-          sharedOptions
-        );
-      }
+      avoidOverlap.run(
+        svgNode,
+        [...rectGroups, ...choicesGroups, ...nudgeGroups],
+        options
+      );
     });
   });
 }
@@ -446,7 +434,7 @@ const ACTIVE_CATEGORY = 'Business & Industrial';
 const NON_BIZ_OPACITY = 0.55; // dim non-business tiles
 const LABEL_DIM_COLOR = '#9aa0a6'; // lighter text for non-business categories
 
-function buildBusinessNudge(container: HTMLElement, useScored = false) {
+function buildBusinessNudge(container: HTMLElement) {
   const margin = { top: 10, right: 16, bottom: 10, left: 16 };
   const totalWidth = Math.min(container.clientWidth || 800, 960);
   const totalHeight = Math.round(totalWidth * 0.55);
@@ -605,19 +593,13 @@ function buildBusinessNudge(container: HTMLElement, useScored = false) {
       ];
 
       const avoidOverlap = new AvoidOverlap();
-      const sharedOptions = {
+      const options: Options = {
         includeParent: true,
         parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
         nudgeOffsets: [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+        scoreExponent: 2,
       };
-      if (useScored) {
-        avoidOverlap.runScored(svgNode, nudgeGroups, {
-          ...sharedOptions,
-          scoreExponent: 2,
-        } as ScoredOptions);
-      } else {
-        avoidOverlap.run(svgNode, nudgeGroups, sharedOptions);
-      }
+      avoidOverlap.run(svgNode, nudgeGroups, options);
     });
   });
 }
@@ -643,15 +625,6 @@ export const TopSites: StoryObj = {
   },
 };
 
-export const TopSitesScored: StoryObj = {
-  ...storyDefaults,
-  play: async ({ canvasElement }) => {
-    const div = canvasElement.querySelector('div') as HTMLElement;
-    div.innerHTML = '';
-    buildTreemap(div, ACTIVE_DOMAINS, true);
-  },
-};
-
 export const ManySites: StoryObj = {
   ...storyDefaults,
   play: async ({ canvasElement }) => {
@@ -661,33 +634,11 @@ export const ManySites: StoryObj = {
   },
 };
 
-export const ManySitesScored: StoryObj = {
-  ...storyDefaults,
-  play: async ({ canvasElement }) => {
-    const div = canvasElement.querySelector('div') as HTMLElement;
-    div.innerHTML = '';
-    buildTreemap(div, ACTIVE_DOMAINS_MANY, true);
-  },
-};
-
-// Mirrors the "business-industrial" scrollytelling step from the original
-// aidata graphic: Business & Industrial and its sub-categories (Finance,
-// Business Services, Industry, etc.) are highlighted while everything else is
-// dimmed. Sub-category labels are positioned with the nudge technique.
 export const BusinessCategoryNudge: StoryObj = {
   ...storyDefaults,
   play: async ({ canvasElement }) => {
     const div = canvasElement.querySelector('div') as HTMLElement;
     div.innerHTML = '';
     buildBusinessNudge(div);
-  },
-};
-
-export const BusinessCategoryNudgeScored: StoryObj = {
-  ...storyDefaults,
-  play: async ({ canvasElement }) => {
-    const div = canvasElement.querySelector('div') as HTMLElement;
-    div.innerHTML = '';
-    buildBusinessNudge(div, true);
   },
 };

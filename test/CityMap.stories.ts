@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/html';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import { AvoidOverlap } from '../src/index.js';
-import type { LabelGroup, ScoredOptions } from '../src/index.js';
+import type { LabelGroup, Options } from '../src/index.js';
 
 import citiesPizza from './data/cities_pizza.json';
 import usTopoJson from './data/us-states-10m.json';
@@ -38,7 +38,6 @@ function buildCityMap(
   legendMinLabel: string,
   legendMaxLabel: string,
   priorityCities: string[] = [],
-  useScored = false,
 ) {
   const priorityCitiesSet = new Set(priorityCities);
   const majorCities = new Set([
@@ -110,7 +109,7 @@ function buildCityMap(
     .force('collide', d3.forceCollide(radius))
     .stop();
 
-  for (let i = 0; i < 120; i++) simulation.tick();
+  for (let i = 0; i < 120; i += 1) simulation.tick();
 
   const colorScale = d3
     .scaleLinear<string>()
@@ -340,7 +339,7 @@ function buildCityMap(
     .attr('fill', 'none')
     .attr('pointer-events', 'all')
     .style('cursor', 'pointer')
-    .on('mouseover', function (_event, d) {
+    .on('mouseover', (_event, d) => {
       const marker = svg
         .selectAll<SVGPathElement, ForcedDatum>('path.city-marker')
         .filter((cd) => cd === d);
@@ -404,16 +403,12 @@ function buildCityMap(
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       const avoidOverlap = new AvoidOverlap();
-      const sharedOptions = {
+      const options: Options = {
         includeParent: true,
         parentMargin: { top: -5, right: -5, bottom: -5, left: -5 },
+        scoreExponent: 2,
       };
-      if (useScored) {
-        const scoredOptions: ScoredOptions = { ...sharedOptions, scoreExponent: 2 };
-        avoidOverlap.runScored(svgNode, avoidLabelGroups, scoredOptions);
-      } else {
-        avoidOverlap.run(svgNode, avoidLabelGroups, sharedOptions);
-      }
+      avoidOverlap.run(svgNode, avoidLabelGroups, options);
 
       // Highlight visible labels' markers (matches real component)
       labelNodes.each(function () {
@@ -482,23 +477,6 @@ export const Pizza: StoryObj = {
       'The cities with the best (and worst) pizza',
       'Worst pizza',
       'Best pizza'
-    );
-  },
-};
-
-export const PizzaScored: StoryObj = {
-  ...storyDefaults,
-  play: async ({ canvasElement }) => {
-    const div = canvasElement.querySelector('div') as HTMLElement;
-    div.innerHTML = '';
-    buildCityMap(
-      div,
-      citiesPizza as CityDatum[],
-      'The cities with the best (and worst) pizza (scored)',
-      'Worst pizza',
-      'Best pizza',
-      [],
-      true,
     );
   },
 };
