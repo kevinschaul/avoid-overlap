@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/html';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import { AvoidOverlap } from '../src/index.js';
-import type { LabelGroup } from '../src/index.js';
+import type { LabelGroup, ScoredOptions } from '../src/index.js';
 
 import citiesPizza from './data/cities_pizza.json';
 import usTopoJson from './data/us-states-10m.json';
@@ -37,7 +37,8 @@ function buildCityMap(
   headline: string,
   legendMinLabel: string,
   legendMaxLabel: string,
-  priorityCities: string[] = []
+  priorityCities: string[] = [],
+  useScored = false,
 ) {
   const priorityCitiesSet = new Set(priorityCities);
   const majorCities = new Set([
@@ -403,10 +404,16 @@ function buildCityMap(
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       const avoidOverlap = new AvoidOverlap();
-      avoidOverlap.run(svgNode, avoidLabelGroups, {
+      const sharedOptions = {
         includeParent: true,
         parentMargin: { top: -5, right: -5, bottom: -5, left: -5 },
-      });
+      };
+      if (useScored) {
+        const scoredOptions: ScoredOptions = { ...sharedOptions, scoreExponent: 2 };
+        avoidOverlap.runScored(svgNode, avoidLabelGroups, scoredOptions);
+      } else {
+        avoidOverlap.run(svgNode, avoidLabelGroups, sharedOptions);
+      }
 
       // Highlight visible labels' markers (matches real component)
       labelNodes.each(function () {
@@ -475,6 +482,23 @@ export const Pizza: StoryObj = {
       'The cities with the best (and worst) pizza',
       'Worst pizza',
       'Best pizza'
+    );
+  },
+};
+
+export const PizzaScored: StoryObj = {
+  ...storyDefaults,
+  play: async ({ canvasElement }) => {
+    const div = canvasElement.querySelector('div') as HTMLElement;
+    div.innerHTML = '';
+    buildCityMap(
+      div,
+      citiesPizza as CityDatum[],
+      'The cities with the best (and worst) pizza (scored)',
+      'Worst pizza',
+      'Best pizza',
+      [],
+      true,
     );
   },
 };

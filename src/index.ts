@@ -470,7 +470,12 @@ const precomputePositions = (
   const h = body.maxY - body.minY;
 
   if (body.data.technique === 'choices') {
-    return (body.data as BodyDataChoices).choices.map((choice) => {
+    const choices = (body.data as BodyDataChoices).choices;
+    if (choices.length === 0) {
+      // No choice functions — treat as a fixed obstacle at its initial position.
+      return [{ minX: body.minX, minY: body.minY, maxX: body.maxX, maxY: body.maxY }];
+    }
+    return choices.map((choice) => {
       choice(body.node);
       const r = getRelativeBounds(body.node.getBoundingClientRect(), parentBounds);
       return { minX: r.x, minY: r.y, maxX: r.x + w, maxY: r.y + h };

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/html';
 import * as d3 from 'd3';
 import { AvoidOverlap } from '../src/index.js';
-import type { LabelGroup } from '../src/index.js';
+import type { LabelGroup, ScoredOptions } from '../src/index.js';
 
 // @ts-ignore — Vite raw import
 import hierarchyRaw from './data/hierarchy.csv?raw';
@@ -153,7 +153,8 @@ function pickDirection(d: any, chartWidth: number, chartHeight: number): string 
 // ── Main build function ─────────────────────────────────────────────────────
 function buildTreemap(
   container: HTMLElement,
-  activeDomains: string[] = ACTIVE_DOMAINS
+  activeDomains: string[] = ACTIVE_DOMAINS,
+  useScored = false,
 ) {
   const margin = { top: 10, right: 16, bottom: 10, left: 16 };
   const totalWidth = Math.min(container.clientWidth || 800, 960);
@@ -370,10 +371,16 @@ function buildTreemap(
       } as any];
 
       const avoidOverlap = new AvoidOverlap();
-      avoidOverlap.run(svgNode, [...rectGroups, ...choicesGroups, ...nudgeGroups], {
+      const sharedOptions = {
         includeParent: true,
         parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
-      });
+      };
+      if (useScored) {
+        const scoredOptions: ScoredOptions = { ...sharedOptions, scoreExponent: 2 };
+        avoidOverlap.runScored(svgNode, [...rectGroups, ...choicesGroups, ...nudgeGroups], scoredOptions);
+      } else {
+        avoidOverlap.run(svgNode, [...rectGroups, ...choicesGroups, ...nudgeGroups], sharedOptions);
+      }
     });
   });
 }
@@ -399,11 +406,29 @@ export const TopSites: StoryObj = {
   },
 };
 
+export const TopSitesScored: StoryObj = {
+  ...storyDefaults,
+  play: async ({ canvasElement }) => {
+    const div = canvasElement.querySelector('div') as HTMLElement;
+    div.innerHTML = '';
+    buildTreemap(div, ACTIVE_DOMAINS, true);
+  },
+};
+
 export const ManySites: StoryObj = {
   ...storyDefaults,
   play: async ({ canvasElement }) => {
     const div = canvasElement.querySelector('div') as HTMLElement;
     div.innerHTML = '';
     buildTreemap(div, ACTIVE_DOMAINS_MANY);
+  },
+};
+
+export const ManySitesScored: StoryObj = {
+  ...storyDefaults,
+  play: async ({ canvasElement }) => {
+    const div = canvasElement.querySelector('div') as HTMLElement;
+    div.innerHTML = '';
+    buildTreemap(div, ACTIVE_DOMAINS_MANY, true);
   },
 };
