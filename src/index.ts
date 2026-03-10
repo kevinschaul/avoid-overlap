@@ -936,8 +936,10 @@ export class AvoidOverlap {
         body.node.remove();
       } else if (body.data.technique === 'choices') {
         // Re-apply the winning choice (DOM was left in an arbitrary state after
-        // pre-computation)
-        (body.data as BodyDataChoices).choices[choice](body.node);
+        // pre-computation).  Fixed obstacles have choices:[] so there is no
+        // function to call — their position never changes.
+        const fn = (body.data as BodyDataChoices).choices[choice];
+        if (fn) fn(body.node);
       } else if (body.data.technique === 'nudge') {
         // Translate by the offset encoded in the winning synthetic position
         const winPos = allChoicePositions[i][choice];
