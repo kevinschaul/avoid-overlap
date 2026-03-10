@@ -218,4 +218,56 @@ describe('runScored', () => {
     // At minimum one should be visible
     expect(aVisible || bVisible).toBe(true);
   });
+
+  it('choicePriorities: strongly preferred choice wins over showing a low-priority label', () => {
+    // A (priority 2, bodyWeight=9): 2 choices.
+    //   choice 0 at (10,10): overlaps B.  choicePriority = 8 (strong preference)
+    //   choice 1 at (10,60): no overlap.  choicePriority = 0
+    // B (priority 1, bodyWeight=4): fixed obstacle (choices:[]).
+    //   always at (10,10).
+    //
+    // Without choicePriorities SA would move A to choice 1 and keep B visible,
+    // earning score 9 + 4 = 13.
+    // With choicePriorities=[8, 0] the score for A-at-choice-0 + B-hidden is
+    //   9+8 = 17, beating A-at-choice-1 + B-visible = 9+0+4 = 13.
+    // So SA should keep A at choice 0 and hide B.
+
+    const nodeA = document.createElement('span');
+    const nodeB = document.createElement('span');
+    parent.appendChild(nodeA);
+    parent.appendChild(nodeB);
+
+    let aChoice = 0;
+    const aPositions: Rect[] = [
+      { x: 10, y: 10, width: 40, height: 20 }, // overlaps B
+      { x: 10, y: 60, width: 40, height: 20 }, // clear
+    ];
+    mockBCR(nodeA, () => aPositions[aChoice]);
+    mockBCR(nodeB, () => ({ x: 10, y: 10, width: 40, height: 20 }));
+
+    const avoidOverlap = new AvoidOverlap();
+    avoidOverlap.runScored(parent, [
+      {
+        technique: 'choices' as const,
+        nodes: [nodeA],
+        choices: [() => { aChoice = 0; }, () => { aChoice = 1; }],
+        choicePriorities: [8, 0],
+        priority: 2,
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      },
+      {
+        technique: 'choices' as const,
+        nodes: [nodeB],
+        choices: [],          // fixed obstacle
+        priority: 1,
+        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      },
+    ], { iterations: 50_000 });
+
+    // A must be visible at choice 0 (preferred position)
+    expect(nodeA.isConnected).toBe(true);
+    expect(aChoice).toBe(0);
+    // B must be hidden because the choice bonus for A at choice 0 outweighs showing B
+    expect(nodeB.isConnected).toBe(false);
+  });
 });

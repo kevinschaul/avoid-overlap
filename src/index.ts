@@ -60,6 +60,21 @@ type LabelGroupNudge = LabelGroupGeneric & {
 type LabelGroupChoices = LabelGroupGeneric & {
   technique: 'choices';
   choices: Function[];
+  /**
+   * Optional score bonus for each choice, parallel to the `choices` array.
+   * Positive values make a choice more attractive; negative values make it
+   * less attractive.  Values are on the same scale as the per-label body
+   * weight `(priority + 1) ^ scoreExponent`, so they can meaningfully
+   * compete with showing or hiding a lower-priority label.
+   *
+   * Example — prefer the first direction strongly, allow others as fallbacks:
+   *   choicePriorities: [4, 1, 1, -2, -2, -2, -2, -2]
+   *
+   * When omitted, a small displacement penalty (-0.5) is applied to all
+   * non-zero choices so that SA returns to the natural position whenever
+   * the layout allows it.
+   */
+  choicePriorities?: number[];
 };
 
 export type LabelGroup = LabelGroupNudge | LabelGroupChoices;
@@ -80,6 +95,7 @@ type BodyDataNudge = BodyDataGeneric & {
 type BodyDataChoices = BodyDataGeneric & {
   technique: 'choices';
   choices: Function[];
+  choicePriorities?: number[];
 };
 
 type BodyDataStatic = BodyDataGeneric & {
@@ -427,6 +443,7 @@ const extendBodyDataChoices = (
     ...bodyData,
     technique: 'choices',
     choices: labelGroup.choices,
+    choicePriorities: labelGroup.choicePriorities,
   });
 
 // ─── Scoring helpers ──────────────────────────────────────────────────────────
@@ -785,14 +802,42 @@ export class AvoidOverlap {
       precomputePositions(body, parentBounds, nudgeOffsets)
     );
 
-    // ── Overlap penalty ────────────────────────────────────────────────────────
-    // Must exceed the maximum possible total score so that any state with at
-    // least one overlap always scores lower than any overlap-free state.
-    const totalWeight = bodies.reduce(
-      (s, b) => s + bodyWeight(b.data.priority, scoreExp),
-      0
+    // ── Per-choice score contributions ────────────────────────────────────────
+    // Each choice k for body i contributes allChoiceScores[i][k] to the total
+    // score in addition to the base bodyWeight.
+    //
+    // For 'choices' bodies the caller may supply choicePriorities — positive
+    // values make a choice more attractive, negative values less so.  Values
+    // live on the same scale as bodyWeight so they can outweigh showing a
+    // lower-priority label (e.g. a bonus of 4 for choice 0 means SA will keep
+    // an annotation in its preferred direction rather than move it to free space
+    // for a label whose bodyWeight is only 4).
+    //
+    // When choicePriorities is absent (or for 'nudge' bodies) a small
+    // displacement penalty of -0.5 is applied to all non-zero choices so that
+    // SA drifts back to the natural position whenever the layout allows it.
+    const defaultChoiceScore = (k: number): number => (k === 0 ? 0 : -0.5);
+    const allChoiceScores: number[][] = bodies.map((body, bi) =>
+      allChoicePositions[bi].map((_, k) => {
+        if (body.data.technique === 'choices') {
+          const cp = (body.data as BodyDataChoices).choicePriorities;
+          return cp !== undefined ? (cp[k] ?? 0) : defaultChoiceScore(k);
+        }
+        return defaultChoiceScore(k);
+      })
     );
-    const overlapPenalty = totalWeight + 1;
+
+    // ── Overlap penalty ────────────────────────────────────────────────────────
+    // Must exceed the maximum achievable score (body weights + choice bonuses)
+    // so that any state with at least one overlap always scores lower than any
+    // overlap-free state, regardless of how large choicePriorities values are.
+    const totalMaxScore = bodies.reduce((s, b, i) => {
+      const maxChoiceBonus = allChoiceScores[i].length
+        ? Math.max(0, ...allChoiceScores[i])
+        : 0;
+      return s + bodyWeight(b.data.priority, scoreExp) + maxChoiceBonus;
+    }, 0);
+    const overlapPenalty = totalMaxScore + 1;
 
     // ── SA state ───────────────────────────────────────────────────────────────
     // state[i]: -1 = hidden, 0..N-1 = index into allChoicePositions[i]
@@ -810,24 +855,23 @@ export class AvoidOverlap {
     });
 
     // ── Incremental score tracking ────────────────────────────────────────────
-    // Rather than rescoring the entire tree each iteration (O(n²)), track two
-    // accumulators that can be updated in O(log n) per step:
-    //   visibleWeight — sum of bodyWeight() for all currently visible bodies.
-    //   overlapCount  — overlap count consistent with the incremental update.
-    // curScore = visibleWeight - overlapCount * overlapPenalty
+    // Two accumulators updated in O(log n) per SA step:
     //
-    // The incremental update uses:
-    //   newOverlapCount = overlapCount - 2 * oldOverlaps + 2 * newOverlaps
-    // where oldOverlaps/newOverlaps come from tree.search().length.
-    // getCollisions() uses a different (non-standard) deduplication, so we
-    // CANNOT use it to initialise overlapCount — it would cause score drift.
+    //   visibleScore — sum of (bodyWeight + choiceScore) for all visible bodies.
+    //                  Encodes both label-visibility value and position preference
+    //                  (including choicePriorities / displacement penalty).
+    //   overlapCount — symmetric overlap count consistent with the incremental
+    //                  update formula below (see note on getCollisions drift).
     //
-    // Instead, build overlapCount via sequential insertion into a scratch tree:
-    // "inserting" body i contributes 2 × (bodies already present that overlap i).
-    // The factor of 2 mirrors the incremental update's counting convention and
-    // naturally handles both body–body pairs and body–parent pairs correctly.
-    let visibleWeight = bodies.reduce(
-      (s, b) => s + bodyWeight(b.data.priority, scoreExp),
+    // curScore = visibleScore - overlapCount * overlapPenalty
+    //
+    // Overlap count initialisation: getCollisions() uses non-standard
+    // deduplication incompatible with tree.search(), so we build overlapCount
+    // by sequentially inserting bodies into a scratch tree: inserting body i
+    // contributes 2 × (count of bodies already present that overlap i).
+    // The ×2 matches the incremental formula and handles body–parent pairs.
+    let visibleScore = bodies.reduce(
+      (s, b, i) => s + bodyWeight(b.data.priority, scoreExp) + allChoiceScores[i][0],
       0
     );
     let overlapCount = 0;
@@ -843,14 +887,9 @@ export class AvoidOverlap {
         }
       }
     }
-    let curScore     = visibleWeight - overlapCount * overlapPenalty;
-    // Small penalty per visible body that is not at its preferred (index-0) position.
-    // Must be less than the minimum bodyWeight so SA never hides a label just to
-    // avoid displacement; must be > 0 so SA returns to position 0 when possible.
-    const displacementPenalty = 0.5;
-    let displacementCount = 0; // all bodies start at choice 0 = preferred
-    let bestState    = [...state];
-    let bestScore    = curScore;
+    let curScore  = visibleScore - overlapCount * overlapPenalty;
+    let bestState = [...state];
+    let bestScore = curScore;
 
     // ── Simulated Annealing ───────────────────────────────────────────────────
     let temp = initTemp;
@@ -875,8 +914,10 @@ export class AvoidOverlap {
       } while (newChoice === oldChoice);
 
       // ── Compute delta score incrementally ─────────────────────────────────
-      const w           = bodyWeight(bodies[i].data.priority, scoreExp);
-      const deltaWeight = (newChoice >= 0 ? w : 0) - (oldChoice >= 0 ? w : 0);
+      const w            = bodyWeight(bodies[i].data.priority, scoreExp);
+      const oldBodyScore = oldChoice >= 0 ? w + allChoiceScores[i][oldChoice] : 0;
+      const newBodyScore = newChoice >= 0 ? w + allChoiceScores[i][newChoice] : 0;
+      const deltaScore   = newBodyScore - oldBodyScore;
 
       // Count overlaps the OLD position contributes (body i is still in tree;
       // search returns self too, so subtract 1).
@@ -898,24 +939,17 @@ export class AvoidOverlap {
 
       // getCollisions double-counts each pair (once from each side), so scale
       // the per-body overlap counts by 2 to stay consistent.
-      const newOverlapCount      = overlapCount - 2 * oldOverlaps + 2 * newOverlaps;
-      // Displacement: +1 for each visible body not at its preferred position (index 0).
-      // Hidden bodies (choice=-1) are not counted; choice=0 is preferred.
-      const newDisplacementCount = displacementCount
-        + (newChoice > 0 ? 1 : 0) - (oldChoice > 0 ? 1 : 0);
-      const newScore = (visibleWeight + deltaWeight)
-        - newOverlapCount * overlapPenalty
-        - newDisplacementCount * displacementPenalty;
-      const delta = newScore - curScore;
+      const newOverlapCount = overlapCount - 2 * oldOverlaps + 2 * newOverlaps;
+      const newScore        = (visibleScore + deltaScore) - newOverlapCount * overlapPenalty;
+      const delta           = newScore - curScore;
 
       if (delta > 0 || Math.random() < Math.exp(delta / temp)) {
         // Accept the move
-        inTree[i]          = newBodyInTree;
-        state[i]           = newChoice;
-        curScore           = newScore;
-        visibleWeight      += deltaWeight;
-        overlapCount       = newOverlapCount;
-        displacementCount  = newDisplacementCount;
+        inTree[i]    = newBodyInTree;
+        state[i]     = newChoice;
+        curScore     = newScore;
+        visibleScore += deltaScore;
+        overlapCount = newOverlapCount;
 
         if (curScore > bestScore) {
           bestScore = curScore;
