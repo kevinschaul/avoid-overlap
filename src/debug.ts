@@ -5,18 +5,17 @@ const scale = (domain: number[], range: number[], value: number): number => {
   const result =
     range[0] +
     ((range[1] - range[0]) / (domain[1] - domain[0])) * (value - domain[0]);
-  if (isNaN(result)) {
+  if (Number.isNaN(result)) {
     return range[0];
-  } else {
-    return result;
   }
+  return result;
 };
 
-export const defaultDebugFunc = (
+export default function defaultDebugFunc(
   tree: RBush<Body>,
   parentBounds: Bounds,
   uid: number
-) => {
+) {
   const bodies = tree.all();
 
   // TODO build a unique class name so we can support multiple instances on the same page
@@ -83,4 +82,4 @@ export const defaultDebugFunc = (
           </div>
         `;
   }
-};
+}

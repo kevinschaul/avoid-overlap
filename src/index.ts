@@ -1,6 +1,6 @@
 import RBush from 'rbush';
-import uniqWith from 'lodash/uniqWith.js';
-import { defaultDebugFunc } from './debug.js';
+import uniqWith from 'lodash/uniqWith';
+import defaultDebugFunc from './debug';
 
 export interface Bounds {
   x: number;
@@ -24,6 +24,33 @@ interface PositionHistoryEntry {
   message: string;
 }
 
+type Direction = 'up' | 'right' | 'down' | 'left';
+
+type BodyDataGeneric = {
+  priority: number;
+  priorityWithinGroup: number;
+  onRemove?: (el: Element) => void;
+};
+
+type BodyDataNudge = BodyDataGeneric & {
+  technique: 'nudge';
+  render: (el: Element, deltaX: number, deltaY: number) => void;
+  nudgeStrategy: 'shortest' | 'ordered';
+  nudgeDirections: Direction[];
+};
+
+type BodyDataChoices = BodyDataGeneric & {
+  technique: 'choices';
+  choices: ((el: Element) => void)[];
+  choicePriorities?: number[];
+};
+
+type BodyDataStatic = BodyDataGeneric & {
+  technique: 'static';
+};
+
+export type BodyData = BodyDataNudge | BodyDataChoices | BodyDataStatic;
+
 export interface Body {
   minX: number;
   minY: number;
@@ -35,8 +62,6 @@ export interface Body {
   data: BodyData;
 }
 
-type Direction = 'up' | 'right' | 'down' | 'left';
-
 interface CollisionCandidate {
   a: Body;
   b: Body;
@@ -47,19 +72,19 @@ type LabelGroupGeneric = {
   nodes: Element[];
   margin: Margin;
   priority: number;
-  onRemove?: (node: Element) => void;
+  onRemove?: (el: Element) => void;
 };
 
 type LabelGroupNudge = LabelGroupGeneric & {
   technique: 'nudge';
-  render: Function;
+  render: (el: Element, deltaX: number, deltaY: number) => void;
   nudgeStrategy: 'shortest' | 'ordered';
   nudgeDirections: Direction[];
 };
 
 type LabelGroupChoices = LabelGroupGeneric & {
   technique: 'choices';
-  choices: Function[];
+  choices: ((el: Element) => void)[];
   /**
    * Optional score bonus for each choice, parallel to the `choices` array.
    * Positive values make a choice more attractive; negative values make it
@@ -79,37 +104,12 @@ type LabelGroupChoices = LabelGroupGeneric & {
 
 export type LabelGroup = LabelGroupNudge | LabelGroupChoices;
 
-type BodyDataGeneric = {
-  priority: number;
-  priorityWithinGroup: number;
-  onRemove?: (node: Element) => void;
-};
-
-type BodyDataNudge = BodyDataGeneric & {
-  technique: 'nudge';
-  render: Function;
-  nudgeStrategy: 'shortest' | 'ordered';
-  nudgeDirections: Direction[];
-};
-
-type BodyDataChoices = BodyDataGeneric & {
-  technique: 'choices';
-  choices: Function[];
-  choicePriorities?: number[];
-};
-
-type BodyDataStatic = BodyDataGeneric & {
-  technique: 'static';
-};
-
-export type BodyData = BodyDataNudge | BodyDataChoices | BodyDataStatic;
-
 type Options = {
   includeParent?: boolean;
   parentMargin?: Margin;
   maxAttempts?: number;
   debug?: boolean;
-  debugFunc?: Function;
+  debugFunc?: (rbTree: RBush<Body>, pbounds: Bounds, id: number) => void;
 };
 
 export type ScoredOptions = Options & {
@@ -171,9 +171,9 @@ const getRelativeBounds = (child: Bounds, parent: Bounds) => <Bounds>{
 
 const first = <T>(
   array: T[],
-  callback: (item: T, index: number) => unknown
+  callback: (_item: T, _index: number) => unknown
 ): any => {
-  for (let i = 0, l = array.length; i < l; i++) {
+  for (let i = 0, l = array.length; i < l; i += 1) {
     const value = callback(array[i], i);
     if (value) {
       return value;
@@ -185,10 +185,10 @@ const first = <T>(
 
 const all = <T>(
   array: T[],
-  callback: (item: T, index: number) => unknown
+  callback: (_item: T, _index: number) => unknown
 ): any => {
   const ret: any[] = [];
-  for (let i = 0, l = array.length; i < l; i++) {
+  for (let i = 0, l = array.length; i < l; i += 1) {
     const value = callback(array[i], i);
     if (value) {
       ret.push(value);
@@ -217,6 +217,7 @@ const checkOne = (tree: RBush<Body>, body: Body) => {
         b: candidate,
       };
     }
+    return undefined;
   };
 
   return first(bodies, checkCollision);
@@ -308,7 +309,7 @@ const removeCollisions = (tree: RBush<Body>) => {
   const maxAttempts = tree.all().length;
   let attempts = 0;
   while (attempts < maxAttempts) {
-    attempts++;
+    attempts += 1;
     const collisions = getCollisions(tree);
     if (!collisions.length) {
       break;
@@ -462,7 +463,7 @@ type ChoicePosition = {
  * and higher-priority labels are exponentially more valuable when exp > 1.
  */
 const bodyWeight = (priority: number, exp: number): number =>
-  Math.pow(Math.max(0, priority) + 1, exp);
+  (Math.max(0, priority) + 1) ** exp;
 
 /**
  * Pre-compute the bounding-box positions for every candidate placement of a body.
@@ -487,7 +488,7 @@ const precomputePositions = (
   const h = body.maxY - body.minY;
 
   if (body.data.technique === 'choices') {
-    const choices = (body.data as BodyDataChoices).choices;
+    const { choices } = body.data as BodyDataChoices;
     if (choices.length === 0) {
       // No choice functions — treat as a fixed obstacle at its initial position.
       return [{ minX: body.minX, minY: body.minY, maxX: body.maxX, maxY: body.maxY }];
@@ -506,18 +507,22 @@ const precomputePositions = (
       { minX: body.minX, minY: body.minY, maxX: body.maxX, maxY: body.maxY },
     ];
     const dirs = (body.data as BodyDataNudge).nudgeDirections;
-    for (const dir of dirs) {
-      for (const offset of nudgeOffsets) {
-        const dx = dir === 'right' ? offset : dir === 'left' ? -offset : 0;
-        const dy = dir === 'down'  ? offset : dir === 'up'   ? -offset : 0;
+    dirs.forEach((dir) => {
+      nudgeOffsets.forEach((offset) => {
+        let dx = 0;
+        if (dir === 'right') dx = offset;
+        else if (dir === 'left') dx = -offset;
+        let dy = 0;
+        if (dir === 'down') dy = offset;
+        else if (dir === 'up') dy = -offset;
         positions.push({
           minX: body.minX + dx,
           minY: body.minY + dy,
           maxX: body.maxX + dx,
           maxY: body.maxY + dy,
         });
-      }
-    }
+      });
+    });
     return positions;
   }
 
@@ -532,7 +537,8 @@ export class AvoidOverlap {
   uid: number;
 
   constructor() {
-    this.uid = uid++;
+    this.uid = uid;
+    uid += 1;
   }
 
   run(parent: Element, labelGroups: LabelGroup[], options: Options) {
@@ -560,7 +566,7 @@ export class AvoidOverlap {
     }
 
     // Add everything to the system
-    labelGroups.map((labelGroup) => {
+    labelGroups.forEach((labelGroup) => {
       const margin = labelGroup.margin || {
         top: 0,
         right: 0,
@@ -570,7 +576,7 @@ export class AvoidOverlap {
 
       const priority = labelGroup.priority || 0;
 
-      labelGroup.nodes.map((node, i) => {
+      labelGroup.nodes.forEach((node, i) => {
         const bounds = getRelativeBounds(
           node.getBoundingClientRect(),
           parentBounds
@@ -643,7 +649,9 @@ export class AvoidOverlap {
           bodyToMove.data.nudgeStrategy === 'ordered' &&
           bodyToMove.data.nudgeDirections
         ) {
-          for (const direction of bodyToMove.data.nudgeDirections) {
+          // TODO only use first direction for now; extend to try others if collision remains
+          const [direction] = bodyToMove.data.nudgeDirections;
+          if (direction) {
             const position = getNudgedPosition(
               direction,
               bodyToMove,
@@ -659,15 +667,12 @@ export class AvoidOverlap {
               const newBody = updateTree(tree, bodyToMove, newX, newY);
               savePositionHistory(newBody, `nudge-ordered, ${direction}`);
             }
-
-            // TODO only break if there is no longer a collision so that other nudgeDirections values are attempted?
-            break;
           }
         }
       } else if (bodyToMove.data.technique === 'choices') {
         if (!bodyToMove.isStatic && bodyToMove.data.choices) {
           // Loop through the positioning choices, finding one that works
-          for (const choice of bodyToMove.data.choices) {
+          bodyToMove.data.choices.some((choice) => {
             choice(bodyToMove.node);
 
             // Update the position of the body in the system
@@ -682,20 +687,18 @@ export class AvoidOverlap {
             // Check if this position collides with anything else in the system
             const collisions = checkOne(tree, newBody);
             const stillCollides = !!collisions;
-            if (!stillCollides) {
-              break;
-            }
-          }
+            return !stillCollides; // stop iterating when no longer colliding
+          });
         }
       }
     };
 
     let attempts = 0;
     while (attempts < maxAttempts) {
-      attempts++;
+      attempts += 1;
       const collisions = getCollisions(tree);
       if (collisions) {
-        collisions.map(handleCollision);
+        collisions.forEach(handleCollision);
       } else {
         break;
       }
@@ -757,7 +760,7 @@ export class AvoidOverlap {
 
     // ── Build body list ───────────────────────────────────────────────────────
     const bodies: Body[] = [];
-    for (const labelGroup of labelGroups) {
+    labelGroups.forEach((labelGroup) => {
       const margin   = labelGroup.margin   ?? { top: 0, right: 0, bottom: 0, left: 0 };
       const priority = labelGroup.priority ?? 0;
 
@@ -788,7 +791,7 @@ export class AvoidOverlap {
         savePositionHistory(body, 'initial');
         bodies.push(body);
       });
-    }
+    });
 
     if (!bodies.length) return;
 
@@ -880,7 +883,7 @@ export class AvoidOverlap {
       if (includeParent) {
         addParent(initTree, parent, parentBounds, parentMargin);
       }
-      for (let i = 0; i < bodies.length; i++) {
+      for (let i = 0; i < bodies.length; i += 1) {
         if (inTree[i]) {
           overlapCount += 2 * initTree.search(inTree[i]!).length;
           initTree.insert(inTree[i]!);
@@ -894,85 +897,81 @@ export class AvoidOverlap {
     // ── Simulated Annealing ───────────────────────────────────────────────────
     let temp = initTemp;
 
-    for (let iter = 0; iter < iterations; iter++) {
+    for (let iter = 0; iter < iterations; iter += 1) {
       // Pick a random body to perturb
       const i         = Math.floor(Math.random() * bodies.length);
       const oldChoice = state[i];
       const nChoices  = allChoicePositions[i].length; // ≥1 for choices, 1 for nudge
       const nStates   = nChoices + 1;                  // +1 for the "hidden" state
 
-      if (nStates < 2) {
-        // No alternative state is available for this body; skip
+      if (nStates >= 2) {
+        // Pick a different state uniformly at random
+        let newChoice: number;
+        do {
+          newChoice = Math.floor(Math.random() * nStates) - 1; // range: -1 .. nChoices-1
+        } while (newChoice === oldChoice);
+
+        // ── Compute delta score incrementally ─────────────────────────────────
+        const w            = bodyWeight(bodies[i].data.priority, scoreExp);
+        const oldBodyScore = oldChoice >= 0 ? w + allChoiceScores[i][oldChoice] : 0;
+        const newBodyScore = newChoice >= 0 ? w + allChoiceScores[i][newChoice] : 0;
+        const deltaScore   = newBodyScore - oldBodyScore;
+
+        // Count overlaps the OLD position contributes (body i is still in tree;
+        // search returns self too, so subtract 1).
+        let oldOverlaps = 0;
+        if (inTree[i]) {
+          oldOverlaps = tree.search(inTree[i]!).length - 1;
+          tree.remove(inTree[i]!, (a: Body, b: Body) => a.node === b.node);
+        }
+
+        // Insert new position and count its overlaps (body i is not in tree yet).
+        let newBodyInTree: Body | null = null;
+        let newOverlaps = 0;
+        if (newChoice >= 0) {
+          const pos = allChoicePositions[i][newChoice];
+          newBodyInTree = { ...bodies[i], ...pos };
+          newOverlaps   = tree.search(newBodyInTree).length;
+          tree.insert(newBodyInTree);
+        }
+
+        // getCollisions double-counts each pair (once from each side), so scale
+        // the per-body overlap counts by 2 to stay consistent.
+        const newOverlapCount = overlapCount - 2 * oldOverlaps + 2 * newOverlaps;
+        const newScore        = (visibleScore + deltaScore) - newOverlapCount * overlapPenalty;
+        const delta           = newScore - curScore;
+
+        if (delta > 0 || Math.random() < Math.exp(delta / temp)) {
+          // Accept the move
+          inTree[i]    = newBodyInTree;
+          state[i]     = newChoice;
+          curScore     = newScore;
+          visibleScore += deltaScore;
+          overlapCount = newOverlapCount;
+
+          if (curScore > bestScore) {
+            bestScore = curScore;
+            bestState = [...state];
+          }
+        } else {
+          // Reject — revert tree to previous state
+          if (newBodyInTree) {
+            tree.remove(newBodyInTree, (a: Body, b: Body) => a.node === b.node);
+          }
+          if (oldChoice >= 0) {
+            const pos      = allChoicePositions[i][oldChoice];
+            const restored: Body = { ...bodies[i], ...pos };
+            inTree[i]      = restored;
+            tree.insert(restored);
+          }
+        }
+
         temp *= coolingRate;
-        continue;
       }
-
-      // Pick a different state uniformly at random
-      let newChoice: number;
-      do {
-        newChoice = Math.floor(Math.random() * nStates) - 1; // range: -1 .. nChoices-1
-      } while (newChoice === oldChoice);
-
-      // ── Compute delta score incrementally ─────────────────────────────────
-      const w            = bodyWeight(bodies[i].data.priority, scoreExp);
-      const oldBodyScore = oldChoice >= 0 ? w + allChoiceScores[i][oldChoice] : 0;
-      const newBodyScore = newChoice >= 0 ? w + allChoiceScores[i][newChoice] : 0;
-      const deltaScore   = newBodyScore - oldBodyScore;
-
-      // Count overlaps the OLD position contributes (body i is still in tree;
-      // search returns self too, so subtract 1).
-      let oldOverlaps = 0;
-      if (inTree[i]) {
-        oldOverlaps = tree.search(inTree[i]!).length - 1;
-        tree.remove(inTree[i]!, (a: Body, b: Body) => a.node === b.node);
-      }
-
-      // Insert new position and count its overlaps (body i is not in tree yet).
-      let newBodyInTree: Body | null = null;
-      let newOverlaps = 0;
-      if (newChoice >= 0) {
-        const pos = allChoicePositions[i][newChoice];
-        newBodyInTree = { ...bodies[i], ...pos };
-        newOverlaps   = tree.search(newBodyInTree).length;
-        tree.insert(newBodyInTree);
-      }
-
-      // getCollisions double-counts each pair (once from each side), so scale
-      // the per-body overlap counts by 2 to stay consistent.
-      const newOverlapCount = overlapCount - 2 * oldOverlaps + 2 * newOverlaps;
-      const newScore        = (visibleScore + deltaScore) - newOverlapCount * overlapPenalty;
-      const delta           = newScore - curScore;
-
-      if (delta > 0 || Math.random() < Math.exp(delta / temp)) {
-        // Accept the move
-        inTree[i]    = newBodyInTree;
-        state[i]     = newChoice;
-        curScore     = newScore;
-        visibleScore += deltaScore;
-        overlapCount = newOverlapCount;
-
-        if (curScore > bestScore) {
-          bestScore = curScore;
-          bestState = [...state];
-        }
-      } else {
-        // Reject — revert tree to previous state
-        if (newBodyInTree) {
-          tree.remove(newBodyInTree, (a: Body, b: Body) => a.node === b.node);
-        }
-        if (oldChoice >= 0) {
-          const pos      = allChoicePositions[i][oldChoice];
-          const restored: Body = { ...bodies[i], ...pos };
-          inTree[i]      = restored;
-          tree.insert(restored);
-        }
-      }
-
-      temp *= coolingRate;
     }
 
     // ── Apply best state to DOM ───────────────────────────────────────────────
-    for (let i = 0; i < bodies.length; i++) {
+    for (let i = 0; i < bodies.length; i += 1) {
       const choice = bestState[i];
       const body   = bodies[i];
 
@@ -1004,7 +1003,7 @@ export class AvoidOverlap {
     if (includeParent) {
       addParent(tree, parent, parentBounds, parentMargin);
     }
-    for (let i = 0; i < bodies.length; i++) {
+    for (let i = 0; i < bodies.length; i += 1) {
       if (bestState[i] >= 0) {
         const pos = allChoicePositions[i][bestState[i]];
         const b: Body = { ...bodies[i], ...pos };

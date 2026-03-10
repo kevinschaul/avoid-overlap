@@ -1,13 +1,14 @@
 /**
- * Jest tests for runScored using jsdom with mocked getBoundingClientRect.
+ * Tests for runScored using jsdom with mocked getBoundingClientRect.
  * Tests that the SA resolves overlapping labels to a non-overlapping state.
  */
-// Use the compiled dist version to avoid .js extension issues in Jest/CommonJS
-import { AvoidOverlap } from '../dist/index.js';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { AvoidOverlap } from './index';
 
 type Rect = { x: number; y: number; width: number; height: number };
 
 function mockBCR(el: Element, rectFn: () => Rect) {
+  // eslint-disable-next-line no-param-reassign
   el.getBoundingClientRect = () => {
     const r = rectFn();
     return {

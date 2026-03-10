@@ -10,7 +10,14 @@
     "prettier",
     "plugin:storybook/recommended"
   ],
-  "overrides": [],
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.test.js", "**/*.spec.ts", "**/*.spec.js"],
+      "env": {
+        "jest": true
+      }
+    }
+  ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": "latest",
@@ -19,5 +26,13 @@
   "plugins": [
     "@typescript-eslint"
   ],
-  "rules": {}
+  "rules": {
+    "import/extensions": "off",
+    "import/no-unresolved": "off",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": ["error", {
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_"
+    }]
+  }
 }
