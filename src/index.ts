@@ -124,6 +124,14 @@ export type ScoredOptions = Options & {
    * Default: 2  (quadratic weighting)
    */
   scoreExponent?: number;
+  /**
+   * Pixel offsets used to generate synthetic nudge positions for labels that
+   * use the `nudge` technique.  For each allowed nudge direction the label is
+   * speculatively placed at every listed offset, giving the SA a real set of
+   * positions to choose from instead of just show/hide.
+   * Default: [2, 4, 8, 16, 32, 64]
+   */
+  nudgeOffsets?: number[];
 };
 
 type NudgedPosition = {
@@ -440,14 +448,24 @@ const bodyWeight = (priority: number, exp: number): number =>
   Math.pow(Math.max(0, priority) + 1, exp);
 
 /**
- * Pre-compute the bounding-box positions for every choice of a body by
- * transiently calling each choice function and reading the DOM rect.
- * For nudge bodies there is only one position: the initial one.
+ * Pre-compute the bounding-box positions for every candidate placement of a body.
  *
- * The width/height of the body (which include the margin) are preserved so
- * the returned positions are directly usable in the spatial tree.
+ * - `choices` bodies: calls each choice function, reads the DOM rect (transient
+ *   DOM modification), and records the resulting bounding box.
+ * - `nudge` bodies: generates positions arithmetically by shifting the initial
+ *   bounding box in each allowed nudge direction at every listed offset —
+ *   no DOM calls required.
+ *
+ * The width/height of the body (which includes the margin) is preserved across
+ * all positions so they are directly usable in the spatial tree.
  */
-const precomputePositions = (body: Body, parentBounds: Bounds): ChoicePosition[] => {
+const DEFAULT_NUDGE_OFFSETS = [2, 4, 8, 16, 32, 64];
+
+const precomputePositions = (
+  body: Body,
+  parentBounds: Bounds,
+  nudgeOffsets: number[] = DEFAULT_NUDGE_OFFSETS
+): ChoicePosition[] => {
   const w = body.maxX - body.minX;
   const h = body.maxY - body.minY;
 
@@ -459,7 +477,29 @@ const precomputePositions = (body: Body, parentBounds: Bounds): ChoicePosition[]
     });
   }
 
-  // nudge / static: only the original position
+  if (body.data.technique === 'nudge') {
+    // Start with the initial (un-nudged) position, then add a candidate for
+    // each direction × offset combination.  Pure arithmetic — no DOM calls.
+    const positions: ChoicePosition[] = [
+      { minX: body.minX, minY: body.minY, maxX: body.maxX, maxY: body.maxY },
+    ];
+    const dirs = (body.data as BodyDataNudge).nudgeDirections;
+    for (const dir of dirs) {
+      for (const offset of nudgeOffsets) {
+        const dx = dir === 'right' ? offset : dir === 'left' ? -offset : 0;
+        const dy = dir === 'down'  ? offset : dir === 'up'   ? -offset : 0;
+        positions.push({
+          minX: body.minX + dx,
+          minY: body.minY + dy,
+          maxX: body.maxX + dx,
+          maxY: body.maxY + dy,
+        });
+      }
+    }
+    return positions;
+  }
+
+  // static: only the original position
   return [{ minX: body.minX, minY: body.minY, maxX: body.maxX, maxY: body.maxY }];
 };
 
@@ -735,8 +775,9 @@ export class AvoidOverlap {
     // the initial box for nudge bodies).  After this loop each node is left in
     // the state of its last choice, but we correct that when we apply the
     // winning configuration at the end.
+    const nudgeOffsets = options.nudgeOffsets ?? DEFAULT_NUDGE_OFFSETS;
     const allChoicePositions: ChoicePosition[][] = bodies.map((body) =>
-      precomputePositions(body, parentBounds)
+      precomputePositions(body, parentBounds, nudgeOffsets)
     );
 
     // ── Overlap penalty ────────────────────────────────────────────────────────
@@ -856,8 +897,15 @@ export class AvoidOverlap {
         // Re-apply the winning choice (DOM was left in an arbitrary state after
         // pre-computation)
         (body.data as BodyDataChoices).choices[choice](body.node);
+      } else if (body.data.technique === 'nudge') {
+        // Translate by the offset encoded in the winning synthetic position
+        const winPos = allChoicePositions[i][choice];
+        const diffX  = winPos.minX - body.minX;
+        const diffY  = winPos.minY - body.minY;
+        if (diffX !== 0 || diffY !== 0) {
+          (body.data as BodyDataNudge).render(body.node, diffX, diffY);
+        }
       }
-      // nudge bodies at choice 0 remain at their initial DOM position
     }
 
     // ── Safety net: greedy collision removal ──────────────────────────────────
