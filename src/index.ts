@@ -96,6 +96,36 @@ type Options = {
   debugFunc?: Function;
 };
 
+export type ScoredOptions = Options & {
+  /**
+   * Number of simulated-annealing iterations.
+   * More iterations = better results but slower.
+   * Default: 10_000
+   */
+  iterations?: number;
+  /**
+   * Initial temperature for simulated annealing.
+   * Higher values allow the algorithm to escape local optima early on.
+   * Default: 100
+   */
+  temperature?: number;
+  /**
+   * Multiplicative cooling rate applied each iteration (must be in (0, 1)).
+   * Values close to 1 cool slowly (more exploration); values closer to 0
+   * cool fast (more exploitation).
+   * Default: 0.995
+   */
+  coolingRate?: number;
+  /**
+   * Exponent used in the per-label score formula:
+   *   score = (priority + 1) ^ scoreExponent
+   * Higher values make the highest-priority labels exponentially more
+   * valuable relative to lower-priority labels.
+   * Default: 2  (quadratic weighting)
+   */
+  scoreExponent?: number;
+};
+
 type NudgedPosition = {
   direction: Direction;
   x: number;
@@ -391,6 +421,48 @@ const extendBodyDataChoices = (
     choices: labelGroup.choices,
   });
 
+// ─── Scoring helpers ──────────────────────────────────────────────────────────
+
+/** Bounding box pre-computed for a single choice position (no DOM involvement). */
+type ChoicePosition = {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+};
+
+/**
+ * Score weight for a label.
+ * Using (priority + 1)^exp so that even priority-0 labels contribute,
+ * and higher-priority labels are exponentially more valuable when exp > 1.
+ */
+const bodyWeight = (priority: number, exp: number): number =>
+  Math.pow(Math.max(0, priority) + 1, exp);
+
+/**
+ * Pre-compute the bounding-box positions for every choice of a body by
+ * transiently calling each choice function and reading the DOM rect.
+ * For nudge bodies there is only one position: the initial one.
+ *
+ * The width/height of the body (which include the margin) are preserved so
+ * the returned positions are directly usable in the spatial tree.
+ */
+const precomputePositions = (body: Body, parentBounds: Bounds): ChoicePosition[] => {
+  const w = body.maxX - body.minX;
+  const h = body.maxY - body.minY;
+
+  if (body.data.technique === 'choices') {
+    return (body.data as BodyDataChoices).choices.map((choice) => {
+      choice(body.node);
+      const r = getRelativeBounds(body.node.getBoundingClientRect(), parentBounds);
+      return { minX: r.x, minY: r.y, maxX: r.x + w, maxY: r.y + h };
+    });
+  }
+
+  // nudge / static: only the original position
+  return [{ minX: body.minX, minY: body.minY, maxX: body.maxX, maxY: body.maxY }];
+};
+
 // Global id counter, incremented for each instance of an avoid overlap class
 let uid = 0;
 
@@ -569,6 +641,243 @@ export class AvoidOverlap {
 
     removeCollisions(tree);
 
+    if (options.debug) {
+      if (options.debugFunc) {
+        options.debugFunc(tree, parentBounds, this.uid);
+      } else {
+        defaultDebugFunc(tree, parentBounds, this.uid);
+      }
+    }
+  }
+
+  /**
+   * Run a global score-maximising label placement using simulated annealing.
+   *
+   * Each label is assigned a score of `(priority + 1) ^ scoreExponent`.
+   * The algorithm searches for the configuration of label positions/visibility
+   * that maximises the total score while keeping all visible labels
+   * non-overlapping.  Removing (hiding) a label loses its score contribution,
+   * so the algorithm naturally prefers keeping high-priority labels visible.
+   *
+   * Labels that use the `choices` technique can be placed at any of their
+   * pre-defined positions, or hidden.  Labels that use the `nudge` technique
+   * are either shown at their initial position or hidden; nudge-style movement
+   * is not performed here because the SA explores discrete states.
+   *
+   * After SA terminates the best-found configuration is applied to the DOM.
+   * A greedy removal pass is run as a safety net in case any overlaps remain
+   * (e.g. if SA did not fully converge).
+   */
+  runScored(parent: Element, labelGroups: LabelGroup[], options: ScoredOptions = {}) {
+    const parentBounds = parent.getBoundingClientRect();
+
+    const iterations  = options.iterations   ?? 10_000;
+    const initTemp    = options.temperature  ?? 100;
+    const coolingRate = options.coolingRate  ?? 0.995;
+    const scoreExp    = options.scoreExponent ?? 2;
+    const includeParent = options.includeParent ?? false;
+    const parentMargin  = options.parentMargin  ?? {
+      top: -2, right: -2, bottom: -2, left: -2,
+    };
+
+    if (options.debug) {
+      console.log(serialize(parent, labelGroups, options));
+      console.log(
+        "^ copy the above message into this project's Storybook for more debugging"
+      );
+    }
+
+    // ── Build spatial tree ───────────────────────────────────────────────────
+    const tree: RBush<Body> = new RBush();
+    if (includeParent) {
+      addParent(tree, parent, parentBounds, parentMargin);
+    }
+
+    // ── Build body list ───────────────────────────────────────────────────────
+    const bodies: Body[] = [];
+    for (const labelGroup of labelGroups) {
+      const margin   = labelGroup.margin   ?? { top: 0, right: 0, bottom: 0, left: 0 };
+      const priority = labelGroup.priority ?? 0;
+
+      labelGroup.nodes.forEach((node, i) => {
+        const b = getRelativeBounds(node.getBoundingClientRect(), parentBounds);
+
+        const baseData: BodyDataGeneric = {
+          priority,
+          priorityWithinGroup: labelGroup.nodes.length - i,
+          onRemove: labelGroup.onRemove,
+        };
+
+        const data: BodyData =
+          labelGroup.technique === 'nudge'
+            ? extendBodyDataNudge(baseData, labelGroup)
+            : extendBodyDataChoices(baseData, labelGroup);
+
+        const body: Body = {
+          minX: b.x - margin.left,
+          minY: b.y - margin.top,
+          maxX: b.x + b.width + margin.left + margin.right,
+          maxY: b.y + b.height + margin.top + margin.bottom,
+          positionHistory: [],
+          isStatic: false,
+          node,
+          data,
+        };
+        savePositionHistory(body, 'initial');
+        bodies.push(body);
+      });
+    }
+
+    if (!bodies.length) return;
+
+    // ── Pre-compute choice positions (transiently modifies DOM) ───────────────
+    // For each body we get an array of bounding boxes – one per choice (or just
+    // the initial box for nudge bodies).  After this loop each node is left in
+    // the state of its last choice, but we correct that when we apply the
+    // winning configuration at the end.
+    const allChoicePositions: ChoicePosition[][] = bodies.map((body) =>
+      precomputePositions(body, parentBounds)
+    );
+
+    // ── Overlap penalty ────────────────────────────────────────────────────────
+    // Must exceed the maximum possible total score so that any state with at
+    // least one overlap always scores lower than any overlap-free state.
+    const totalWeight = bodies.reduce(
+      (s, b) => s + bodyWeight(b.data.priority, scoreExp),
+      0
+    );
+    const overlapPenalty = totalWeight + 1;
+
+    // ── SA state ───────────────────────────────────────────────────────────────
+    // state[i]: -1 = hidden, 0..N-1 = index into allChoicePositions[i]
+    // inTree[i]: the Body object currently inserted in the tree for body i,
+    //            or null if body i is hidden.
+    const inTree: (Body | null)[] = new Array(bodies.length).fill(null);
+
+    // Initialise: every label visible at choice 0
+    const state: number[] = bodies.map((body, i) => {
+      const pos = allChoicePositions[i][0];
+      const b: Body = { ...body, ...pos };
+      tree.insert(b);
+      inTree[i] = b;
+      return 0;
+    });
+
+    // ── Score helper ──────────────────────────────────────────────────────────
+    const scoreState = (s: number[]): number => {
+      let score = 0;
+      for (let i = 0; i < bodies.length; i++) {
+        if (s[i] >= 0) score += bodyWeight(bodies[i].data.priority, scoreExp);
+      }
+      score -= getCollisions(tree).length * overlapPenalty;
+      return score;
+    };
+
+    let curScore  = scoreState(state);
+    let bestState = [...state];
+    let bestScore = curScore;
+
+    // ── Simulated Annealing ───────────────────────────────────────────────────
+    let temp = initTemp;
+
+    for (let iter = 0; iter < iterations; iter++) {
+      // Pick a random body to perturb
+      const i        = Math.floor(Math.random() * bodies.length);
+      const oldChoice = state[i];
+      const nChoices  = allChoicePositions[i].length; // 1 for nudge, ≥1 for choices
+      const nStates   = nChoices + 1;                  // +1 for the "hidden" state
+
+      if (nStates < 2) {
+        // No alternative state is available for this body; skip
+        temp *= coolingRate;
+        continue;
+      }
+
+      // Pick a different state uniformly at random
+      let newChoice: number;
+      do {
+        newChoice = Math.floor(Math.random() * nStates) - 1; // range: -1 .. nChoices-1
+      } while (newChoice === oldChoice);
+
+      // ── Mutate tree (remove old, insert new) ─────────────────────────────
+      if (oldChoice >= 0 && inTree[i]) {
+        tree.remove(inTree[i]!, (a: Body, b: Body) => a.node === b.node);
+      }
+
+      let newBodyInTree: Body | null = null;
+      if (newChoice >= 0) {
+        const pos = allChoicePositions[i][newChoice];
+        newBodyInTree = { ...bodies[i], ...pos };
+        tree.insert(newBodyInTree);
+      }
+
+      // ── Evaluate new state ────────────────────────────────────────────────
+      state[i] = newChoice;
+      const newScore = scoreState(state);
+      const delta    = newScore - curScore;
+
+      if (delta > 0 || Math.random() < Math.exp(delta / temp)) {
+        // Accept the move
+        inTree[i] = newBodyInTree;
+        curScore   = newScore;
+
+        if (curScore > bestScore) {
+          bestScore = curScore;
+          bestState = [...state];
+        }
+      } else {
+        // Reject — revert tree to previous state
+        state[i] = oldChoice;
+
+        if (newBodyInTree) {
+          tree.remove(newBodyInTree, (a: Body, b: Body) => a.node === b.node);
+        }
+        if (oldChoice >= 0) {
+          const pos      = allChoicePositions[i][oldChoice];
+          const restored: Body = { ...bodies[i], ...pos };
+          inTree[i]      = restored;
+          tree.insert(restored);
+        }
+      }
+
+      temp *= coolingRate;
+    }
+
+    // ── Apply best state to DOM ───────────────────────────────────────────────
+    for (let i = 0; i < bodies.length; i++) {
+      const choice = bestState[i];
+      const body   = bodies[i];
+
+      if (choice < 0) {
+        // Label was hidden by SA — remove it
+        body.data.onRemove?.(body.node);
+        body.node.remove();
+      } else if (body.data.technique === 'choices') {
+        // Re-apply the winning choice (DOM was left in an arbitrary state after
+        // pre-computation)
+        (body.data as BodyDataChoices).choices[choice](body.node);
+      }
+      // nudge bodies at choice 0 remain at their initial DOM position
+    }
+
+    // ── Safety net: greedy collision removal ──────────────────────────────────
+    // Rebuild tree with the winning positions and remove any residual overlaps
+    // (can occur when SA has not fully converged).
+    tree.clear();
+    if (includeParent) {
+      addParent(tree, parent, parentBounds, parentMargin);
+    }
+    for (let i = 0; i < bodies.length; i++) {
+      if (bestState[i] >= 0) {
+        const pos = allChoicePositions[i][bestState[i]];
+        const b: Body = { ...bodies[i], ...pos };
+        savePositionHistory(b, `scored-best-choice-${bestState[i]}`);
+        tree.insert(b);
+      }
+    }
+    removeCollisions(tree);
+
+    // ── Debug ─────────────────────────────────────────────────────────────────
     if (options.debug) {
       if (options.debugFunc) {
         options.debugFunc(tree, parentBounds, this.uid);
