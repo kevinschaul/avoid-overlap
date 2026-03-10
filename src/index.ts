@@ -813,13 +813,36 @@ export class AvoidOverlap {
     // Rather than rescoring the entire tree each iteration (O(n²)), track two
     // accumulators that can be updated in O(log n) per step:
     //   visibleWeight — sum of bodyWeight() for all currently visible bodies.
-    //   overlapCount  — getCollisions()-style count (double-counts each pair).
+    //   overlapCount  — overlap count consistent with the incremental update.
     // curScore = visibleWeight - overlapCount * overlapPenalty
+    //
+    // The incremental update uses:
+    //   newOverlapCount = overlapCount - 2 * oldOverlaps + 2 * newOverlaps
+    // where oldOverlaps/newOverlaps come from tree.search().length.
+    // getCollisions() uses a different (non-standard) deduplication, so we
+    // CANNOT use it to initialise overlapCount — it would cause score drift.
+    //
+    // Instead, build overlapCount via sequential insertion into a scratch tree:
+    // "inserting" body i contributes 2 × (bodies already present that overlap i).
+    // The factor of 2 mirrors the incremental update's counting convention and
+    // naturally handles both body–body pairs and body–parent pairs correctly.
     let visibleWeight = bodies.reduce(
       (s, b) => s + bodyWeight(b.data.priority, scoreExp),
       0
     );
-    let overlapCount = getCollisions(tree).length; // double-counted pairs
+    let overlapCount = 0;
+    {
+      const initTree: RBush<Body> = new RBush();
+      if (includeParent) {
+        addParent(initTree, parent, parentBounds, parentMargin);
+      }
+      for (let i = 0; i < bodies.length; i++) {
+        if (inTree[i]) {
+          overlapCount += 2 * initTree.search(inTree[i]!).length;
+          initTree.insert(inTree[i]!);
+        }
+      }
+    }
     let curScore     = visibleWeight - overlapCount * overlapPenalty;
     let bestState    = [...state];
     let bestScore    = curScore;
