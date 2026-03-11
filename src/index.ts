@@ -1,7 +1,7 @@
 import RBush from 'rbush';
 import seedrandom from 'seedrandom';
-import defaultDebugFunc from './debug';
-import type { DebugLabel, DebugInfo } from './debug';
+import defaultDebugFunc from './debug.js';
+import type { DebugLabel, DebugInfo } from './debug.js';
 
 export type { DebugLabel, DebugInfo };
 
