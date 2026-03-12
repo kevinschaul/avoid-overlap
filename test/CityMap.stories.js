@@ -408,7 +408,7 @@ function buildCityMap(
         scoreExponent: 2,
         debug,
       };
-      avoidOverlap(svgNode, allLabelGroups, options);
+      avoidOverlap(allLabelGroups, options);
 
       // Highlight visible labels' markers (matches real component)
       labelNodes.each(function () {

@@ -68,49 +68,66 @@ interface CollisionCandidate {
   b: Body;
 }
 
-type LabelGroupGeneric = {
+export type LabelGroupGeneric = {
   technique: 'nudge' | 'choices';
+  /** An array of elements to avoid overlaps. */
   nodes: Element[];
+  /**
+   * Extra spacing to consider for collisions with these nodes. Accepts a
+   * number (uniform) or `{ top, right, bottom, left }`.
+   * @defaultValue 0
+   */
   margin?: number | Partial<Margin>;
+  /**
+   * Priority for this label group. Higher-priority labels are kept visible
+   * when a conflict cannot be resolved. Uses quadratic weighting, so
+   * differences matter more at higher values.
+   * @defaultValue 0
+   */
   priority?: number;
   /**
-   * Whether the algorithm is allowed to remove this label when it cannot be
-   * placed without overlapping a higher-priority label.
-   * Set to false to always show the label, even if it overlaps.
-   * Default: true
+   * Whether the algorithm is allowed to hide this label when it cannot be
+   * placed without overlapping a higher-priority label. Set to `false` to
+   * always show the label, even if it overlaps.
+   * @defaultValue true
    */
   remove?: boolean;
+  /** Called when a node is removed from the DOM due to an unresolvable overlap. */
   onRemove?: (el: Element) => void;
 };
 
-type LabelGroupNudge = LabelGroupGeneric & {
+export type LabelGroupNudge = LabelGroupGeneric & {
   technique: 'nudge';
+  /** Function that applies the nudged position (`dx`, `dy`) to the node. */
   render: (el: Element, deltaX: number, deltaY: number) => void;
+  /**
+   * Which directions to consider nudging.
+   * @defaultValue ["down", "right", "up", "left"]
+   */
   directions?: Direction[];
+  /**
+   * Maximum nudge distance in pixels.
+   * @defaultValue 64
+   */
   maxDistance?: number;
 };
 
-type LabelGroupChoices = LabelGroupGeneric & {
+export type LabelGroupChoices = LabelGroupGeneric & {
   technique: 'choices';
+  /**
+   * An array of functions that each apply a candidate position to the node.
+   * Pass an empty array to treat the node as a fixed obstacle.
+   */
   choices: ((el: Element) => void)[];
   /**
-   * Optional score bonus for each choice, parallel to the `choices` array.
-   * Positive values make a choice more attractive; negative values make it
-   * less attractive.  Values are on the same scale as the per-label body
-   * weight `(priority + 1) ^ scoreExponent`, so they can meaningfully
-   * compete with showing or hiding a lower-priority label.
-   *
-   * Example — prefer the first direction strongly, allow others as fallbacks:
-   *   choiceBonuses: [4, 1, 1, -2, -2, -2, -2, -2]
-   *
-   * When omitted, a small displacement penalty (-0.5) is applied to all
-   * non-zero choices so that SA returns to the natural position whenever
-   * the layout allows it.
+   * Score bonus for each choice, parallel to `choices`. Positive values make
+   * a choice more attractive; negative values less so. When omitted, a small
+   * penalty (`-0.5`) is applied to non-zero choices.
    */
   choiceBonuses?: number[];
 };
 
-type LabelGroupFixed = {
+export type LabelGroupFixed = {
   technique: 'fixed';
   nodes: Element[];
   margin?: number | Partial<Margin>;
@@ -119,48 +136,69 @@ type LabelGroupFixed = {
 export type LabelGroup = LabelGroupNudge | LabelGroupChoices | LabelGroupFixed;
 
 export type Options = {
+  /**
+   * Whether to treat the common ancestor's edges as collision boundaries.
+   * @defaultValue true
+   */
   includeParent?: boolean;
   /**
    * Margin inset from the parent boundary. Negative values allow labels to
    * touch (but not cross) the parent edge without a collision penalty.
    * Accepts a number (uniform) or per-side object.
-   * Default: -2 (all sides)
+   * @defaultValue -2
    */
   parentMargin?: number | Partial<Margin>;
+  /**
+   * Whether to enable debug mode, which renders a panel showing label scores
+   * and lets you toggle between the original and final layouts.
+   * @defaultValue false
+   */
   debug?: boolean;
   /**
-   * Number of simulated-annealing iterations.
-   * More iterations = better results but slower.
-   * Default: 10_000
+   * Number of simulated-annealing iterations. More iterations = better
+   * results but slower.
+   * @defaultValue 10000
    */
   iterations?: number;
   /**
-   * Initial temperature for simulated annealing.
-   * Higher values allow the algorithm to escape local optima early on.
-   * Default: 100
+   * Initial temperature for simulated annealing. Higher values allow the algorithm to escape local optima early on. Most users won't need to change this.
+   * @defaultValue 100
    */
   temperature?: number;
   /**
-   * Multiplicative cooling rate applied each iteration (must be in (0, 1)).
-   * Values close to 1 cool slowly (more exploration); values closer to 0
-   * cool fast (more exploitation).
-   * Default: 0.995
+   * Multiplicative cooling rate per iteration (between 0 and 1). Values close to 1 cool slowly; values closer to 0 cool fast. Most users won't need to change this.
+   * @defaultValue 0.995
    */
   coolingRate?: number;
   /**
    * Exponent used in the per-label score formula:
-   *   score = (priority + 1) ^ scoreExponent
-   * Higher values make the highest-priority labels exponentially more
-   * valuable relative to lower-priority labels.
-   * Default: 2  (quadratic weighting)
+   * `(priority + 1) ^ scoreExponent`. Higher values make the highest-priority
+   * labels exponentially more valuable.
+   * @defaultValue 2
    */
   scoreExponent?: number;
   /**
-   * Seed for the random number generator to enable deterministic results.
-   * The same seed will produce identical label placements across multiple runs.
-   * Default: 42 (for reproducibility)
+   * Seed for the random number generator. The same seed produces identical
+   * placements across runs.
+   * @defaultValue 42
    */
   seed?: string | number;
+};
+
+const findCommonAncestor = (nodes: Element[]): Element => {
+  if (nodes.length === 0) return document.documentElement;
+  const chain: Element[] = [];
+  let cur: Element | null = nodes[0].parentElement;
+  while (cur) {
+    chain.push(cur);
+    cur = cur.parentElement;
+  }
+  for (let i = 1; i < nodes.length; i++) {
+    for (let j = chain.length - 1; j >= 0; j--) {
+      if (!chain[j].contains(nodes[i])) chain.splice(j, 1);
+    }
+  }
+  return chain[0] ?? document.documentElement;
 };
 
 const getRelativeBounds = (child: Bounds, parent: Bounds) =>
@@ -402,27 +440,65 @@ let nextUid = 0;
  * Returns a DebugInfo object when `options.debug` is true, otherwise undefined.
  */
 export function avoidOverlap(
-  parent: Element,
   labelGroups: LabelGroup[],
   options: Options = {}
 ): DebugInfo | undefined {
   const uid = nextUid++;
+  const allNodes = labelGroups.flatMap((g) => g.nodes);
+  const parent = findCommonAncestor(allNodes);
   const parentBounds = parent.getBoundingClientRect();
 
   const iterations = options.iterations ?? 10_000;
   const initTemp = options.temperature ?? 100;
   const coolingRate = options.coolingRate ?? 0.995;
   const scoreExp = options.scoreExponent ?? 2;
-  const includeParent = options.includeParent ?? false;
+  const includeParent = options.includeParent ?? true;
   const parentMargin = resolveMargin(options.parentMargin ?? -2);
 
   // Create a random function: use provided seed or default to 42 for deterministic results
-  const random = seedrandom(options.seed ?? 42);
+  const random = seedrandom(String(options.seed ?? 42));
 
   // ── Build spatial tree ───────────────────────────────────────────────────
   const tree: RBush<Body> = new RBush();
   if (includeParent) {
     addParent(tree, parent, parentBounds, parentMargin);
+  }
+
+  // ── Validate label groups ─────────────────────────────────────────────────
+  const validTechniques = new Set(['nudge', 'choices', 'fixed']);
+  const validDirections = new Set(['up', 'down', 'left', 'right']);
+  for (const labelGroup of labelGroups) {
+    const { technique } = labelGroup;
+    if (!validTechniques.has(technique)) {
+      throw new Error(
+        `avoid-overlap: unknown technique "${technique}". Valid values are: ${[...validTechniques].join(', ')}.`
+      );
+    }
+    if (technique === 'choices') {
+      const g = labelGroup as LabelGroupChoices;
+      if (!Array.isArray(g.choices)) {
+        throw new Error(`avoid-overlap: "choices" technique requires a "choices" array.`);
+      }
+      if (g.choiceBonuses !== undefined && g.choiceBonuses.length !== g.choices.length) {
+        throw new Error(
+          `avoid-overlap: "choiceBonuses" length (${g.choiceBonuses.length}) must match "choices" length (${g.choices.length}).`
+        );
+      }
+    }
+    if (technique === 'nudge') {
+      const g = labelGroup as LabelGroupNudge;
+      if (typeof g.render !== 'function') {
+        throw new Error(`avoid-overlap: "nudge" technique requires a "render" function.`);
+      }
+      if (g.directions !== undefined) {
+        const invalid = g.directions.filter((d) => !validDirections.has(d));
+        if (invalid.length > 0) {
+          throw new Error(
+            `avoid-overlap: invalid direction(s): ${invalid.map((d) => `"${d}"`).join(', ')}. Valid values are: ${[...validDirections].join(', ')}.`
+          );
+        }
+      }
+    }
   }
 
   // ── Insert fixed label groups as obstacles ────────────────────────────────
@@ -564,7 +640,7 @@ export function avoidOverlap(
     // Pick a random body to perturb
     const i = Math.floor(random() * bodies.length);
     const oldChoice = state[i];
-    const nChoices = allChoicePositions[i].length; // ≥1 for choices, 1 for nudge
+    const nChoices = allChoicePositions[i].length; // ≥1 always
     const canRemove = bodies[i].data.remove;
     const nStates = canRemove ? nChoices + 1 : nChoices; // hidden state only if removable
 

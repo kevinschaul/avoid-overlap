@@ -87,16 +87,12 @@ export const TopSites = {
           },
         ];
 
-        avoidOverlap(
-          svgNode,
-          [...rectGroups, ...choicesGroups, ...nudgeGroups],
-          {
-            includeParent: true,
-            parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
-            scoreExponent: 2,
-            debug: args.debug,
-          },
-        );
+        avoidOverlap([...rectGroups, ...choicesGroups, ...nudgeGroups], {
+          includeParent: true,
+          parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
+          scoreExponent: 2,
+          debug: args.debug,
+        });
       });
     });
     return div;
@@ -168,16 +164,12 @@ export const ManySites = {
           },
         ];
 
-        avoidOverlap(
-          svgNode,
-          [...rectGroups, ...choicesGroups, ...nudgeGroups],
-          {
-            includeParent: true,
-            parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
-            scoreExponent: 2,
-            debug: args.debug,
-          },
-        );
+        avoidOverlap([...rectGroups, ...choicesGroups, ...nudgeGroups], {
+          includeParent: true,
+          parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
+          scoreExponent: 2,
+          debug: args.debug,
+        });
       });
     });
     return div;
@@ -214,7 +206,7 @@ export const BusinessCategoryNudge = {
           },
         ];
 
-        avoidOverlap(svgNode, nudgeGroups, {
+        avoidOverlap(nudgeGroups, {
           includeParent: true,
           parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
           scoreExponent: 3,

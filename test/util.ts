@@ -74,7 +74,7 @@ function buildSimpleStory(parent: SVGElement, args: any) {
   );
 
   const runOptions: Options = { ...args.options, ...args.scoredOptions, debug: args.debug ?? false };
-  avoidOverlap(parent, labelGroups, runOptions);
+  avoidOverlap(labelGroups, runOptions);
 }
 
 export const render = (args: any) => {

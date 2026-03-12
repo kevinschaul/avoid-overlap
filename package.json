@@ -6,6 +6,7 @@
   "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": "./dist/index.js",
   "engines": {
     "node": ">= 16"
@@ -23,6 +24,7 @@
     "@swc/core": "^1.15.18",
     "@types/d3": "^7.4.3",
     "@types/rbush": "^4.0.0",
+    "@types/seedrandom": "^3.0.8",
     "@types/topojson-client": "^3.1.5",
     "@typescript-eslint/eslint-plugin": "^8.57.0",
     "@typescript-eslint/parser": "^8.57.0",
@@ -42,15 +44,18 @@
     "react-dom": "^19.2.4",
     "storybook": "^10.2.17",
     "topojson-client": "^3.1.0",
+    "typedoc": "^0.28.17",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vitest": "^4.1.0"
   },
   "scripts": {
-    "build": "swc src/ --out-dir dist/",
-    "dev": "concurrently \"swc src/ -w --out-dir dist/\" \"npm run storybook\"",
+    "generate-docs": "node scripts/generate-docs.mjs",
+    "build": "swc src/ --out-dir dist/ --strip-leading-paths && tsc && npm run generate-docs",
+    "dev": "concurrently \"swc src/ -w --out-dir dist/ --strip-leading-paths\" \"tsc -w\" \"npm run storybook\"",
     "test": "vitest run",
     "prepare": "husky",
+    "prepublishOnly": "npm run build",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

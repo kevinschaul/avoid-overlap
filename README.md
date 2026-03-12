@@ -1,6 +1,8 @@
 # avoid-overlap
 
-Utilities for chart-makers to avoid text overlaps in their graphics. The utilities were build with [D3.js](https://github.com/d3/d3) and [React](https://react.dev/) in mind but likely work with other frameworks.
+Avoid text overlaps in your charts and data visualizations (automatic label placement). Uses [simulated annealing](https://en.wikipedia.org/wiki/Simulated_annealing) to quickly find an acceptable solution.
+
+The utilities were build with [D3.js](https://github.com/d3/d3) and [React](https://react.dev/) in mind but likely work with other frameworks.
 
 ## Two techniques to avoid overlaps: Nudge and Choices
 
@@ -34,94 +36,87 @@ npm install --save avoid-overlap
 
 ## Usage
 
-This library provides the class `AvoidOverlap`, which provides the function `.run()`. Each page should use just one `AvoidOverlap` instance.
-
 ```js
-import { AvoidOverlap } from 'avoid-overlap';
-
-// Create an avoid-overlap instance
-const avoidOverlap = new AvoidOverlap();
+import { avoidOverlap } from 'avoid-overlap';
 
 // Place your labels here
 
-// Then, run the avoid overlapper
-avoidOverlap.run(/* args here, see table below */);
+// Then, run avoid-overlap
+avoidOverlap(/* args here, see table below */);
 ```
 
-### `AvoidOverlap.run(parent, labelGroups, options)`
+### `avoidOverlap(labelGroups, options)`
 
-Perform the label avoidance.
+Perform the label avoidance. Call this after you have positioned all of your labels. The parent element is inferred automatically as the deepest common ancestor of all label nodes.
 
-Call this after you have positioned all of your labels.
+<!-- params-start -->
 
-| Param                         | Type                                | Default                                    | Description                                                                                                                                                                                                                                                                                                               |
-| ----------------------------- | ----------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| parent                        | `Element`                           |                                            | The parent element, that contains all labels. This can be a `div`, an `svg`, etc.                                                                                                                                                                                                                                         |
-| labelGroups                   | `object[]`                          |                                            | An array of label groups that define how to resolve overlaps                                                                                                                                                                                                                                                              |
-| labelGroups[].technique       | `string`                            |                                            | The overlap avoidance technique to use ("nudge" or "choices")                                                                                                                                                                                                                                                             |
-| labelGroups[].nodes           | `Element[]`                         |                                            | An array of elements to avoid overlaps                                                                                                                                                                                                                                                                                    |
-| labelGroups[].margin          | `object`                            | `{ top: 0, right: 0, bottom: 0, left: 0 }` | How much extra spacing to consider for collisions with these nodes                                                                                                                                                                                                                                                        |
-| labelGroups[].priority        | `number`                            |                                            | What priority to give this label group in case of collision. Generally nodes with lower priority values will not be moved if they collide with nodes with higher priority values. Note that 1 is a lower priority value than 10.                                                                                          |
-| labelGroups[].render          | `function(node, dx, dy)`            |                                            | Function that applies the given nudged position (`dx`, `dy`) to the `node`. Required for technique `nudge`.                                                                                                                                                                                                               |
-| labelGroups[].nudgeDirections | `string[]`                          | `["down", "right", "up", "left"]`          | Which directions to consider nudging. Optional for technique `nudge`.                                                                                                                                                                                                                                                     |
-| labelGroups[].choices         | `function(node)[]`                  |                                            | An array of functions that apply a new potential positioning for the `node`. Each choice will be tried in order until a solution is found. Required for technique `choices`.                                                                                                                                              |
-| options                       | `object`                            |                                            | Global options                                                                                                                                                                                                                                                                                                            |
-| [options.includeParent]       | `boolean`                           | `false`                                    | Whether to consider the parent as part of the bounds                                                                                                                                                                                                                                                                      |
-| [options.parentMargin]        | `object`                            | `{ top: 0, right: 0, bottom: 0, left: 0 }` | How much extra spacing to consider for collisions with the parent                                                                                                                                                                                                                                                         |
-| [options.maxAttempts]         | `number`                            | 3                                          | How many iterations to try finding collisions before giving up                                                                                                                                                                                                                                                            |
-| [options.debug]               | `boolean`                           | `false`                                    | Whether to enable debug mode, which logs all nodes in the system and calls `[options.debugFunc]` to visually aid in debugging                                                                                                                                                                                             |
-| [options.debugFunc]           | `function(tree, parentBounds, uid)` | `defaultDebugFunc`                         | The default debug function, which draws boxes for each label for each position in its history saved as the overlap avoider ran. `tree` is an `RBush` object containing all nodes in the system. `parentBounds` contains the bounding box of the parent. `uid` is a unique identifier for this instance of `AvoidOverlap`. |
+| Param | Type | Description |
+| - | - | - |
+| `labelGroups` | `object[]` | An array of label groups that define how to resolve overlaps. |
+| `labelGroups[].technique` | `"nudge" \| "choices" \| "fixed"` | The overlap avoidance technique to use. `nudge` shifts labels by a small offset; `choices` picks from a list of candidate positions; `fixed` treats nodes as immovable obstacles. |
+| `labelGroups[].nodes` | `Element[]` | An array of elements to avoid overlaps. |
+| `labelGroups[].margin` | `number` \| `object` | Extra spacing to consider for collisions with these nodes. Accepts a number (uniform) or `{ top, right, bottom, left }`. Default: `0` |
+| `labelGroups[].priority` | `number` | Priority for this label group. Higher-priority labels are kept visible when a conflict cannot be resolved. Uses quadratic weighting, so differences matter more at higher values. Default: `0` |
+| `labelGroups[].remove` | `boolean` | Whether the algorithm is allowed to hide this label when it cannot be placed without overlapping a higher-priority label. Set to `false` to always show the label, even if it overlaps. Default: `true` |
+| `labelGroups[].onRemove` | `function` | Called when a node is removed from the DOM due to an unresolvable overlap. |
+| `labelGroups[].render` | `function` | _nudge only_. Function that applies the nudged position (`dx`, `dy`) to the node. |
+| `labelGroups[].directions` | `"up"` \| `"down"` \| `"left"` \| `"right"` | _nudge only_. Which directions to consider nudging. Default: `["down", "right", "up", "left"]` |
+| `labelGroups[].maxDistance` | `number` | _nudge only_. Maximum nudge distance in pixels. Default: `64` |
+| `labelGroups[].choices` | `function[]` | _choices only_. An array of functions that each apply a candidate position to the node. Pass an empty array to treat the node as a fixed obstacle. |
+| `labelGroups[].choiceBonuses` | `number[]` | _choices only_. Score bonus for each choice, parallel to `choices`. Positive values make a choice more attractive; negative values less so. When omitted, a small penalty (`-0.5`) is applied to non-zero choices. |
+| | | |
+| `options.includeParent` | `boolean` | Whether to treat the common ancestor's edges as collision boundaries. Default: `true` |
+| `options.parentMargin` | `number` \| `object` | Margin inset from the parent boundary. Negative values allow labels to touch (but not cross) the parent edge without a collision penalty. Accepts a number (uniform) or per-side object. Default: `-2` |
+| `options.iterations` | `number` | Number of simulated-annealing iterations. More iterations = better results but slower. Default: `10000` |
+| `options.temperature` | `number` | Initial temperature for simulated annealing. Higher values allow the algorithm to escape local optima early on. Most users won't need to change this. Default: `100` |
+| `options.coolingRate` | `number` | Multiplicative cooling rate per iteration (between 0 and 1). Values close to 1 cool slowly; values closer to 0 cool fast. Most users won't need to change this. Default: `0.995` |
+| `options.scoreExponent` | `number` | Exponent used in the per-label score formula: `(priority + 1) ^ scoreExponent`. Higher values make the highest-priority labels exponentially more valuable. Default: `2` |
+| `options.seed` | `string` \| `number` | Seed for the random number generator. The same seed produces identical placements across runs. Default: `42` |
+| `options.debug` | `boolean` | Whether to enable debug mode, which renders a panel showing label scores and lets you toggle between the original and final layouts. Default: `false` |
+
+<!-- params-end -->
 
 ### Example using technique: `nudge`
 
 ```js
-import { AvoidOverlap } from 'avoid-overlap';
+import { avoidOverlap } from 'avoid-overlap';
 import { select, selectAll } from 'd3-selection';
 
-const parent = select('.chart');
 const headers = selectAll('.label-header');
 const subheads = selectAll('.label-subhead');
 
-const avoidOverlap = new AvoidOverlap();
-
-avoidOverlap.run(
-  parent,
-  [
-    {
-      technique: 'nudge',
-      nodes: headers.nodes(),
-      render: () => {},
-      priority: 1,
-    },
-    {
-      technique: 'nudge',
-      nodes: subheads.nodes(),
-      priority: 2,
-      render: (node, dx, dy) => {
-        // Apply the nudge to the node
-        const selected = select(node);
-        const [x, y] = selected
-          .attr('transform')
-          .match(/([0-9\-\.]+)/g)
-          .map((d) => +d);
-
-        select(node).attr('transform', `translate(${x + dx}, ${y + dy})`);
-      },
-    },
-  ],
+avoidOverlap([
   {
-    includeParent: true,
-  }
-);
+    technique: 'nudge',
+    nodes: headers.nodes(),
+    render: () => {},
+    priority: 1,
+  },
+  {
+    technique: 'nudge',
+    nodes: subheads.nodes(),
+    priority: 2,
+    render: (node, dx, dy) => {
+      // Apply the nudge to the node
+      const selected = select(node);
+      const [x, y] = selected
+        .attr('transform')
+        .match(/([0-9\-\.]+)/g)
+        .map((d) => +d);
+
+      select(node).attr('transform', `translate(${x + dx}, ${y + dy})`);
+    },
+  },
+]);
 ```
 
 ### Example using technique: `choices`
 
 ```js
 import { avoidOverlap } from 'avoid-overlap';
-import { select, selectAll } from 'd3-selection';
+import { selectAll } from 'd3-selection';
 
-const parent = select('.chart');
 const arrows = selectAll('.label-arrow');
 
 const arrowTop = (node) => {
@@ -131,30 +126,19 @@ const arrowBottom = (node) => {
   /* Draw the arrow at the bottom */
 };
 
-const avoidOverlap = new AvoidOverlap();
-avoidOverlap.run(
-  parent,
-  [
-    {
-      technique: 'choices',
-      nodes: headers.nodes(),
-      choices: [arrowTop, arrowBottom],
-      priority: 1,
-    },
-  ],
+avoidOverlap([
   {
-    includeParent: true,
-  }
-);
+    technique: 'choices',
+    nodes: arrows.nodes(),
+    choices: [arrowTop, arrowBottom],
+    priority: 1,
+  },
+]);
 ```
 
 ### Debugging
 
-Debugging needs to be improved. But for now the `debug` option may help. Setting that to `true` will do two things.
-
-First it will draw colorful boxes around the labels that the system is avoiding overlaps among. Each label will have a box drawn for each position it tried. It’s not great, but it’s something.
-
-Second it will `console.log()` a representation of all nodes in the system. You can copy that output into the `exportedArgs` control [on this Storybook page](https://main--64a5bef463fbc133b9a4b6b6.chromatic.com/?path=/story/utils-real-world-exported-tests--no-overlap) to see it render there, or into the stories in [test/real-world-exports.stories.ts](test/real-world-exports.stories.ts) if you are running this repo locally.
+Setting `debug: true` in options renders a panel at the top of the page showing each label's technique, priority, score, and chosen position. Buttons let you toggle between the original and final layouts to see what the algorithm changed.
 
 ## Development
 

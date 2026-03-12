@@ -61,7 +61,7 @@ describe('avoidOverlap', () => {
     ];
     mockBCR(nodeB, () => bPositions[bChoice]);
 
-    avoidOverlap(parent, [
+    avoidOverlap([
       {
         technique: 'choices' as const,
         nodes: [nodeA],
@@ -118,7 +118,7 @@ describe('avoidOverlap', () => {
     ];
     mockBCR(nodeC, () => cPositions[cChoice]);
 
-    avoidOverlap(parent, [
+    avoidOverlap([
       {
         technique: 'choices' as const,
         nodes: [nodeA],
@@ -181,7 +181,7 @@ describe('avoidOverlap', () => {
     ];
     mockBCR(nodeB, () => bPositions[bChoice]);
 
-    avoidOverlap(parent, [
+    avoidOverlap([
       {
         technique: 'choices' as const,
         nodes: [nodeA],
@@ -242,7 +242,7 @@ describe('avoidOverlap', () => {
     mockBCR(nodeA, () => aPositions[aChoice]);
     mockBCR(nodeB, () => ({ x: 10, y: 10, width: 40, height: 20 }));
 
-    avoidOverlap(parent, [
+    avoidOverlap([
       {
         technique: 'choices' as const,
         nodes: [nodeA],
