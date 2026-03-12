@@ -50,7 +50,7 @@
     "build": "swc src/ --out-dir dist/",
     "dev": "concurrently \"swc src/ -w --out-dir dist/\" \"npm run storybook\"",
     "test": "vitest run",
-    "prepare": "husky install",
+    "prepare": "husky",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
