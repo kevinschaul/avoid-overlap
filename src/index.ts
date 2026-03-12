@@ -31,6 +31,7 @@ type BodyDataNudge = BodyDataGeneric & {
   technique: 'nudge';
   render: (el: Element, deltaX: number, deltaY: number) => void;
   nudgeDirections: Direction[];
+  maxNudgeOffset?: number;
 };
 
 type BodyDataChoices = BodyDataGeneric & {
@@ -72,6 +73,7 @@ type LabelGroupNudge = LabelGroupGeneric & {
   technique: 'nudge';
   render: (el: Element, deltaX: number, deltaY: number) => void;
   nudgeDirections: Direction[];
+  maxNudgeOffset?: number;
 };
 
 type LabelGroupChoices = LabelGroupGeneric & {
@@ -94,7 +96,13 @@ type LabelGroupChoices = LabelGroupGeneric & {
   choicePriorities?: number[];
 };
 
-export type LabelGroup = LabelGroupNudge | LabelGroupChoices;
+type LabelGroupStatic = {
+  technique: 'static';
+  nodes: Element[];
+  margin?: Partial<Margin>;
+};
+
+export type LabelGroup = LabelGroupNudge | LabelGroupChoices | LabelGroupStatic;
 
 export type Options = {
   includeParent?: boolean;
@@ -128,13 +136,14 @@ export type Options = {
    */
   scoreExponent?: number;
   /**
-   * Pixel offsets used to generate synthetic nudge positions for labels that
-   * use the `nudge` technique.  For each allowed nudge direction the label is
-   * speculatively placed at every listed offset, giving the SA a real set of
-   * positions to choose from instead of just show/hide.
-   * Default: [2, 4, 8, 16, 32, 64]
+   * Maximum pixel distance SA is allowed to nudge a label from its original
+   * position.  A single candidate per direction is generated at this distance;
+   * the post-SA compression pass then finds the true minimum collision-free
+   * offset (≤ maxNudgeOffset) in 1 px steps.
+   * Can also be set per group via LabelGroupNudge.maxNudgeOffset.
+   * Default: 64
    */
-  nudgeOffsets?: number[];
+  maxNudgeOffset?: number;
   /**
    * Seed for the random number generator to enable deterministic results.
    * The same seed will produce identical label placements across multiple runs.
@@ -242,6 +251,7 @@ const extendBodyDataNudge = (
     <Direction>'left',
   ],
   render: labelGroup.render,
+  maxNudgeOffset: labelGroup.maxNudgeOffset,
 });
 
 const extendBodyDataChoices = (
@@ -284,12 +294,12 @@ const bodyWeight = (priority: number, exp: number): number =>
  * The width/height of the body (which includes the margin) is preserved across
  * all positions so they are directly usable in the spatial tree.
  */
-const DEFAULT_NUDGE_OFFSETS = [2, 4, 8, 16, 32, 64];
+const DEFAULT_MAX_NUDGE_OFFSET = 64;
 
 const precomputePositions = (
   body: Body,
   parentBounds: Bounds,
-  nudgeOffsets: number[] = DEFAULT_NUDGE_OFFSETS
+  maxNudgeOffset: number = DEFAULT_MAX_NUDGE_OFFSET
 ): ChoicePosition[] => {
   const w = body.maxX - body.minX;
   const h = body.maxY - body.minY;
@@ -313,26 +323,22 @@ const precomputePositions = (
   }
 
   if (body.data.technique === 'nudge') {
-    // Start with the initial (un-nudged) position, then add a candidate for
-    // each direction × offset combination.  Pure arithmetic — no DOM calls.
+    // Start with the initial (un-nudged) position, then add one candidate per
+    // direction at maxNudgeOffset.  The compression pass later finds the true
+    // minimum collision-free offset in 1 px steps.  Pure arithmetic — no DOM calls.
+    const nudgeData = body.data as BodyDataNudge;
+    const offset = nudgeData.maxNudgeOffset ?? maxNudgeOffset;
     const positions: ChoicePosition[] = [
       { minX: body.minX, minY: body.minY, maxX: body.maxX, maxY: body.maxY },
     ];
-    const dirs = (body.data as BodyDataNudge).nudgeDirections;
-    dirs.forEach((dir) => {
-      nudgeOffsets.forEach((offset) => {
-        let dx = 0;
-        if (dir === 'right') dx = offset;
-        else if (dir === 'left') dx = -offset;
-        let dy = 0;
-        if (dir === 'down') dy = offset;
-        else if (dir === 'up') dy = -offset;
-        positions.push({
-          minX: body.minX + dx,
-          minY: body.minY + dy,
-          maxX: body.maxX + dx,
-          maxY: body.maxY + dy,
-        });
+    nudgeData.nudgeDirections.forEach((dir) => {
+      const dx = dir === 'right' ? offset : dir === 'left' ? -offset : 0;
+      const dy = dir === 'down' ? offset : dir === 'up' ? -offset : 0;
+      positions.push({
+        minX: body.minX + dx,
+        minY: body.minY + dy,
+        maxX: body.maxX + dx,
+        maxY: body.maxY + dy,
       });
     });
     return positions;
@@ -396,9 +402,37 @@ export class AvoidOverlap {
       addParent(tree, parent, parentBounds, parentMargin);
     }
 
+    // ── Insert static label groups as fixed obstacles ─────────────────────────
+    const staticBodies: Body[] = [];
+    labelGroups.forEach((labelGroup) => {
+      if (labelGroup.technique !== 'static') return;
+      const m = labelGroup.margin ?? {};
+      const margin = {
+        top: m.top ?? 0,
+        right: m.right ?? 0,
+        bottom: m.bottom ?? 0,
+        left: m.left ?? 0,
+      };
+      labelGroup.nodes.forEach((node) => {
+        const b = getRelativeBounds(node.getBoundingClientRect(), parentBounds);
+        const body: Body = {
+          minX: b.x - margin.left,
+          minY: b.y - margin.top,
+          maxX: b.x + b.width + margin.right,
+          maxY: b.y + b.height + margin.bottom,
+          isStatic: true,
+          node,
+          data: { technique: 'static', priority: Infinity, priorityWithinGroup: Infinity },
+        };
+        staticBodies.push(body);
+        tree.insert(body);
+      });
+    });
+
     // ── Build body list ───────────────────────────────────────────────────────
     const bodies: Body[] = [];
     labelGroups.forEach((labelGroup) => {
+      if (labelGroup.technique === 'static') return;
       const margin = labelGroup.margin ?? {
         top: 0,
         right: 0,
@@ -442,9 +476,9 @@ export class AvoidOverlap {
       : [];
 
     // ── Pre-compute choice positions (transiently modifies DOM) ───────────────
-    const nudgeOffsets = options.nudgeOffsets ?? DEFAULT_NUDGE_OFFSETS;
+    const maxNudgeOffset = options.maxNudgeOffset ?? DEFAULT_MAX_NUDGE_OFFSET;
     const allChoicePositions: ChoicePosition[][] = bodies.map((body) =>
-      precomputePositions(body, parentBounds, nudgeOffsets)
+      precomputePositions(body, parentBounds, maxNudgeOffset)
     );
 
     // ── Per-choice score contributions ────────────────────────────────────────
@@ -586,6 +620,60 @@ export class AvoidOverlap {
       }
     }
 
+    // ── Post-SA nudge compression pass ────────────────────────────────────────
+    // Build a spatial tree reflecting the SA best state, then for each nudge
+    // body that was displaced scan from offset=0 upward to find the minimum
+    // collision-free nudge, preserving SA's global decisions (show/hide,
+    // direction) while minimising the actual displacement.
+    const finalTree: RBush<Body> = new RBush();
+    if (includeParent) addParent(finalTree, parent, parentBounds, parentMargin);
+    for (const sb of staticBodies) finalTree.insert(sb);
+    for (let i = 0; i < bodies.length; i++) {
+      if (bestState[i] >= 0) {
+        finalTree.insert({ ...bodies[i], ...allChoicePositions[i][bestState[i]] });
+      }
+    }
+
+    const compressedDeltas = new Map<number, { dx: number; dy: number }>();
+
+    const nudgeOrder = bodies
+      .map((_, i) => i)
+      .filter(i => bodies[i].data.technique === 'nudge' && bestState[i] > 0)
+      .sort((a, b) => bodies[b].data.priority - bodies[a].data.priority);
+
+    for (const i of nudgeOrder) {
+      const origPos = allChoicePositions[i][0];
+      const saPos   = allChoicePositions[i][bestState[i]];
+      const rawDx   = saPos.minX - origPos.minX;
+      const rawDy   = saPos.minY - origPos.minY;
+      const maxOff  = Math.abs(rawDx !== 0 ? rawDx : rawDy);
+      const signX   = Math.sign(rawDx);
+      const signY   = Math.sign(rawDy);
+      const w       = origPos.maxX - origPos.minX;
+      const h       = origPos.maxY - origPos.minY;
+
+      // Remove from finalTree so we don't self-collide during scan
+      const saBody = { ...bodies[i], ...saPos };
+      finalTree.remove(saBody, (a: Body, b: Body) => a.node === b.node);
+
+      let minOff = maxOff;
+      for (let off = 0; off <= maxOff; off++) {
+        const tx = origPos.minX + signX * off;
+        const ty = origPos.minY + signY * off;
+        if (finalTree.search({ minX: tx, minY: ty, maxX: tx + w, maxY: ty + h }).length === 0) {
+          minOff = off;
+          break;
+        }
+      }
+
+      const cx = origPos.minX + signX * minOff;
+      const cy = origPos.minY + signY * minOff;
+      compressedDeltas.set(i, { dx: cx - origPos.minX, dy: cy - origPos.minY });
+
+      // Re-insert at compressed position so later bodies compress around it
+      finalTree.insert({ ...bodies[i], minX: cx, minY: cy, maxX: cx + w, maxY: cy + h });
+    }
+
     // ── Apply best state to DOM ───────────────────────────────────────────────
     const applyFinalState = () => {
       for (let i = 0; i < bodies.length; i += 1) {
@@ -613,8 +701,9 @@ export class AvoidOverlap {
               body.node.setAttribute('transform', debugOriginalTransforms[i]);
             }
             const winPos = allChoicePositions[i][choice];
-            const diffX = winPos.minX - body.minX;
-            const diffY = winPos.minY - body.minY;
+            const compressed = compressedDeltas.get(i);
+            const diffX = compressed ? compressed.dx : winPos.minX - body.minX;
+            const diffY = compressed ? compressed.dy : winPos.minY - body.minY;
             if (diffX !== 0 || diffY !== 0) {
               (body.data as BodyDataNudge).render(body.node, diffX, diffY);
             }
@@ -630,6 +719,9 @@ export class AvoidOverlap {
     tree.clear();
     if (includeParent) {
       addParent(tree, parent, parentBounds, parentMargin);
+    }
+    for (const sb of staticBodies) {
+      tree.insert(sb);
     }
     for (let i = 0; i < bodies.length; i += 1) {
       if (bestState[i] >= 0 && bodies[i].node.isConnected) {

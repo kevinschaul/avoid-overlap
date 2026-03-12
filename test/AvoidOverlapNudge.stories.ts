@@ -69,6 +69,7 @@ export const TwoSetsOfNodes: StoryObj = {
         ],
         priority: 5,
         render: labelGroupNudgeRender,
+        nudgeDirections: ['down'],
       },
     ],
     options: {},
@@ -173,6 +174,7 @@ export const ShortestWithDirectionRight: StoryObj = {
         priority: 5,
 
         nudgeDirections: ['right'],
+        maxNudgeOffset: 110,
       },
     ],
     options: {},
