@@ -160,6 +160,28 @@ const getRelativeBounds = (child: Bounds, parent: Bounds) =>
     height: child.height,
   };
 
+/**
+ * Returns the viewport bounding rect for an element.
+ * For SVGGraphicsElement nodes, uses getBBox() + getScreenCTM() to get tight
+ * visual bounds that are consistent across browsers (Firefox typographic vs
+ * Chrome glyph bounds differ when using getBoundingClientRect() on SVG text).
+ */
+const getNodeBounds = (node: Element): DOMRect => {
+  if (typeof (node as SVGGraphicsElement).getBBox === 'function') {
+    const svgNode = node as SVGGraphicsElement;
+    const bbox = svgNode.getBBox();
+    const ctm = svgNode.getScreenCTM();
+    if (ctm) {
+      const x = ctm.a * bbox.x + ctm.c * bbox.y + ctm.e;
+      const y = ctm.b * bbox.x + ctm.d * bbox.y + ctm.f;
+      const w = ctm.a * bbox.width + ctm.c * bbox.height;
+      const h = ctm.b * bbox.width + ctm.d * bbox.height;
+      return new DOMRect(x, y, Math.abs(w), Math.abs(h));
+    }
+  }
+  return node.getBoundingClientRect();
+};
+
 /** Find the first collision involving a non-static body, if any. */
 const findCollision = (tree: RBush<Body>): CollisionCandidate | null => {
   const bodies = tree.all();
@@ -315,7 +337,7 @@ const precomputePositions = (
     return choices.map((choice) => {
       choice(body.node);
       const r = getRelativeBounds(
-        body.node.getBoundingClientRect(),
+        getNodeBounds(body.node),
         parentBounds
       );
       return { minX: r.x, minY: r.y, maxX: r.x + w, maxY: r.y + h };
@@ -414,7 +436,7 @@ export class AvoidOverlap {
         left: m.left ?? 0,
       };
       labelGroup.nodes.forEach((node) => {
-        const b = getRelativeBounds(node.getBoundingClientRect(), parentBounds);
+        const b = getRelativeBounds(getNodeBounds(node), parentBounds);
         const body: Body = {
           minX: b.x - margin.left,
           minY: b.y - margin.top,
@@ -442,7 +464,7 @@ export class AvoidOverlap {
       const priority = labelGroup.priority ?? 0;
 
       labelGroup.nodes.forEach((node, i) => {
-        const b = getRelativeBounds(node.getBoundingClientRect(), parentBounds);
+        const b = getRelativeBounds(getNodeBounds(node), parentBounds);
 
         const baseData: BodyDataGeneric = {
           priority,

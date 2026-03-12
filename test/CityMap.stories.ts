@@ -44,9 +44,11 @@ function buildCityMap(
   legendMinLabel: string,
   legendMaxLabel: string,
   priorityCities: string[] = [],
-  debug = false,
+  debug = false
 ) {
-  document.querySelectorAll('[id^="avoid-overlap-scored-debug"]').forEach((n) => n.remove());
+  document
+    .querySelectorAll('[id^="avoid-overlap-scored-debug"]')
+    .forEach((n) => n.remove());
   const priorityCitiesSet = new Set(priorityCities);
   const majorCities = new Set([
     'New York, NY',
@@ -106,14 +108,8 @@ function buildCityMap(
 
   const simulation = d3
     .forceSimulation(forcedData)
-    .force(
-      'x',
-      d3.forceX((d: ForcedDatum) => d.x).strength(0.8)
-    )
-    .force(
-      'y',
-      d3.forceY((d: ForcedDatum) => d.y).strength(0.8)
-    )
+    .force('x', d3.forceX((d: ForcedDatum) => d.x).strength(0.8))
+    .force('y', d3.forceY((d: ForcedDatum) => d.y).strength(0.8))
     .force('collide', d3.forceCollide(radius))
     .stop();
 
@@ -245,8 +241,7 @@ function buildCityMap(
 
   const labelData = sortedByPriority
     .filter(
-      (d) =>
-        d.city !== 'Fort Wayne, IN' && d.city !== 'North Las Vegas, NV'
+      (d) => d.city !== 'Fort Wayne, IN' && d.city !== 'North Las Vegas, NV'
     )
     .slice(0, 20)
     .map((d) => ({
@@ -280,8 +275,15 @@ function buildCityMap(
     .text((d) => d.labelText);
 
   // Hover interaction (mirrors real component)
-  function handleMouseover(this: SVGPathElement, _event: MouseEvent, d: ForcedDatum) {
-    svg.selectAll('path.city-marker').attr('stroke', '#fff').attr('stroke-width', 1);
+  function handleMouseover(
+    this: SVGPathElement,
+    _event: MouseEvent,
+    d: ForcedDatum
+  ) {
+    svg
+      .selectAll('path.city-marker')
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 1);
     d3.select(this).attr('stroke', '#000').attr('stroke-width', 2);
 
     svg.selectAll('.labels').style('opacity', 0);
@@ -311,7 +313,10 @@ function buildCityMap(
   }
 
   function handleMouseout() {
-    svg.selectAll('path.city-marker').attr('stroke', '#fff').attr('stroke-width', 1);
+    svg
+      .selectAll('path.city-marker')
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 1);
     svg.selectAll('.labels').style('opacity', 1);
     svg.selectAll('.hover-label').remove();
 
@@ -335,7 +340,11 @@ function buildCityMap(
     .on('mouseout', handleMouseout);
 
   // Voronoi for larger hit targets
-  const delaunay = d3.Delaunay.from(forcedData, (d) => d.x, (d) => d.y);
+  const delaunay = d3.Delaunay.from(
+    forcedData,
+    (d) => d.x,
+    (d) => d.y
+  );
   const voronoi = delaunay.voronoi([0, 0, mapWidth, mapHeight]);
 
   svg
@@ -366,50 +375,62 @@ function buildCityMap(
   }
 
   const positiveChoices = (d: ForcedDatum) => [
-    (el: Element) => posUp(el, d.x - offset, d.y - offset + 3, 'end'),      // upper-left
-    (el: Element) => posUp(el, d.x + offset, d.y - offset + 3, 'start'),    // upper-right
-    (el: Element) => posUp(el, d.x, d.y + offset + 10, 'middle'),           // below
+    (el: Element) => posUp(el, d.x - offset, d.y - offset + 3, 'end'), // upper-left
+    (el: Element) => posUp(el, d.x + offset, d.y - offset + 3, 'start'), // upper-right
+    (el: Element) => posUp(el, d.x, d.y + offset + 10, 'middle'), // below
   ];
 
   const negativeChoices = (d: ForcedDatum) => [
-    (el: Element) => posUp(el, d.x - offset, d.y + offset + 5, 'end'),      // lower-left
-    (el: Element) => posUp(el, d.x + offset, d.y + offset + 5, 'start'),    // lower-right
-    (el: Element) => posUp(el, d.x, d.y - offset - 3, 'middle'),            // above
+    (el: Element) => posUp(el, d.x - offset, d.y + offset + 5, 'end'), // lower-left
+    (el: Element) => posUp(el, d.x + offset, d.y + offset + 5, 'start'), // lower-right
+    (el: Element) => posUp(el, d.x, d.y - offset - 3, 'middle'), // above
   ];
 
-  const avoidLabelGroups: LabelGroup[] = (
-    labelNodes.nodes() as Element[]
-  ).map((node, i) => {
-    const d = labelData[i];
+  const avoidLabelGroups: LabelGroup[] = (labelNodes.nodes() as Element[]).map(
+    (node, i) => {
+      const d = labelData[i];
 
-    let choices: ((el: Element) => void)[];
-    if (d.city === 'New York, NY' || d.city === 'Las Vegas, NV') {
-      const pos = positiveChoices(d);
-      choices = [pos[1], pos[0], pos[2]]; // right first
-    } else if (d.city === 'Detroit, MI') {
-      const neg = negativeChoices(d);
-      choices = [neg[2], neg[0], neg[1]]; // above first
-    } else if (d.city === 'Honolulu, HI') {
-      const pos = positiveChoices(d);
-      choices = [pos[2], pos[0], pos[1]]; // below first
-    } else {
-      choices = d.score >= 0 ? positiveChoices(d) : negativeChoices(d);
+      let choices: ((el: Element) => void)[];
+      if (d.city === 'New York, NY' || d.city === 'Las Vegas, NV') {
+        const pos = positiveChoices(d);
+        choices = [pos[1], pos[0], pos[2]]; // right first
+      } else if (d.city === 'Detroit, MI') {
+        const neg = negativeChoices(d);
+        choices = [neg[2], neg[0], neg[1]]; // above first
+      } else if (d.city === 'Honolulu, HI') {
+        const pos = positiveChoices(d);
+        choices = [pos[2], pos[0], pos[1]]; // below first
+      } else {
+        choices = d.score >= 0 ? positiveChoices(d) : negativeChoices(d);
+      }
+
+      return {
+        technique: 'choices' as const,
+        nodes: [node],
+        choices,
+        priority: getPriority(d),
+        margin: { top: 2, right: 2, bottom: 2, left: 2 },
+      };
     }
-
-    return {
-      technique: 'choices' as const,
-      nodes: [node],
-      choices,
-      priority: getPriority(d),
-      margin: { top: 2, right: 2, bottom: 2, left: 2 },
-    };
-  });
+  );
 
   const svgNode = svg.node()!;
   container.appendChild(svgNode);
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
+      const markerNodes = Array.from(
+        svgNode.querySelectorAll<SVGPathElement>('path.city-marker')
+      );
+      const allLabelGroups: LabelGroup[] = [
+        {
+          technique: 'static',
+          nodes: markerNodes,
+          margin: { top: -4, right: -4, bottom: -4, left: -4 },
+        },
+        ...avoidLabelGroups,
+      ];
+
       const avoidOverlap = new AvoidOverlap();
       const options: Options = {
         includeParent: true,
@@ -417,7 +438,7 @@ function buildCityMap(
         scoreExponent: 2,
         debug,
       };
-      avoidOverlap.run(svgNode, avoidLabelGroups, options);
+      avoidOverlap.run(svgNode, allLabelGroups, options);
 
       // Highlight visible labels' markers (matches real component)
       labelNodes.each(function () {
@@ -479,7 +500,7 @@ export const Pizza: StoryObj = {
         'Worst pizza',
         'Best pizza',
         [],
-        args.debug,
+        args.debug
       )
     );
     return div;

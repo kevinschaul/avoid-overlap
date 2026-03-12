@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/html-vite';
-import { range } from 'd3';
 import { AvoidOverlap } from '../src/index.js';
 import type { LabelGroup, Options } from '../src/index.js';
 import {
@@ -220,7 +219,7 @@ export const BusinessCategoryNudge: StoryObj = {
           {
             technique: 'nudge',
             nodes: nodeMainCategoryText.nodes() as Element[],
-            margin: { top: 0, right: 0, bottom: -8, left: 0 },
+            margin: { top: 0, right: 0, bottom: 0, left: 0 },
             render: nudgeRender,
             priority: 10,
             nudgeDirections: ['down', 'right'],
@@ -231,7 +230,7 @@ export const BusinessCategoryNudge: StoryObj = {
         const options: Options = {
           includeParent: true,
           parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
-          nudgeOffsets: range(2, 30),
+          maxNudgeOffset: 30,
           scoreExponent: 3,
           debug: args.debug,
         };
