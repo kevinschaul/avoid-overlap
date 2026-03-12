@@ -1,8 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/html-vite';
-
 import { render, labelGroupNudgeRender } from './util';
 
-const meta: Meta = {
+const meta = {
   title: 'AvoidOverlapNudge',
   tags: ['autodocs'],
   args: {
@@ -14,7 +12,7 @@ const meta: Meta = {
 };
 export default meta;
 
-const Default: StoryObj = {
+const Default = {
   parameters: {
     docs: {
       story: { autoplay: true },
@@ -26,7 +24,7 @@ const Default: StoryObj = {
 /**
  * Subtitle should appear below title
  */
-export const TwoSetsOfNodes: StoryObj = {
+export const TwoSetsOfNodes = {
   ...Default,
   args: {
     parent: {
@@ -79,7 +77,7 @@ export const TwoSetsOfNodes: StoryObj = {
 /**
  * Square box should appear above the rectangle
  */
-export const ShortestWithDirectionUp: StoryObj = {
+export const ShortestWithDirectionUp = {
   ...Default,
   args: {
     parent: {
@@ -131,7 +129,7 @@ export const ShortestWithDirectionUp: StoryObj = {
 /**
  * Square should appear to the right of the rectangle
  */
-export const ShortestWithDirectionRight: StoryObj = {
+export const ShortestWithDirectionRight = {
   ...Default,
   args: {
     parent: {

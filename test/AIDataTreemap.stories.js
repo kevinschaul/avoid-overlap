@@ -1,6 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/html-vite';
 import { AvoidOverlap } from '../src/index.js';
-import type { LabelGroup, Options } from '../src/index.js';
 import {
   buildTreemapChart,
   buildBusinessNudgeChart,
@@ -13,7 +11,7 @@ import {
   ACTIVE_DOMAINS_MANY,
 } from './AIDataTreemap.helpers.js';
 
-const meta: Meta = {
+const meta = {
   title: 'Real-world/AidataTreemap',
   args: {
     debug: false,
@@ -24,7 +22,7 @@ const meta: Meta = {
 };
 export default meta;
 
-export const TopSites: StoryObj = {
+export const TopSites = {
   parameters: { docs: { story: { autoplay: true } } },
   render: (args) => {
     const div = makeContainer();
@@ -40,10 +38,8 @@ export const TopSites: StoryObj = {
       } = buildTreemapChart(div, ACTIVE_DOMAINS);
 
       requestAnimationFrame(() => {
-        const rectNodes = nodeDomainRectGroups.nodes() as Element[];
-        const choicesGroups: LabelGroup[] = (
-          nodeDomainText.nodes() as Element[]
-        ).map((node, i) => {
+        const rectNodes = nodeDomainRectGroups.nodes();
+        const choicesGroups = nodeDomainText.nodes().map((node, i) => {
           const d = dataDomain[i];
           const preferred = pickDirection(d, chartWidth, chartHeight);
           const ordered = [
@@ -51,7 +47,7 @@ export const TopSites: StoryObj = {
             ...ALL_DIRECTIONS.filter((dir) => dir !== preferred),
           ];
           return {
-            technique: 'choices' as const,
+            technique: 'choices',
             nodes: [node],
             choices: ordered.map((dir) =>
               makeChoice(dir, d, chartWidth, chartHeight)
@@ -62,18 +58,16 @@ export const TopSites: StoryObj = {
           };
         });
 
-        const textNodes = nodeDomainText.nodes() as Element[];
-        const rectGroups: LabelGroup[] = [
+        const textNodes = nodeDomainText.nodes();
+        const rectGroups = [
           {
             technique: 'choices',
-            nodes: nodeDomainRectGroups.nodes() as Element[],
+            nodes: nodeDomainRectGroups.nodes(),
             choices: [],
             priority: 10,
             margin: { top: -2, right: -2, bottom: -2, left: -2 },
             onRemove: (el) => {
-              const rectIndex = (
-                nodeDomainRectGroups.nodes() as Element[]
-              ).indexOf(el);
+              const rectIndex = nodeDomainRectGroups.nodes().indexOf(el);
               if (rectIndex >= 0 && textNodes[rectIndex]) {
                 textNodes[rectIndex].remove();
               }
@@ -81,20 +75,20 @@ export const TopSites: StoryObj = {
           },
         ];
 
-        const nudgeGroups: LabelGroup[] = [
+        const nudgeGroups = [
           {
             technique: 'nudge',
-            nodes: nodeMainCategoryText.nodes() as Element[],
+            nodes: nodeMainCategoryText.nodes(),
             render: nudgeRender,
             margin: { top: 0, right: 0, bottom: 0, left: 0 },
             priority: 10,
             maxDistance: 40,
             nudgeDirections: ['down', 'right', 'up', 'left'],
-          } as any,
+          },
         ];
 
         const avoidOverlap = new AvoidOverlap();
-        const options: Options = {
+        const options = {
           includeParent: true,
           parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
           scoreExponent: 2,
@@ -111,7 +105,7 @@ export const TopSites: StoryObj = {
   },
 };
 
-export const ManySites: StoryObj = {
+export const ManySites = {
   parameters: { docs: { story: { autoplay: true } } },
   render: (args) => {
     const div = makeContainer();
@@ -127,10 +121,8 @@ export const ManySites: StoryObj = {
       } = buildTreemapChart(div, ACTIVE_DOMAINS_MANY);
 
       requestAnimationFrame(() => {
-        const rectNodes = nodeDomainRectGroups.nodes() as Element[];
-        const choicesGroups: LabelGroup[] = (
-          nodeDomainText.nodes() as Element[]
-        ).map((node, i) => {
+        const rectNodes = nodeDomainRectGroups.nodes();
+        const choicesGroups = nodeDomainText.nodes().map((node, i) => {
           const d = dataDomain[i];
           const preferred = pickDirection(d, chartWidth, chartHeight);
           const ordered = [
@@ -138,7 +130,7 @@ export const ManySites: StoryObj = {
             ...ALL_DIRECTIONS.filter((dir) => dir !== preferred),
           ];
           return {
-            technique: 'choices' as const,
+            technique: 'choices',
             nodes: [node],
             choices: ordered.map((dir) =>
               makeChoice(dir, d, chartWidth, chartHeight)
@@ -149,18 +141,16 @@ export const ManySites: StoryObj = {
           };
         });
 
-        const textNodes = nodeDomainText.nodes() as Element[];
-        const rectGroups: LabelGroup[] = [
+        const textNodes = nodeDomainText.nodes();
+        const rectGroups = [
           {
             technique: 'choices',
-            nodes: nodeDomainRectGroups.nodes() as Element[],
+            nodes: nodeDomainRectGroups.nodes(),
             choices: [],
             priority: 10,
             margin: { top: -2, right: -2, bottom: -2, left: -2 },
             onRemove: (el) => {
-              const rectIndex = (
-                nodeDomainRectGroups.nodes() as Element[]
-              ).indexOf(el);
+              const rectIndex = nodeDomainRectGroups.nodes().indexOf(el);
               if (rectIndex >= 0 && textNodes[rectIndex]) {
                 textNodes[rectIndex].remove();
               }
@@ -168,20 +158,20 @@ export const ManySites: StoryObj = {
           },
         ];
 
-        const nudgeGroups: LabelGroup[] = [
+        const nudgeGroups = [
           {
             technique: 'nudge',
-            nodes: nodeMainCategoryText.nodes() as Element[],
+            nodes: nodeMainCategoryText.nodes(),
             render: nudgeRender,
             margin: { top: 0, right: 0, bottom: 0, left: 0 },
             priority: 10,
             maxDistance: 40,
             nudgeDirections: ['down', 'right', 'up', 'left'],
-          } as any,
+          },
         ];
 
         const avoidOverlap = new AvoidOverlap();
-        const options: Options = {
+        const options = {
           includeParent: true,
           parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
           scoreExponent: 2,
@@ -198,7 +188,7 @@ export const ManySites: StoryObj = {
   },
 };
 
-export const BusinessCategoryNudge: StoryObj = {
+export const BusinessCategoryNudge = {
   parameters: { docs: { story: { autoplay: true } } },
   render: (args) => {
     const div = makeContainer();
@@ -207,27 +197,27 @@ export const BusinessCategoryNudge: StoryObj = {
         buildBusinessNudgeChart(div);
 
       requestAnimationFrame(() => {
-        const nudgeGroups: LabelGroup[] = [
+        const nudgeGroups = [
           {
             technique: 'nudge',
-            nodes: nodeSubCategoryText.nodes() as Element[],
+            nodes: nodeSubCategoryText.nodes(),
             // margin: { top: -4, right: 0, bottom: 0, left: 0 },
             render: nudgeRender,
             priority: 0,
             nudgeDirections: ['down', 'right'],
-          } as any,
+          },
           {
             technique: 'nudge',
-            nodes: nodeMainCategoryText.nodes() as Element[],
+            nodes: nodeMainCategoryText.nodes(),
             margin: { top: 0, right: 0, bottom: 0, left: 0 },
             render: nudgeRender,
             priority: 10,
             nudgeDirections: ['down', 'right'],
-          } as any,
+          },
         ];
 
         const avoidOverlap = new AvoidOverlap();
-        const options: Options = {
+        const options = {
           includeParent: true,
           parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
           maxNudgeOffset: 30,

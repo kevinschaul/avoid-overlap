@@ -1,8 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/html-vite';
-
 import { render } from './util';
 
-const meta: Meta = {
+const meta = {
   title: 'AvoidOverlapChoices',
   tags: ['autodocs'],
   args: {
@@ -14,7 +12,7 @@ const meta: Meta = {
 };
 export default meta;
 
-const Default: StoryObj = {
+const Default = {
   parameters: {
     docs: {
       story: { autoplay: true },
@@ -26,7 +24,7 @@ const Default: StoryObj = {
 /**
  * Square should appear at top left corner
  */
-export const AvoidViewboxBounds: StoryObj = {
+export const AvoidViewboxBounds = {
   ...Default,
   args: {
     parent: {
@@ -51,9 +49,9 @@ export const AvoidViewboxBounds: StoryObj = {
           },
         ],
         choices: [
-          (element: Element) =>
+          (element) =>
             element.setAttributeNS(null, 'transform', 'translate(-20, -20)'),
-          (element: Element) =>
+          (element) =>
             element.setAttributeNS(null, 'transform', 'translate(0, 0)'),
         ],
       },
