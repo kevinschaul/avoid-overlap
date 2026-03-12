@@ -776,7 +776,6 @@ export function avoidOverlap(
 
     const applyOriginal = () => {
       bodies.forEach((body, i) => {
-        // eslint-disable-next-line no-param-reassign
         (body.node as HTMLElement).style.display = '';
         if (body.data.technique === 'choices') {
           // Restore by calling the first choice (natural position)

@@ -8,7 +8,6 @@ import { avoidOverlap } from './index';
 type Rect = { x: number; y: number; width: number; height: number };
 
 function mockBCR(el: Element, rectFn: () => Rect) {
-  // eslint-disable-next-line no-param-reassign
   el.getBoundingClientRect = () => {
     const r = rectFn();
     return {

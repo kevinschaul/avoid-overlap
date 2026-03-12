@@ -53,7 +53,9 @@ export default function defaultDebugFunc(info: DebugInfo) {
     return btn;
   };
 
+  // eslint-disable-next-line prefer-const
   let btnOriginal: HTMLButtonElement;
+  // eslint-disable-next-line prefer-const
   let btnFinal: HTMLButtonElement;
 
   const setActive = (which: 'original' | 'final') => {
