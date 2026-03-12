@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
-import { AvoidOverlap } from '../src/index.js';
+import { avoidOverlap } from '../src/index.js';
 
 import citiesPizza from './data/cities_pizza.json';
 import usTopoJson from './data/us-states-10m.json';
@@ -34,7 +34,7 @@ function buildCityMap(
   legendMinLabel,
   legendMaxLabel,
   priorityCities = [],
-  debug = false
+  debug = false,
 ) {
   document
     .querySelectorAll('[id^="avoid-overlap-scored-debug"]')
@@ -215,12 +215,12 @@ function buildCityMap(
 
   // ── Labels ───────────────────────────────────────────────────────────────
   const sortedByPriority = [...forcedData].sort(
-    (a, b) => getPriority(b) - getPriority(a)
+    (a, b) => getPriority(b) - getPriority(a),
   );
 
   const labelData = sortedByPriority
     .filter(
-      (d) => d.city !== 'Fort Wayne, IN' && d.city !== 'North Las Vegas, NV'
+      (d) => d.city !== 'Fort Wayne, IN' && d.city !== 'North Las Vegas, NV',
     )
     .slice(0, 20)
     .map((d) => ({
@@ -318,7 +318,7 @@ function buildCityMap(
   const delaunay = d3.Delaunay.from(
     forcedData,
     (d) => d.x,
-    (d) => d.y
+    (d) => d.y,
   );
   const voronoi = delaunay.voronoi([0, 0, mapWidth, mapHeight]);
 
@@ -391,25 +391,24 @@ function buildCityMap(
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       const markerNodes = Array.from(
-        svgNode.querySelectorAll('path.city-marker')
+        svgNode.querySelectorAll('path.city-marker'),
       );
       const allLabelGroups = [
         {
-          technique: 'static',
+          technique: 'fixed',
           nodes: markerNodes,
-          margin: { top: -4, right: -4, bottom: -4, left: -4 },
+          margin: -4,
         },
         ...avoidLabelGroups,
       ];
 
-      const avoidOverlap = new AvoidOverlap();
       const options = {
         includeParent: true,
         parentMargin: { top: -5, right: -5, bottom: -5, left: -5 },
         scoreExponent: 2,
         debug,
       };
-      avoidOverlap.run(svgNode, allLabelGroups, options);
+      avoidOverlap(svgNode, allLabelGroups, options);
 
       // Highlight visible labels' markers (matches real component)
       labelNodes.each(function () {
@@ -471,8 +470,8 @@ export const Pizza = {
         'Worst pizza',
         'Best pizza',
         [],
-        args.debug
-      )
+        args.debug,
+      ),
     );
     return div;
   },

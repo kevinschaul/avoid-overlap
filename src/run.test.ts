@@ -1,9 +1,9 @@
 /**
- * Tests for run() (simulated annealing) using jsdom with mocked getBoundingClientRect.
+ * Tests for avoidOverlap() using jsdom with mocked getBoundingClientRect.
  * Tests that the SA resolves overlapping labels to a non-overlapping state.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { AvoidOverlap } from './index';
+import { avoidOverlap } from './index';
 
 type Rect = { x: number; y: number; width: number; height: number };
 
@@ -24,7 +24,7 @@ function rectsOverlap(a: Rect, b: Rect): boolean {
            a.y + a.height <= b.y || b.y + b.height <= a.y);
 }
 
-describe('run', () => {
+describe('avoidOverlap', () => {
   let parent: HTMLElement;
 
   beforeEach(() => {
@@ -62,21 +62,20 @@ describe('run', () => {
     ];
     mockBCR(nodeB, () => bPositions[bChoice]);
 
-    const avoidOverlap = new AvoidOverlap();
-    avoidOverlap.run(parent, [
+    avoidOverlap(parent, [
       {
         technique: 'choices' as const,
         nodes: [nodeA],
         choices: [() => { aChoice = 0; }, () => { aChoice = 1; }],
         priority: 1,
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        margin: 0,
       },
       {
         technique: 'choices' as const,
         nodes: [nodeB],
         choices: [() => { bChoice = 0; }, () => { bChoice = 1; }],
         priority: 1,
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        margin: 0,
       },
     ], { iterations: 50_000 });
 
@@ -120,28 +119,27 @@ describe('run', () => {
     ];
     mockBCR(nodeC, () => cPositions[cChoice]);
 
-    const avoidOverlap = new AvoidOverlap();
-    avoidOverlap.run(parent, [
+    avoidOverlap(parent, [
       {
         technique: 'choices' as const,
         nodes: [nodeA],
         choices: [],                            // fixed obstacle
         priority: 10,
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        margin: 0,
       },
       {
         technique: 'choices' as const,
         nodes: [nodeB],
         choices: [() => { bChoice = 0; }, () => { bChoice = 1; }],
         priority: 1,
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        margin: 0,
       },
       {
         technique: 'choices' as const,
         nodes: [nodeC],
         choices: [() => { cChoice = 0; }, () => { cChoice = 1; }],
         priority: 1,
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        margin: 0,
       },
     ], { iterations: 50_000 });
 
@@ -184,8 +182,7 @@ describe('run', () => {
     ];
     mockBCR(nodeB, () => bPositions[bChoice]);
 
-    const avoidOverlap = new AvoidOverlap();
-    avoidOverlap.run(parent, [
+    avoidOverlap(parent, [
       {
         technique: 'choices' as const,
         nodes: [nodeA],
@@ -195,7 +192,7 @@ describe('run', () => {
           () => { aChoice = 2; },
         ],
         priority: 1,
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        margin: 0,
       },
       {
         technique: 'choices' as const,
@@ -206,7 +203,7 @@ describe('run', () => {
           () => { bChoice = 2; },
         ],
         priority: 1,
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        margin: 0,
       },
     ], { iterations: 50_000 });
 
@@ -220,16 +217,16 @@ describe('run', () => {
     expect(aVisible || bVisible).toBe(true);
   });
 
-  it('choicePriorities: strongly preferred choice wins over showing a low-priority label', () => {
+  it('choiceBonuses: strongly preferred choice wins over showing a low-priority label', () => {
     // A (priority 2, bodyWeight=9): 2 choices.
-    //   choice 0 at (10,10): overlaps B.  choicePriority = 8 (strong preference)
-    //   choice 1 at (10,60): no overlap.  choicePriority = 0
+    //   choice 0 at (10,10): overlaps B.  choiceBonus = 8 (strong preference)
+    //   choice 1 at (10,60): no overlap.  choiceBonus = 0
     // B (priority 1, bodyWeight=4): fixed obstacle (choices:[]).
     //   always at (10,10).
     //
-    // Without choicePriorities SA would move A to choice 1 and keep B visible,
+    // Without choiceBonuses SA would move A to choice 1 and keep B visible,
     // earning score 9 + 4 = 13.
-    // With choicePriorities=[8, 0] the score for A-at-choice-0 + B-hidden is
+    // With choiceBonuses=[8, 0] the score for A-at-choice-0 + B-hidden is
     //   9+8 = 17, beating A-at-choice-1 + B-visible = 9+0+4 = 13.
     // So SA should keep A at choice 0 and hide B.
 
@@ -246,22 +243,21 @@ describe('run', () => {
     mockBCR(nodeA, () => aPositions[aChoice]);
     mockBCR(nodeB, () => ({ x: 10, y: 10, width: 40, height: 20 }));
 
-    const avoidOverlap = new AvoidOverlap();
-    avoidOverlap.run(parent, [
+    avoidOverlap(parent, [
       {
         technique: 'choices' as const,
         nodes: [nodeA],
         choices: [() => { aChoice = 0; }, () => { aChoice = 1; }],
-        choicePriorities: [8, 0],
+        choiceBonuses: [8, 0],
         priority: 2,
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        margin: 0,
       },
       {
         technique: 'choices' as const,
         nodes: [nodeB],
         choices: [],          // fixed obstacle
         priority: 1,
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
+        margin: 0,
       },
     ], { iterations: 50_000 });
 

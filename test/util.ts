@@ -1,4 +1,4 @@
-import { AvoidOverlap } from '../src/index';
+import { avoidOverlap } from '../src/index';
 import type { LabelGroup, Options } from '../src/index';
 
 interface TestNode {
@@ -74,8 +74,7 @@ function buildSimpleStory(parent: SVGElement, args: any) {
   );
 
   const runOptions: Options = { ...args.options, ...args.scoredOptions, debug: args.debug ?? false };
-  const avoidOverlap = new AvoidOverlap();
-  avoidOverlap.run(parent, labelGroups, runOptions);
+  avoidOverlap(parent, labelGroups, runOptions);
 }
 
 export const render = (args: any) => {

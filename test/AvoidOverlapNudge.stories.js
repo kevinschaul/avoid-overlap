@@ -67,7 +67,7 @@ export const TwoSetsOfNodes = {
         ],
         priority: 5,
         render: labelGroupNudgeRender,
-        nudgeDirections: ['down'],
+        directions: ['down'],
       },
     ],
     options: {},
@@ -119,7 +119,7 @@ export const ShortestWithDirectionUp = {
         priority: 5,
         render: labelGroupNudgeRender,
 
-        nudgeDirections: ['up'],
+        directions: ['up'],
       },
     ],
     options: {},
@@ -171,8 +171,8 @@ export const ShortestWithDirectionRight = {
         render: labelGroupNudgeRender,
         priority: 5,
 
-        nudgeDirections: ['right'],
-        maxNudgeOffset: 110,
+        directions: ['right'],
+        maxDistance: 110,
       },
     ],
     options: {},

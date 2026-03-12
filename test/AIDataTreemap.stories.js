@@ -1,4 +1,4 @@
-import { AvoidOverlap } from '../src/index.js';
+import { avoidOverlap } from '../src/index.js';
 import {
   buildTreemapChart,
   buildBusinessNudgeChart,
@@ -50,7 +50,7 @@ export const TopSites = {
             technique: 'choices',
             nodes: [node],
             choices: ordered.map((dir) =>
-              makeChoice(dir, d, chartWidth, chartHeight)
+              makeChoice(dir, d, chartWidth, chartHeight),
             ),
             priority: 1,
             margin: { top: 2, right: 4, bottom: 2, left: 4 },
@@ -83,21 +83,19 @@ export const TopSites = {
             margin: { top: 0, right: 0, bottom: 0, left: 0 },
             priority: 10,
             maxDistance: 40,
-            nudgeDirections: ['down', 'right', 'up', 'left'],
+            directions: ['down', 'right', 'up', 'left'],
           },
         ];
 
-        const avoidOverlap = new AvoidOverlap();
-        const options = {
-          includeParent: true,
-          parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
-          scoreExponent: 2,
-          debug: args.debug,
-        };
-        avoidOverlap.run(
+        avoidOverlap(
           svgNode,
           [...rectGroups, ...choicesGroups, ...nudgeGroups],
-          options
+          {
+            includeParent: true,
+            parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
+            scoreExponent: 2,
+            debug: args.debug,
+          },
         );
       });
     });
@@ -133,7 +131,7 @@ export const ManySites = {
             technique: 'choices',
             nodes: [node],
             choices: ordered.map((dir) =>
-              makeChoice(dir, d, chartWidth, chartHeight)
+              makeChoice(dir, d, chartWidth, chartHeight),
             ),
             priority: 1,
             margin: { top: 2, right: 4, bottom: 2, left: 4 },
@@ -166,21 +164,19 @@ export const ManySites = {
             margin: { top: 0, right: 0, bottom: 0, left: 0 },
             priority: 10,
             maxDistance: 40,
-            nudgeDirections: ['down', 'right', 'up', 'left'],
+            directions: ['down', 'right', 'up', 'left'],
           },
         ];
 
-        const avoidOverlap = new AvoidOverlap();
-        const options = {
-          includeParent: true,
-          parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
-          scoreExponent: 2,
-          debug: args.debug,
-        };
-        avoidOverlap.run(
+        avoidOverlap(
           svgNode,
           [...rectGroups, ...choicesGroups, ...nudgeGroups],
-          options
+          {
+            includeParent: true,
+            parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
+            scoreExponent: 2,
+            debug: args.debug,
+          },
         );
       });
     });
@@ -201,30 +197,29 @@ export const BusinessCategoryNudge = {
           {
             technique: 'nudge',
             nodes: nodeSubCategoryText.nodes(),
-            // margin: { top: -4, right: 0, bottom: 0, left: 0 },
+            margin: { right: 4, bottom: 4 },
             render: nudgeRender,
             priority: 0,
-            nudgeDirections: ['down', 'right'],
+            directions: ['down', 'right'],
+            maxDistance: 30,
           },
           {
             technique: 'nudge',
             nodes: nodeMainCategoryText.nodes(),
-            margin: { top: 0, right: 0, bottom: 0, left: 0 },
+            margin: 0,
             render: nudgeRender,
             priority: 10,
-            nudgeDirections: ['down', 'right'],
+            directions: ['down', 'right'],
+            maxDistance: 30,
           },
         ];
 
-        const avoidOverlap = new AvoidOverlap();
-        const options = {
+        avoidOverlap(svgNode, nudgeGroups, {
           includeParent: true,
           parentMargin: { top: -10, right: -2, bottom: 0, left: -2 },
-          maxNudgeOffset: 30,
           scoreExponent: 3,
           debug: args.debug,
-        };
-        avoidOverlap.run(svgNode, nudgeGroups, options);
+        });
       });
     });
     return div;
