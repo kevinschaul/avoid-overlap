@@ -11,7 +11,7 @@
     "skipLibCheck": true,
     "declaration": true,
     "emitDeclarationOnly": true,
-    "outDir": "dist"
+    "declarationDir": "dist"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]

@@ -13,15 +13,15 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: google-github-actions/release-please-action@v3
+      - uses: googleapis/release-please-action@v4
+        id: release
         with:
           release-type: node
-          package-name: avoid-overlap
 
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 22
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci
       - run: npm run build

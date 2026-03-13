@@ -35,7 +35,7 @@ const resolveMargin = (m?: number | Partial<Margin>): Margin => {
 type BodyDataGeneric = {
   priority: number;
   priorityWithinGroup: number;
-  remove: boolean;
+  allowRemove: boolean;
   onRemove?: (el: Element) => void;
 };
 
@@ -56,9 +56,9 @@ type BodyDataFixed = BodyDataGeneric & {
   technique: 'fixed';
 };
 
-export type BodyData = BodyDataNudge | BodyDataChoices | BodyDataFixed;
+type BodyData = BodyDataNudge | BodyDataChoices | BodyDataFixed;
 
-export interface Body {
+interface Body {
   minX: number;
   minY: number;
   maxX: number;
@@ -96,7 +96,7 @@ export type LabelGroupGeneric = {
    * always show the label, even if it overlaps.
    * @defaultValue true
    */
-  remove?: boolean;
+  allowRemove?: boolean;
   /** Called when a node is removed from the DOM due to an unresolvable overlap. Use this to remove highlight styles for elements that no longer have labels. */
   onRemove?: (el: Element) => void;
 };
@@ -250,7 +250,7 @@ const findCollision = (tree: RBush<Body>): CollisionCandidate | null => {
     for (const candidate of overlapping) {
       if (candidate !== body) {
         // Skip pairs where both bodies must stay visible
-        if (!body.data.remove && !candidate.data.remove) continue;
+        if (!body.data.allowRemove && !candidate.data.allowRemove) continue;
         return { a: body, b: candidate };
       }
     }
@@ -280,7 +280,7 @@ const removeCollisions = (tree: RBush<Body>) => {
     if (!collision) break;
     const [first, second] = orderBodies(collision.a, collision.b);
     // Remove the lower-priority body, falling back to the other if it can't be removed
-    const bodyToRemove = first.data.remove ? first : second;
+    const bodyToRemove = first.data.allowRemove ? first : second;
     bodyToRemove.data.onRemove?.(bodyToRemove.node);
     bodyToRemove.node.remove();
     tree.remove(bodyToRemove);
@@ -322,7 +322,7 @@ const addParent = (
         technique: 'fixed',
         priority: Infinity,
         priorityWithinGroup: Infinity,
-        remove: false,
+        allowRemove: false,
       },
     });
   }
@@ -577,7 +577,7 @@ export function avoidOverlap(
           technique: 'fixed',
           priority: Infinity,
           priorityWithinGroup: Infinity,
-          remove: false,
+          allowRemove: false,
         },
       };
       staticBodies.push(body);
@@ -598,7 +598,7 @@ export function avoidOverlap(
       const baseData: BodyDataGeneric = {
         priority,
         priorityWithinGroup: labelGroup.nodes.length - i,
-        remove: labelGroup.remove ?? true,
+        allowRemove: labelGroup.allowRemove ?? true,
         onRemove: labelGroup.onRemove,
       };
 
@@ -704,7 +704,7 @@ export function avoidOverlap(
     const i = Math.floor(random() * bodies.length);
     const oldChoice = state[i];
     const nChoices = allChoicePositions[i].length; // ≥1 always
-    const canRemove = bodies[i].data.remove;
+    const canRemove = bodies[i].data.allowRemove;
     const nStates = canRemove ? nChoices + 1 : nChoices; // hidden state only if removable
 
     if (nStates >= 2) {

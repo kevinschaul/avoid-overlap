@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.3.0](https://github.com/kevinschaul/avoid-overlap/compare/v0.2.3...v0.3.0) (2026-03-13)
+
+### ⚠ Breaking Changes
+
+* Complete API overhaul — `avoidOverlap` now accepts `labelGroups` and `options` objects; previous argument shapes are no longer supported
+* `remove` option renamed to `allowRemove`
+
+### Features
+
+* Simulated annealing algorithm for significantly better label placement
+* TypeScript declarations and auto-generated API documentation
+* `onRemove` callback fired when a label is removed from the DOM
+* Seeded RNG (`seed` option) for deterministic, reproducible layouts
+* `choiceBonuses` for per-choice scoring weights
+* Post-SA nudge compression pass for tighter label placement
+* Improved debug mode with consistent visualization
+
+### Bug Fixes
+
+* Normalize element bounds cross-browser (SVG via `getBBox`+`getScreenCTM`)
+* Fix crash when applying best state for fixed-obstacle bodies
+* Fix incremental overlap count initialisation in scoring algorithm
+
 ## [0.2.3](https://github.com/kevinschaul/avoid-overlap/compare/v0.2.2...v0.2.3) (2024-03-17)
 
 

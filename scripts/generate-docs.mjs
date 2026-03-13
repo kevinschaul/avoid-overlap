@@ -9,10 +9,11 @@
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
+import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const tmpJson = '/tmp/avoid-overlap-docs.json';
+const tmpJson = join(tmpdir(), 'avoid-overlap-docs.json');
 
 // Generate TypeDoc JSON
 execSync(
@@ -160,16 +161,33 @@ const sections = [];
 // labelGroups — common params
 {
   const lines = tableHeader();
-  const techniqueProps = ['LabelGroupNudge', 'LabelGroupChoices', 'LabelGroupFixed']
+  const techniqueProps = [
+    'LabelGroupNudge',
+    'LabelGroupChoices',
+    'LabelGroupFixed',
+  ]
     .map((name) => {
-      const props = Object.fromEntries(getOwnProps(name).map((p) => [p.name, p]));
+      const props = Object.fromEntries(
+        getOwnProps(name).map((p) => [p.name, p]),
+      );
       return props['technique'];
     })
     .filter(Boolean);
-  const techniqueType = { type: 'union', types: techniqueProps.map((p) => p.type) };
+  const techniqueType = {
+    type: 'union',
+    types: techniqueProps.map((p) => p.type),
+  };
   // Use comment from first variant (all three share the same description)
-  lines.push(renderProp('technique', { ...techniqueProps[0], type: techniqueType }));
-  const genericOrder = ['nodes', 'margin', 'priority', 'remove', 'onRemove'];
+  lines.push(
+    renderProp('technique', { ...techniqueProps[0], type: techniqueType }),
+  );
+  const genericOrder = [
+    'nodes',
+    'margin',
+    'priority',
+    'allowRemove',
+    'onRemove',
+  ];
   const genericProps = Object.fromEntries(
     getOwnProps('LabelGroupGeneric').map((p) => [p.name, p]),
   );

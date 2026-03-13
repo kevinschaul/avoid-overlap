@@ -118,7 +118,7 @@ Perform the label avoidance. Call this after you have positioned all of your lab
 | `nodes` | `Element[]` | An array of elements to avoid overlaps. |
 | `margin` | `number` \| `object` | Extra spacing to consider for collisions with these nodes. Accepts a number (uniform) or `{ top, right, bottom, left }`. Default: `0` |
 | `priority` | `number` | Priority for this label group. Higher-priority labels are kept visible when a conflict cannot be resolved. Uses quadratic weighting, so differences matter more at higher values. Default: `0` |
-| `remove` | `boolean` | Whether the algorithm is allowed to hide this label when it cannot be placed without overlapping a higher-priority label. Set to `false` to always show the label, even if it overlaps. Default: `true` |
+| `allowRemove` | `boolean` | Whether the algorithm is allowed to hide this label when it cannot be placed without overlapping a higher-priority label. Set to `false` to always show the label, even if it overlaps. Default: `true` |
 | `onRemove` | `(el: Element) => void` | Called when a node is removed from the DOM due to an unresolvable overlap. Use this to remove highlight styles for elements that no longer have labels. |
 
 #### `labelGroups` — `choices` technique
