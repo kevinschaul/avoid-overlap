@@ -24,7 +24,12 @@ export type Direction = 'up' | 'right' | 'down' | 'left';
 const resolveMargin = (m?: number | Partial<Margin>): Margin => {
   if (m === undefined) return { top: 0, right: 0, bottom: 0, left: 0 };
   if (typeof m === 'number') return { top: m, right: m, bottom: m, left: m };
-  return { top: m.top ?? 0, right: m.right ?? 0, bottom: m.bottom ?? 0, left: m.left ?? 0 };
+  return {
+    top: m.top ?? 0,
+    right: m.right ?? 0,
+    bottom: m.bottom ?? 0,
+    left: m.left ?? 0,
+  };
 };
 
 type BodyDataGeneric = {
@@ -69,7 +74,7 @@ interface CollisionCandidate {
 }
 
 export type LabelGroupGeneric = {
-  technique: 'nudge' | 'choices';
+  technique: 'choices' | 'nudge';
   /** An array of elements to avoid overlaps. */
   nodes: Element[];
   /**
@@ -210,25 +215,27 @@ const getRelativeBounds = (child: Bounds, parent: Bounds) =>
   };
 
 /**
- * Returns the viewport bounding rect for an element.
- * For SVGGraphicsElement nodes, uses getBBox() + getScreenCTM() to get tight
- * visual bounds that are consistent across browsers (Firefox typographic vs
- * Chrome glyph bounds differ when using getBoundingClientRect() on SVG text).
+ * Returns bounds for an SVG node in SVG user-unit space using getCTM() +
+ * getBBox().  getCTM() maps from the element's local coordinate system to the
+ * nearest SVG viewport; getBBox() returns tight glyph bounds with no
+ * typographic leading.  Returns null if the node is not an SVGGraphicsElement
+ * or if the transform is unavailable (e.g. detached node).
  */
-const getNodeBounds = (node: Element): DOMRect => {
-  if (typeof (node as SVGGraphicsElement).getBBox === 'function') {
-    const svgNode = node as SVGGraphicsElement;
+const getSVGNodeBounds = (node: Element): Bounds | null => {
+  if (typeof (node as SVGGraphicsElement).getBBox !== 'function') return null;
+  const svgNode = node as SVGGraphicsElement;
+  try {
     const bbox = svgNode.getBBox();
-    const ctm = svgNode.getScreenCTM();
-    if (ctm) {
-      const x = ctm.a * bbox.x + ctm.c * bbox.y + ctm.e;
-      const y = ctm.b * bbox.x + ctm.d * bbox.y + ctm.f;
-      const w = ctm.a * bbox.width + ctm.c * bbox.height;
-      const h = ctm.b * bbox.width + ctm.d * bbox.height;
-      return new DOMRect(x, y, Math.abs(w), Math.abs(h));
-    }
+    const ctm = svgNode.getCTM();
+    if (!ctm) return null;
+    const x = ctm.a * bbox.x + ctm.c * bbox.y + ctm.e;
+    const y = ctm.b * bbox.x + ctm.d * bbox.y + ctm.f;
+    const w = Math.abs(ctm.a * bbox.width + ctm.c * bbox.height);
+    const h = Math.abs(ctm.b * bbox.width + ctm.d * bbox.height);
+    return { x, y, width: w, height: h };
+  } catch {
+    return null;
   }
-  return node.getBoundingClientRect();
 };
 
 /** Find the first collision where at least one body can be hidden. */
@@ -281,17 +288,23 @@ const addParent = (
   tree: RBush<Body>,
   parent: Element,
   parentBounds: Bounds,
-  parentMargin: Margin
+  parentMargin: Margin,
 ) => {
   const t = 200; // thickness of boundary walls
   const w = parentBounds.width;
   const h = parentBounds.height;
 
+  // Shift boundary walls 0.5px outward so that labels exactly touching the
+  // allowed margin are not counted as collisions.  RBush uses inclusive bounds
+  // (a.minX <= b.maxX), so without this adjustment a label whose edge lands
+  // exactly on the margin line (e.g. due to font bearing or sub-pixel rendering)
+  // would trigger a spurious collision penalty.
+  const eps = 0.5;
   const sides: [number, number, number, number][] = [
-    [-t, -t, w + t, parentMargin.top], // top
-    [-t, h - parentMargin.bottom, w + t, h + t], // bottom
-    [-t, -t, parentMargin.left, h + t], // left
-    [w - parentMargin.right, -t, w + t, h + t], // right
+    [-t, -t, w + t, parentMargin.top - eps], // top
+    [-t, h - parentMargin.bottom + eps, w + t, h + t], // bottom
+    [-t, -t, parentMargin.left - eps, h + t], // left
+    [w - parentMargin.right + eps, -t, w + t, h + t], // right
   ];
 
   for (const [minX, minY, maxX, maxY] of sides) {
@@ -314,7 +327,7 @@ const addParent = (
 
 const extendBodyDataNudge = (
   bodyData: BodyDataGeneric,
-  labelGroup: LabelGroupNudge
+  labelGroup: LabelGroupNudge,
 ): BodyDataNudge => ({
   ...bodyData,
   technique: 'nudge',
@@ -325,7 +338,7 @@ const extendBodyDataNudge = (
 
 const extendBodyDataChoices = (
   bodyData: BodyDataGeneric,
-  labelGroup: LabelGroupChoices
+  labelGroup: LabelGroupChoices,
 ): BodyDataChoices => ({
   ...bodyData,
   technique: 'choices',
@@ -366,7 +379,7 @@ const DEFAULT_MAX_DISTANCE = 64;
 
 const precomputePositions = (
   body: Body,
-  parentBounds: Bounds,
+  getBoundsRelativeToParent: (node: Element) => Bounds,
 ): ChoicePosition[] => {
   const w = body.maxX - body.minX;
   const h = body.maxY - body.minY;
@@ -381,32 +394,37 @@ const precomputePositions = (
     }
     return choices.map((choice) => {
       choice(body.node);
-      const r = getRelativeBounds(
-        getNodeBounds(body.node),
-        parentBounds
-      );
+      const r = getBoundsRelativeToParent(body.node);
       return { minX: r.x, minY: r.y, maxX: r.x + w, maxY: r.y + h };
     });
   }
 
   if (body.data.technique === 'nudge') {
-    // Start with the initial (un-nudged) position, then add one candidate per
-    // direction at maxDistance.  The compression pass later finds the true
-    // minimum collision-free offset in 1 px steps.  Pure arithmetic — no DOM calls.
+    // Start with the initial (un-nudged) position, then add candidates at
+    // logarithmically-spaced distances up to maxDistance per direction.
+    // Multiple candidates ensure SA can find a collision-free direction even
+    // when the max offset would hit a boundary (e.g. a label near the top edge
+    // that can only be nudged a small amount).  The post-SA compression pass
+    // then finds the true minimum collision-free offset in 1 px steps.
     const nudgeData = body.data as BodyDataNudge;
-    const offset = nudgeData.maxDistance ?? DEFAULT_MAX_DISTANCE;
+    const maxOff = nudgeData.maxDistance ?? DEFAULT_MAX_DISTANCE;
+    const offsets: number[] = [];
+    for (let o = 2; o < maxOff; o *= 2) offsets.push(o);
+    offsets.push(maxOff);
     const positions: ChoicePosition[] = [
       { minX: body.minX, minY: body.minY, maxX: body.maxX, maxY: body.maxY },
     ];
     nudgeData.directions.forEach((dir) => {
-      const dx = dir === 'right' ? offset : dir === 'left' ? -offset : 0;
-      const dy = dir === 'down' ? offset : dir === 'up' ? -offset : 0;
-      positions.push({
-        minX: body.minX + dx,
-        minY: body.minY + dy,
-        maxX: body.maxX + dx,
-        maxY: body.maxY + dy,
-      });
+      const sx = dir === 'right' ? 1 : dir === 'left' ? -1 : 0;
+      const sy = dir === 'down' ? 1 : dir === 'up' ? -1 : 0;
+      for (const off of offsets) {
+        positions.push({
+          minX: body.minX + sx * off,
+          minY: body.minY + sy * off,
+          maxX: body.maxX + sx * off,
+          maxY: body.maxY + sy * off,
+        });
+      }
     });
     return positions;
   }
@@ -441,12 +459,42 @@ let nextUid = 0;
  */
 export function avoidOverlap(
   labelGroups: LabelGroup[],
-  options: Options = {}
+  options: Options = {},
 ): DebugInfo | undefined {
   const uid = nextUid++;
   const allNodes = labelGroups.flatMap((g) => g.nodes);
   const parent = findCommonAncestor(allNodes);
-  const parentBounds = parent.getBoundingClientRect();
+
+  // For SVG root parents, work entirely in SVG user-unit space.
+  // getCTM() + getBBox() on child elements gives SVG-space coords with no
+  // Firefox typographic-leading artifact (unlike getBoundingClientRect()).
+  // The SVG root's own coordinate space starts at (0, 0), so parentBounds.x/y = 0.
+  const isSVGRoot = parent instanceof SVGSVGElement;
+  const parentBounds: Bounds = isSVGRoot
+    ? {
+        x: 0,
+        y: 0,
+        width:
+          (parent as SVGSVGElement).width.baseVal.value ||
+          parseFloat((parent as SVGSVGElement).getAttribute('width') ?? '0'),
+        height:
+          (parent as SVGSVGElement).height.baseVal.value ||
+          parseFloat((parent as SVGSVGElement).getAttribute('height') ?? '0'),
+      }
+    : parent.getBoundingClientRect();
+
+  /**
+   * Returns bounds for `node` in the parent's coordinate space.
+   * Uses getCTM()+getBBox() when the parent is an SVG root (SVG user units);
+   * falls back to getBoundingClientRect() for HTML contexts.
+   */
+  const getBoundsRelativeToParent = (node: Element): Bounds => {
+    if (isSVGRoot) {
+      const svgBounds = getSVGNodeBounds(node);
+      if (svgBounds) return svgBounds; // already in SVG viewport space = relative to (0,0) parent
+    }
+    return getRelativeBounds(node.getBoundingClientRect(), parentBounds);
+  };
 
   const iterations = options.iterations ?? 10_000;
   const initTemp = options.temperature ?? 100;
@@ -471,30 +519,37 @@ export function avoidOverlap(
     const { technique } = labelGroup;
     if (!validTechniques.has(technique)) {
       throw new Error(
-        `avoid-overlap: unknown technique "${technique}". Valid values are: ${[...validTechniques].join(', ')}.`
+        `avoid-overlap: unknown technique "${technique}". Valid values are: ${[...validTechniques].join(', ')}.`,
       );
     }
     if (technique === 'choices') {
       const g = labelGroup as LabelGroupChoices;
       if (!Array.isArray(g.choices)) {
-        throw new Error(`avoid-overlap: "choices" technique requires a "choices" array.`);
-      }
-      if (g.choiceBonuses !== undefined && g.choiceBonuses.length !== g.choices.length) {
         throw new Error(
-          `avoid-overlap: "choiceBonuses" length (${g.choiceBonuses.length}) must match "choices" length (${g.choices.length}).`
+          `avoid-overlap: "choices" technique requires a "choices" array.`,
+        );
+      }
+      if (
+        g.choiceBonuses !== undefined &&
+        g.choiceBonuses.length !== g.choices.length
+      ) {
+        throw new Error(
+          `avoid-overlap: "choiceBonuses" length (${g.choiceBonuses.length}) must match "choices" length (${g.choices.length}).`,
         );
       }
     }
     if (technique === 'nudge') {
       const g = labelGroup as LabelGroupNudge;
       if (typeof g.render !== 'function') {
-        throw new Error(`avoid-overlap: "nudge" technique requires a "render" function.`);
+        throw new Error(
+          `avoid-overlap: "nudge" technique requires a "render" function.`,
+        );
       }
       if (g.directions !== undefined) {
         const invalid = g.directions.filter((d) => !validDirections.has(d));
         if (invalid.length > 0) {
           throw new Error(
-            `avoid-overlap: invalid direction(s): ${invalid.map((d) => `"${d}"`).join(', ')}. Valid values are: ${[...validDirections].join(', ')}.`
+            `avoid-overlap: invalid direction(s): ${invalid.map((d) => `"${d}"`).join(', ')}. Valid values are: ${[...validDirections].join(', ')}.`,
           );
         }
       }
@@ -507,7 +562,7 @@ export function avoidOverlap(
     if (labelGroup.technique !== 'fixed') return;
     const margin = resolveMargin(labelGroup.margin);
     labelGroup.nodes.forEach((node) => {
-      const b = getRelativeBounds(getNodeBounds(node), parentBounds);
+      const b = getBoundsRelativeToParent(node);
       const body: Body = {
         minX: b.x - margin.left,
         minY: b.y - margin.top,
@@ -515,7 +570,12 @@ export function avoidOverlap(
         maxY: b.y + b.height + margin.bottom,
         isStatic: true,
         node,
-        data: { technique: 'fixed', priority: Infinity, priorityWithinGroup: Infinity, remove: false },
+        data: {
+          technique: 'fixed',
+          priority: Infinity,
+          priorityWithinGroup: Infinity,
+          remove: false,
+        },
       };
       staticBodies.push(body);
       tree.insert(body);
@@ -530,7 +590,7 @@ export function avoidOverlap(
     const priority = labelGroup.priority ?? 0;
 
     labelGroup.nodes.forEach((node, i) => {
-      const b = getRelativeBounds(getNodeBounds(node), parentBounds);
+      const b = getBoundsRelativeToParent(node);
 
       const baseData: BodyDataGeneric = {
         priority,
@@ -566,7 +626,7 @@ export function avoidOverlap(
 
   // ── Pre-compute choice positions (transiently modifies DOM) ───────────────
   const allChoicePositions: ChoicePosition[][] = bodies.map((body) =>
-    precomputePositions(body, parentBounds)
+    precomputePositions(body, getBoundsRelativeToParent),
   );
 
   // ── Per-choice score contributions ────────────────────────────────────────
@@ -575,12 +635,12 @@ export function avoidOverlap(
     allChoicePositions[bi].map((_, k) => {
       if (body.data.technique === 'choices') {
         const cb = (body.data as BodyDataChoices).choiceBonuses;
-        return cb !== undefined ? cb[k] ?? 0 : defaultChoiceScore(k);
+        return cb !== undefined ? (cb[k] ?? 0) : defaultChoiceScore(k);
       }
       // Nudge: scale the displacement penalty by bodyWeight so resistance to
       // nudging is proportional to priority.
       return k === 0 ? 0 : -0.5 * bodyWeight(body.data.priority, scoreExp);
-    })
+    }),
   );
 
   // ── Overlap penalty ────────────────────────────────────────────────────────
@@ -611,7 +671,7 @@ export function avoidOverlap(
   let visibleScore = bodies.reduce(
     (s, b, i) =>
       s + bodyWeight(b.data.priority, scoreExp) + allChoiceScores[i][0],
-    0
+    0,
   );
   // Count initial overlaps incrementally: insert bodies one by one and count
   // how many existing items each new body overlaps.  Multiplied by 2 to match
@@ -678,8 +738,7 @@ export function avoidOverlap(
         tree.insert(newBodyInTree);
       }
 
-      const newOverlapCount =
-        overlapCount - 2 * oldOverlaps + 2 * newOverlaps;
+      const newOverlapCount = overlapCount - 2 * oldOverlaps + 2 * newOverlaps;
       const newScore =
         visibleScore + deltaScore - newOverlapCount * overlapPenalty;
       const delta = newScore - curScore;
@@ -723,7 +782,10 @@ export function avoidOverlap(
   for (const sb of staticBodies) finalTree.insert(sb);
   for (let i = 0; i < bodies.length; i++) {
     if (bestState[i] >= 0) {
-      finalTree.insert({ ...bodies[i], ...allChoicePositions[i][bestState[i]] });
+      finalTree.insert({
+        ...bodies[i],
+        ...allChoicePositions[i][bestState[i]],
+      });
     }
   }
 
@@ -731,19 +793,19 @@ export function avoidOverlap(
 
   const nudgeOrder = bodies
     .map((_, i) => i)
-    .filter(i => bodies[i].data.technique === 'nudge' && bestState[i] > 0)
+    .filter((i) => bodies[i].data.technique === 'nudge' && bestState[i] > 0)
     .sort((a, b) => bodies[b].data.priority - bodies[a].data.priority);
 
   for (const i of nudgeOrder) {
     const origPos = allChoicePositions[i][0];
-    const saPos   = allChoicePositions[i][bestState[i]];
-    const rawDx   = saPos.minX - origPos.minX;
-    const rawDy   = saPos.minY - origPos.minY;
-    const maxOff  = Math.abs(rawDx !== 0 ? rawDx : rawDy);
-    const signX   = Math.sign(rawDx);
-    const signY   = Math.sign(rawDy);
-    const w       = origPos.maxX - origPos.minX;
-    const h       = origPos.maxY - origPos.minY;
+    const saPos = allChoicePositions[i][bestState[i]];
+    const rawDx = saPos.minX - origPos.minX;
+    const rawDy = saPos.minY - origPos.minY;
+    const maxOff = Math.abs(rawDx !== 0 ? rawDx : rawDy);
+    const signX = Math.sign(rawDx);
+    const signY = Math.sign(rawDy);
+    const w = origPos.maxX - origPos.minX;
+    const h = origPos.maxY - origPos.minY;
 
     // Remove from finalTree so we don't self-collide during scan
     const saBody = { ...bodies[i], ...saPos };
@@ -753,7 +815,10 @@ export function avoidOverlap(
     for (let off = 0; off <= maxOff; off++) {
       const tx = origPos.minX + signX * off;
       const ty = origPos.minY + signY * off;
-      if (finalTree.search({ minX: tx, minY: ty, maxX: tx + w, maxY: ty + h }).length === 0) {
+      if (
+        finalTree.search({ minX: tx, minY: ty, maxX: tx + w, maxY: ty + h })
+          .length === 0
+      ) {
         minOff = off;
         break;
       }
@@ -764,7 +829,13 @@ export function avoidOverlap(
     compressedDeltas.set(i, { dx: cx - origPos.minX, dy: cy - origPos.minY });
 
     // Re-insert at compressed position so later bodies compress around it
-    finalTree.insert({ ...bodies[i], minX: cx, minY: cy, maxX: cx + w, maxY: cy + h });
+    finalTree.insert({
+      ...bodies[i],
+      minX: cx,
+      minY: cy,
+      maxX: cx + w,
+      maxY: cy + h,
+    });
   }
 
   // ── Apply best state to DOM ───────────────────────────────────────────────

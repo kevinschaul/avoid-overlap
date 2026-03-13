@@ -126,15 +126,6 @@ for (const name of genericOrder) {
   if (genericProps[name]) lines.push(renderProp(`labelGroups[].${name}`, genericProps[name]));
 }
 
-// nudge-only props (skip technique — already shown above)
-const nudgeOrder = ['render', 'directions', 'maxDistance'];
-const nudgeProps = Object.fromEntries(
-  getOwnProps('LabelGroupNudge').map((p) => [p.name, p])
-);
-for (const name of nudgeOrder) {
-  if (nudgeProps[name]) lines.push(renderProp(`labelGroups[].${name}`, nudgeProps[name], 'nudge only'));
-}
-
 // choices-only props (skip technique)
 const choicesOrder = ['choices', 'choiceBonuses'];
 const choicesProps = Object.fromEntries(
@@ -142,6 +133,15 @@ const choicesProps = Object.fromEntries(
 );
 for (const name of choicesOrder) {
   if (choicesProps[name]) lines.push(renderProp(`labelGroups[].${name}`, choicesProps[name], 'choices only'));
+}
+
+// nudge-only props (skip technique — already shown above)
+const nudgeOrder = ['render', 'directions', 'maxDistance'];
+const nudgeProps = Object.fromEntries(
+  getOwnProps('LabelGroupNudge').map((p) => [p.name, p])
+);
+for (const name of nudgeOrder) {
+  if (nudgeProps[name]) lines.push(renderProp(`labelGroups[].${name}`, nudgeProps[name], 'nudge only'));
 }
 
 lines.push('| | | |');

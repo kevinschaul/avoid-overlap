@@ -68,7 +68,7 @@ type ArrowConfig = {
 function getArrowConfig(
   direction: string,
   _chartWidth: number,
-  _chartHeight: number
+  _chartHeight: number,
 ): ArrowConfig {
   const s = SWOOP;
   const p = SWOOP_PAD;
@@ -165,7 +165,7 @@ export const ALL_DIRECTIONS = [
 export function pickDirection(
   d: any,
   chartWidth: number,
-  chartHeight: number
+  chartHeight: number,
 ): string {
   if (d.id in ARROW_DIRECTION_OVERRIDES) return ARROW_DIRECTION_OVERRIDES[d.id];
   if (d.x0 - 100 < 0) return d.y0 - 100 < 0 ? 'bottom-right' : 'top-right';
@@ -178,7 +178,7 @@ export function pickDirection(
 
 export function nudgeRender(node: Element, dx: number, dy: number) {
   const m = (node.getAttribute('transform') || 'translate(0,0)').match(
-    /translate\(([^,]+),\s*([^)]+)\)/
+    /translate\(([^,]+),\s*([^)]+)\)/,
   );
   const x = m ? parseFloat(m[1]) : 0;
   const y = m ? parseFloat(m[2]) : 0;
@@ -189,13 +189,13 @@ export function makeChoice(
   dir: string,
   d: any,
   chartWidth: number,
-  chartHeight: number
+  chartHeight: number,
 ) {
   return (node: Element) => {
     const cfg = getArrowConfig(dir, chartWidth, chartHeight);
     node.setAttribute(
       'transform',
-      `translate(${cfg.anchorX(d)},${cfg.anchorY(d)})`
+      `translate(${cfg.anchorX(d)},${cfg.anchorY(d)})`,
     );
     const sel = d3.select(node);
     sel.select('path').attr('d', cfg.path);
@@ -204,7 +204,7 @@ export function makeChoice(
       .attr('text-anchor', cfg.textAnchor)
       .attr(
         'transform',
-        `translate(${cfg.textOffset[0]},${cfg.textOffset[1]})`
+        `translate(${cfg.textOffset[0]},${cfg.textOffset[1]})`,
       );
   };
 }
@@ -221,7 +221,7 @@ export function makeContainer(): HTMLDivElement {
 
 export function buildTreemapChart(
   container: HTMLElement,
-  activeDomains: string[] = []
+  activeDomains: string[] = [],
 ) {
   document
     .querySelectorAll('[id^="avoid-overlap-scored-debug"]')
@@ -453,7 +453,7 @@ export function buildBusinessNudgeChart(container: HTMLElement) {
     .style('stroke', '#fff')
     .style('stroke-width', 1)
     .style('opacity', (d: any) =>
-      d.id === ACTIVE_CATEGORY ? 1 : NON_BIZ_OPACITY
+      d.id === ACTIVE_CATEGORY ? 1 : NON_BIZ_OPACITY,
     );
 
   // ── Business sub-category tiles ────────────────────────────────────────────
@@ -480,13 +480,13 @@ export function buildBusinessNudgeChart(container: HTMLElement) {
     .attr('transform', (d: any) => `translate(${d.x0},${d.y0})`)
     .style('font-size', `${FONT_MAIN}px`)
     .style('font-weight', (d: any) =>
-      d.id === ACTIVE_CATEGORY ? 'bold' : 'normal'
+      d.id === ACTIVE_CATEGORY ? 'bold' : 'normal',
     )
     .style('fill', (d: any) =>
-      d.id === ACTIVE_CATEGORY ? '#1a1a1a' : LABEL_DIM_COLOR
+      d.id === ACTIVE_CATEGORY ? '#1a1a1a' : LABEL_DIM_COLOR,
     )
     .style('opacity', (d: any) =>
-      d.id === ACTIVE_CATEGORY ? 1 : NON_BIZ_OPACITY
+      d.id === ACTIVE_CATEGORY ? 1 : NON_BIZ_OPACITY,
     )
     .style('stroke', 'rgba(255,255,255,0.7)')
     .style('stroke-width', 3)
