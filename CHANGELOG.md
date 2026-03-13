@@ -4,7 +4,7 @@
 
 ### ⚠ Breaking Changes
 
-* Complete API overhaul — `avoidOverlap` now accepts `labelGroups` and `options` objects; previous argument shapes are no longer supported
+* `avoidOverlap()` arguments changed — now accepts `labelGroups` and `options` objects; previous argument shapes are no longer supported
 * `remove` option renamed to `allowRemove`
 
 ### Features
