@@ -2,39 +2,6 @@
 
 ## [0.3.0](https://github.com/kevinschaul/avoid-overlap/compare/v0.2.3...v0.3.0) (2026-03-13)
 
-
-### ⚠ BREAKING CHANGES
-
-* overhaul algorithm, public API for v1
-* run() now returns DebugInfo or undefined
-
-### Features
-
-* add choiceBonuses per-choice scoring for directional preferences ([8e10e7d](https://github.com/kevinschaul/avoid-overlap/commit/8e10e7d36041aa840eae259db9b68feda9adf877))
-* add onRemove function ([#29](https://github.com/kevinschaul/avoid-overlap/issues/29)) ([6ca921b](https://github.com/kevinschaul/avoid-overlap/commit/6ca921bbfc34907bf6e473e7dd565606b41d8aae))
-* add post-SA nudge compression pass to find minimum collision-free offset ([8e10e7d](https://github.com/kevinschaul/avoid-overlap/commit/8e10e7d36041aa840eae259db9b68feda9adf877))
-* add remove option per group to prevent labels from being hidden ([8e10e7d](https://github.com/kevinschaul/avoid-overlap/commit/8e10e7d36041aa840eae259db9b68feda9adf877))
-* add score-based label placement via simulated annealing ([8e10e7d](https://github.com/kevinschaul/avoid-overlap/commit/8e10e7d36041aa840eae259db9b68feda9adf877))
-* add seeded RNG and seed option for deterministic label placement ([8e10e7d](https://github.com/kevinschaul/avoid-overlap/commit/8e10e7d36041aa840eae259db9b68feda9adf877))
-* add synthetic nudge candidate positions for scored algorithm ([8e10e7d](https://github.com/kevinschaul/avoid-overlap/commit/8e10e7d36041aa840eae259db9b68feda9adf877))
-* margin and parentMargin now accept number or Partial&lt;Margin&gt; ([8e10e7d](https://github.com/kevinschaul/avoid-overlap/commit/8e10e7d36041aa840eae259db9b68feda9adf877))
-* overhaul algorithm, public API for v1 ([8e10e7d](https://github.com/kevinschaul/avoid-overlap/commit/8e10e7d36041aa840eae259db9b68feda9adf877))
-* rename allowRemove, TypeScript declarations, auto-generated docs, and CI fixes ([1469481](https://github.com/kevinschaul/avoid-overlap/commit/146948167ff4c2ed208009996b834b15044fb403))
-
-
-### Bug Fixes
-
-* correct overlapCount initialisation to match incremental update formula ([8e10e7d](https://github.com/kevinschaul/avoid-overlap/commit/8e10e7d36041aa840eae259db9b68feda9adf877))
-* don't crash when applying best state for fixed-obstacle bodies ([8e10e7d](https://github.com/kevinschaul/avoid-overlap/commit/8e10e7d36041aa840eae259db9b68feda9adf877))
-* normalize SVG bounds cross-browser using getBBox and getScreenCTM ([8e10e7d](https://github.com/kevinschaul/avoid-overlap/commit/8e10e7d36041aa840eae259db9b68feda9adf877))
-
-
-### Performance Improvements
-
-* replace O(n²) per-iteration scoring with incremental O(log n) updates ([8e10e7d](https://github.com/kevinschaul/avoid-overlap/commit/8e10e7d36041aa840eae259db9b68feda9adf877))
-
-## [0.3.0](https://github.com/kevinschaul/avoid-overlap/compare/v0.2.3...v0.3.0) (2026-03-13)
-
 ### ⚠ Breaking Changes
 
 * Complete API overhaul — `avoidOverlap` now accepts `labelGroups` and `options` objects; previous argument shapes are no longer supported
