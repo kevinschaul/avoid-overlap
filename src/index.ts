@@ -97,7 +97,7 @@ export type LabelGroupGeneric = {
    * @defaultValue true
    */
   remove?: boolean;
-  /** Called when a node is removed from the DOM due to an unresolvable overlap. */
+  /** Called when a node is removed from the DOM due to an unresolvable overlap. Use this to remove highlight styles for elements that no longer have labels. */
   onRemove?: (el: Element) => void;
 };
 
