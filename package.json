@@ -60,7 +60,7 @@
     "build-storybook": "storybook build"
   },
   "lint-staged": {
-    "*.js": "prettier --write --ignore-unknown"
+    "*.{js,ts,mjs}": "prettier --write --ignore-unknown"
   },
   "dependencies": {
     "rbush": "^4.0.1",
