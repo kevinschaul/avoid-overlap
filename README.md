@@ -45,38 +45,6 @@ import { avoidOverlap } from 'avoid-overlap';
 avoidOverlap(/* args here, see table below */);
 ```
 
-### `avoidOverlap(labelGroups, options)`
-
-Perform the label avoidance. Call this after you have positioned all of your labels. The parent element is inferred automatically as the deepest common ancestor of all label nodes.
-
-<!-- params-start -->
-
-| Param | Type | Description |
-| - | - | - |
-| `labelGroups` | `object[]` | An array of label groups that define how to resolve overlaps. |
-| `labelGroups[].technique` | `"nudge" \| "choices" \| "fixed"` | The overlap avoidance technique to use. `nudge` shifts labels by a small offset; `choices` picks from a list of candidate positions; `fixed` treats nodes as immovable obstacles. |
-| `labelGroups[].nodes` | `Element[]` | An array of elements to avoid overlaps. |
-| `labelGroups[].margin` | `number` \| `object` | Extra spacing to consider for collisions with these nodes. Accepts a number (uniform) or `{ top, right, bottom, left }`. Default: `0` |
-| `labelGroups[].priority` | `number` | Priority for this label group. Higher-priority labels are kept visible when a conflict cannot be resolved. Uses quadratic weighting, so differences matter more at higher values. Default: `0` |
-| `labelGroups[].remove` | `boolean` | Whether the algorithm is allowed to hide this label when it cannot be placed without overlapping a higher-priority label. Set to `false` to always show the label, even if it overlaps. Default: `true` |
-| `labelGroups[].onRemove` | `function` | Called when a node is removed from the DOM due to an unresolvable overlap. Use this to remove highlight styles for elements that no longer have labels. |
-| `labelGroups[].choices` | `function[]` | *choices only*. An array of functions that each apply a candidate position to the node. Pass an empty array to treat the node as a fixed obstacle. |
-| `labelGroups[].choiceBonuses` | `number[]` | *choices only*. Score bonus for each choice, parallel to `choices`. Positive values make a choice more attractive; negative values less so. When omitted, a small penalty (`-0.5`) is applied to non-zero choices. |
-| `labelGroups[].render` | `function` | *nudge only*. Function that applies the nudged position (`dx`, `dy`) to the node. |
-| `labelGroups[].directions` | `"up"` \| `"down"` \| `"left"` \| `"right"` | *nudge only*. Which directions to consider nudging. Default: `["down", "right", "up", "left"]` |
-| `labelGroups[].maxDistance` | `number` | *nudge only*. Maximum nudge distance in pixels. Default: `64` |
-| | | |
-| `options.includeParent` | `boolean` | Whether to treat the common ancestor's edges as collision boundaries. Default: `true` |
-| `options.parentMargin` | `number` \| `object` | Margin inset from the parent boundary. Negative values allow labels to touch (but not cross) the parent edge without a collision penalty. Accepts a number (uniform) or per-side object. Default: `-2` |
-| `options.iterations` | `number` | Number of simulated-annealing iterations. More iterations = better results but slower. Default: `10000` |
-| `options.temperature` | `number` | Initial temperature for simulated annealing. Higher values allow the algorithm to escape local optima early on. Most users won't need to change this. Default: `100` |
-| `options.coolingRate` | `number` | Multiplicative cooling rate per iteration (between 0 and 1). Values close to 1 cool slowly; values closer to 0 cool fast. Most users won't need to change this. Default: `0.995` |
-| `options.scoreExponent` | `number` | Exponent used in the per-label score formula: `(priority + 1) ^ scoreExponent`. Higher values make the highest-priority labels exponentially more valuable. Default: `2` |
-| `options.seed` | `string` \| `number` | Seed for the random number generator. The same seed produces identical placements across runs. Default: `42` |
-| `options.debug` | `boolean` | Whether to enable debug mode, which renders a panel showing label scores and lets you toggle between the original and final layouts. Default: `false` |
-
-<!-- params-end -->
-
 ### Example using technique: `choices`
 
 ```js
@@ -135,6 +103,53 @@ avoidOverlap([
   },
 ]);
 ```
+
+### `avoidOverlap(labelGroups, options)`
+
+Perform the label avoidance. Call this after you have positioned all of your labels. The parent element is inferred automatically as the deepest common ancestor of all label nodes.
+
+<!-- params-start -->
+
+#### `labelGroups` — common params
+
+| Param       | Type                              | Description                                                                                                                                                                                             |
+| ----------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `technique` | `"nudge" \| "choices" \| "fixed"` | The overlap avoidance technique to use. `nudge` shifts labels by a small offset; `choices` picks from a list of candidate positions; `fixed` treats nodes as immovable obstacles.                       |
+| `nodes`     | `Element[]`                       | An array of elements to avoid overlaps.                                                                                                                                                                 |
+| `margin`    | `number` \| `object`              | Extra spacing to consider for collisions with these nodes. Accepts a number (uniform) or `{ top, right, bottom, left }`. Default: `0`                                                                   |
+| `priority`  | `number`                          | Priority for this label group. Higher-priority labels are kept visible when a conflict cannot be resolved. Uses quadratic weighting, so differences matter more at higher values. Default: `0`          |
+| `remove`    | `boolean`                         | Whether the algorithm is allowed to hide this label when it cannot be placed without overlapping a higher-priority label. Set to `false` to always show the label, even if it overlaps. Default: `true` |
+| `onRemove`  | `function`                        | Called when a node is removed from the DOM due to an unresolvable overlap. Use this to remove highlight styles for elements that no longer have labels.                                                 |
+
+#### `labelGroups` — `choices` technique
+
+| Param           | Type         | Description                                                                                                                                                                                        |
+| --------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `choices`       | `function[]` | An array of functions that each apply a candidate position to the node. Pass an empty array to treat the node as a fixed obstacle.                                                                 |
+| `choiceBonuses` | `number[]`   | Score bonus for each choice, parallel to `choices`. Positive values make a choice more attractive; negative values less so. When omitted, a small penalty (`-0.5`) is applied to non-zero choices. |
+
+#### `labelGroups` — `nudge` technique
+
+| Param         | Type                                        | Description                                                                      |
+| ------------- | ------------------------------------------- | -------------------------------------------------------------------------------- |
+| `render`      | `function`                                  | Function that applies the nudged position (`dx`, `dy`) to the node.              |
+| `directions`  | `"up"` \| `"down"` \| `"left"` \| `"right"` | Which directions to consider nudging. Default: `["down", "right", "up", "left"]` |
+| `maxDistance` | `number`                                    | Maximum nudge distance in pixels. Default: `64`                                  |
+
+#### `options`
+
+| Param           | Type                 | Description                                                                                                                                                                                            |
+| --------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `includeParent` | `boolean`            | Whether to treat the common ancestor's edges as collision boundaries. Default: `true`                                                                                                                  |
+| `parentMargin`  | `number` \| `object` | Margin inset from the parent boundary. Negative values allow labels to touch (but not cross) the parent edge without a collision penalty. Accepts a number (uniform) or per-side object. Default: `-2` |
+| `iterations`    | `number`             | Number of simulated-annealing iterations. More iterations = better results but slower. Default: `10000`                                                                                                |
+| `temperature`   | `number`             | Initial temperature for simulated annealing. Higher values allow the algorithm to escape local optima early on. Most users won't need to change this. Default: `100`                                   |
+| `coolingRate`   | `number`             | Multiplicative cooling rate per iteration (between 0 and 1). Values close to 1 cool slowly; values closer to 0 cool fast. Most users won't need to change this. Default: `0.995`                       |
+| `scoreExponent` | `number`             | Exponent used in the per-label score formula: `(priority + 1) ^ scoreExponent`. Higher values make the highest-priority labels exponentially more valuable. Default: `2`                               |
+| `seed`          | `string` \| `number` | Seed for the random number generator. The same seed produces identical placements across runs. Default: `42`                                                                                           |
+| `debug`         | `boolean`            | Whether to enable debug mode, which renders a panel showing label scores and lets you toggle between the original and final layouts. Default: `false`                                                  |
+
+<!-- params-end -->
 
 ### Debugging
 

@@ -118,75 +118,81 @@ function renderProp(name, prop, suffix = '') {
 
 // ── Build params markdown ─────────────────────────────────────────────────────
 
-const lines = [];
-
-lines.push('| Param | Type | Description |');
-lines.push('| - | - | - |');
-
-// labelGroups
-lines.push(
-  '| `labelGroups` | `object[]` | An array of label groups that define how to resolve overlaps. |',
-);
-lines.push(
-  '| `labelGroups[].technique` | `"nudge" \\| "choices" \\| "fixed"` | The overlap avoidance technique to use. `nudge` shifts labels by a small offset; `choices` picks from a list of candidate positions; `fixed` treats nodes as immovable obstacles. |',
-);
-
-// Common props from LabelGroupGeneric in logical order (skip technique)
-const genericOrder = ['nodes', 'margin', 'priority', 'remove', 'onRemove'];
-const genericProps = Object.fromEntries(
-  getOwnProps('LabelGroupGeneric').map((p) => [p.name, p]),
-);
-for (const name of genericOrder) {
-  if (genericProps[name])
-    lines.push(renderProp(`labelGroups[].${name}`, genericProps[name]));
+function tableHeader() {
+  return ['| Param | Type | Description |', '| - | - | - |'];
 }
 
-// choices-only props (skip technique)
-const choicesOrder = ['choices', 'choiceBonuses'];
-const choicesProps = Object.fromEntries(
-  getOwnProps('LabelGroupChoices').map((p) => [p.name, p]),
-);
-for (const name of choicesOrder) {
-  if (choicesProps[name])
-    lines.push(
-      renderProp(`labelGroups[].${name}`, choicesProps[name], 'choices only'),
-    );
+const sections = [];
+
+// labelGroups — common params
+{
+  const lines = tableHeader();
+  lines.push(
+    '| `technique` | `"nudge" \\| "choices" \\| "fixed"` | The overlap avoidance technique to use. `nudge` shifts labels by a small offset; `choices` picks from a list of candidate positions; `fixed` treats nodes as immovable obstacles. |',
+  );
+  const genericOrder = ['nodes', 'margin', 'priority', 'remove', 'onRemove'];
+  const genericProps = Object.fromEntries(
+    getOwnProps('LabelGroupGeneric').map((p) => [p.name, p]),
+  );
+  for (const name of genericOrder) {
+    if (genericProps[name]) lines.push(renderProp(name, genericProps[name]));
+  }
+  sections.push('#### `labelGroups` — common params\n\n' + lines.join('\n'));
 }
 
-// nudge-only props (skip technique — already shown above)
-const nudgeOrder = ['render', 'directions', 'maxDistance'];
-const nudgeProps = Object.fromEntries(
-  getOwnProps('LabelGroupNudge').map((p) => [p.name, p]),
-);
-for (const name of nudgeOrder) {
-  if (nudgeProps[name])
-    lines.push(
-      renderProp(`labelGroups[].${name}`, nudgeProps[name], 'nudge only'),
-    );
+// labelGroups — choices technique
+{
+  const lines = tableHeader();
+  const choicesOrder = ['choices', 'choiceBonuses'];
+  const choicesProps = Object.fromEntries(
+    getOwnProps('LabelGroupChoices').map((p) => [p.name, p]),
+  );
+  for (const name of choicesOrder) {
+    if (choicesProps[name]) lines.push(renderProp(name, choicesProps[name]));
+  }
+  sections.push(
+    '#### `labelGroups` — `choices` technique\n\n' + lines.join('\n'),
+  );
 }
 
-lines.push('| | | |');
-
-// Options in logical order
-const optionsOrder = [
-  'includeParent',
-  'parentMargin',
-  'iterations',
-  'temperature',
-  'coolingRate',
-  'scoreExponent',
-  'seed',
-  'debug',
-];
-const optionsProps = Object.fromEntries(
-  getOwnProps('Options').map((p) => [p.name, p]),
-);
-for (const name of optionsOrder) {
-  if (optionsProps[name])
-    lines.push(renderProp(`options.${name}`, optionsProps[name]));
+// labelGroups — nudge technique
+{
+  const lines = tableHeader();
+  const nudgeOrder = ['render', 'directions', 'maxDistance'];
+  const nudgeProps = Object.fromEntries(
+    getOwnProps('LabelGroupNudge').map((p) => [p.name, p]),
+  );
+  for (const name of nudgeOrder) {
+    if (nudgeProps[name]) lines.push(renderProp(name, nudgeProps[name]));
+  }
+  sections.push(
+    '#### `labelGroups` — `nudge` technique\n\n' + lines.join('\n'),
+  );
 }
 
-const generated = lines.join('\n');
+// options
+{
+  const lines = tableHeader();
+  const optionsOrder = [
+    'includeParent',
+    'parentMargin',
+    'iterations',
+    'temperature',
+    'coolingRate',
+    'scoreExponent',
+    'seed',
+    'debug',
+  ];
+  const optionsProps = Object.fromEntries(
+    getOwnProps('Options').map((p) => [p.name, p]),
+  );
+  for (const name of optionsOrder) {
+    if (optionsProps[name]) lines.push(renderProp(name, optionsProps[name]));
+  }
+  sections.push('#### `options`\n\n' + lines.join('\n'));
+}
+
+const generated = sections.join('\n\n');
 
 // ── Splice into README ────────────────────────────────────────────────────────
 
