@@ -102,6 +102,7 @@ export type LabelGroupGeneric = {
 };
 
 export type LabelGroupNudge = LabelGroupGeneric & {
+  /** The overlap avoidance technique to use. `nudge` shifts labels by a small offset; `choices` picks from a list of candidate positions; `fixed` treats nodes as immovable obstacles. */
   technique: 'nudge';
   /** Function that applies the nudged position (`dx`, `dy`) to the node. */
   render: (el: Element, deltaX: number, deltaY: number) => void;
@@ -118,6 +119,7 @@ export type LabelGroupNudge = LabelGroupGeneric & {
 };
 
 export type LabelGroupChoices = LabelGroupGeneric & {
+  /** The overlap avoidance technique to use. `nudge` shifts labels by a small offset; `choices` picks from a list of candidate positions; `fixed` treats nodes as immovable obstacles. */
   technique: 'choices';
   /**
    * An array of functions that each apply a candidate position to the node.
@@ -133,6 +135,7 @@ export type LabelGroupChoices = LabelGroupGeneric & {
 };
 
 export type LabelGroupFixed = {
+  /** The overlap avoidance technique to use. `nudge` shifts labels by a small offset; `choices` picks from a list of candidate positions; `fixed` treats nodes as immovable obstacles. */
   technique: 'fixed';
   nodes: Element[];
   margin?: number | Partial<Margin>;

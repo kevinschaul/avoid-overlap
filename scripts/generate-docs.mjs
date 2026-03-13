@@ -46,6 +46,21 @@ function getDefault(comment) {
     .trim();
 }
 
+function formatSignature(sig) {
+  if (!sig) return 'function';
+  const params = (sig.parameters ?? [])
+    .map((p) => `${p.name}: ${formatTypeInner(p.type)}`)
+    .join(', ');
+  const ret = formatTypeInner(sig.type);
+  return `(${params}) => ${ret}`;
+}
+
+function resolveReference(name) {
+  const t = findType(name);
+  if (!t) return null;
+  return t.type ?? null;
+}
+
 function formatType(type) {
   if (!type) return '';
   switch (type.type) {
@@ -54,21 +69,28 @@ function formatType(type) {
     case 'literal':
       return `\`${JSON.stringify(type.value)}\``;
     case 'array': {
-      // Expand known union aliases inline rather than showing the type name
-      if (type.elementType?.name === 'Direction') {
-        return '`"up"` \\| `"down"` \\| `"left"` \\| `"right"`';
+      const elType = type.elementType;
+      // Expand reference type aliases (e.g. Direction) inline
+      if (elType?.type === 'reference') {
+        const resolved = resolveReference(elType.name);
+        if (resolved) return formatType({ ...resolved, _arrayOf: true });
       }
-      return `\`${formatTypeInner(type.elementType)}[]\``;
+      const inner = formatTypeInner(elType);
+      const needsParens = elType?.type === 'reflection';
+      return needsParens ? `\`(${inner})[]\`` : `\`${inner}[]\``;
     }
     case 'union':
       return type.types.map(formatType).join(' \\| ');
-    case 'reference':
+    case 'reference': {
       if (type.name === 'Partial') return '`object`';
-      if (type.name === 'Direction')
-        return '`"up"` \\| `"down"` \\| `"left"` \\| `"right"`';
+      const resolved = resolveReference(type.name);
+      if (resolved) return formatType(resolved);
       return `\`${type.name}\``;
-    case 'reflection':
-      return '`function`';
+    }
+    case 'reflection': {
+      const sig = type.declaration?.signatures?.[0];
+      return sig ? `\`${formatSignature(sig)}\`` : '`function`';
+    }
     default:
       return `\`${type.type}\``;
   }
@@ -77,9 +99,20 @@ function formatType(type) {
 function formatTypeInner(type) {
   if (!type) return '';
   if (type.type === 'intrinsic') return type.name;
-  if (type.type === 'reference') return type.name;
-  if (type.type === 'reflection') return 'function';
-  if (type.type === 'array') return `${formatTypeInner(type.elementType)}[]`;
+  if (type.type === 'reference') {
+    const resolved = resolveReference(type.name);
+    if (resolved) return formatTypeInner(resolved);
+    return type.name;
+  }
+  if (type.type === 'reflection') {
+    const sig = type.declaration?.signatures?.[0];
+    return sig ? formatSignature(sig) : 'function';
+  }
+  if (type.type === 'array') {
+    const inner = formatTypeInner(type.elementType);
+    const needsParens = type.elementType?.type === 'reflection';
+    return needsParens ? `(${inner})[]` : `${inner}[]`;
+  }
   return type.type;
 }
 
@@ -127,9 +160,15 @@ const sections = [];
 // labelGroups — common params
 {
   const lines = tableHeader();
-  lines.push(
-    '| `technique` | `"nudge" \\| "choices" \\| "fixed"` | The overlap avoidance technique to use. `nudge` shifts labels by a small offset; `choices` picks from a list of candidate positions; `fixed` treats nodes as immovable obstacles. |',
-  );
+  const techniqueProps = ['LabelGroupNudge', 'LabelGroupChoices', 'LabelGroupFixed']
+    .map((name) => {
+      const props = Object.fromEntries(getOwnProps(name).map((p) => [p.name, p]));
+      return props['technique'];
+    })
+    .filter(Boolean);
+  const techniqueType = { type: 'union', types: techniqueProps.map((p) => p.type) };
+  // Use comment from first variant (all three share the same description)
+  lines.push(renderProp('technique', { ...techniqueProps[0], type: techniqueType }));
   const genericOrder = ['nodes', 'margin', 'priority', 'remove', 'onRemove'];
   const genericProps = Object.fromEntries(
     getOwnProps('LabelGroupGeneric').map((p) => [p.name, p]),
