@@ -1,14 +1,18 @@
-import type { Meta, StoryObj } from '@storybook/html';
 import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
-import { AvoidOverlap } from '../src/index.js';
-import type { LabelGroup } from '../src/index.js';
+import { avoidOverlap } from '../src/index.js';
 
 import citiesPizza from './data/cities_pizza.json';
 import usTopoJson from './data/us-states-10m.json';
 
-const meta: Meta = {
+const meta = {
   title: 'Real-world/CityMap',
+  args: {
+    debug: false,
+  },
+  argTypes: {
+    debug: { control: 'boolean' },
+  },
 };
 export default meta;
 
@@ -23,22 +27,18 @@ const colors = [
   '#01665e',
 ];
 
-type CityDatum = {
-  city: string;
-  score: number;
-  lng?: number;
-  lat?: number;
-  rank?: number;
-};
-
 function buildCityMap(
-  container: HTMLElement,
-  citiesData: CityDatum[],
-  headline: string,
-  legendMinLabel: string,
-  legendMaxLabel: string,
-  priorityCities: string[] = []
+  container,
+  citiesData,
+  headline,
+  legendMinLabel,
+  legendMaxLabel,
+  priorityCities = [],
+  debug = false,
 ) {
+  document
+    .querySelectorAll('[id^="avoid-overlap-scored-debug"]')
+    .forEach((n) => n.remove());
   const priorityCitiesSet = new Set(priorityCities);
   const majorCities = new Set([
     'New York, NY',
@@ -47,7 +47,7 @@ function buildCityMap(
     'Washington, DC',
   ]);
 
-  function getPriority(d: CityDatum) {
+  function getPriority(d) {
     let priority = Math.abs(d.score);
     if (priorityCitiesSet.has(d.city)) priority += 100;
     else if (majorCities.has(d.city)) priority += 50;
@@ -56,17 +56,17 @@ function buildCityMap(
 
   const geocodedData = citiesData
     .filter((d) => d.lng && d.lat)
-    .map((d) => ({ ...d, longitude: d.lng!, latitude: d.lat! }));
+    .map((d) => ({ ...d, longitude: d.lng, latitude: d.lat }));
 
-  const mapWidth = Math.min(container.clientWidth || 672, 672);
+  const mapWidth = 672;
   const mapHeight = mapWidth * 0.625;
   const radius = 7;
   const highlightStrokeWidth = 1.5;
 
-  const us = usTopoJson as any;
-  const nation = topojson.feature(us, us.objects.nation) as any;
-  const stateFeatures = topojson.feature(us, us.objects.states) as any;
-  const states = topojson.mesh(us, us.objects.states) as any;
+  const us = usTopoJson;
+  const nation = topojson.feature(us, us.objects.nation);
+  const stateFeatures = topojson.feature(us, us.objects.states);
+  const states = topojson.mesh(us, us.objects.states);
 
   const leftMargin = 10;
   const projection = d3
@@ -74,18 +74,7 @@ function buildCityMap(
     .scale((mapWidth - leftMargin) * 1.33)
     .translate([mapWidth / 2 + leftMargin / 2, mapHeight / 2]);
 
-  type ForcedDatum = CityDatum & {
-    longitude: number;
-    latitude: number;
-    x: number;
-    y: number;
-    vx?: number;
-    vy?: number;
-    fx?: number | null;
-    fy?: number | null;
-  };
-
-  const forcedData: ForcedDatum[] = geocodedData
+  const forcedData = geocodedData
     .map((d) => {
       const projected = projection([d.longitude, d.latitude]);
       return {
@@ -98,21 +87,15 @@ function buildCityMap(
 
   const simulation = d3
     .forceSimulation(forcedData)
-    .force(
-      'x',
-      d3.forceX((d: ForcedDatum) => d.x).strength(0.8)
-    )
-    .force(
-      'y',
-      d3.forceY((d: ForcedDatum) => d.y).strength(0.8)
-    )
+    .force('x', d3.forceX((d) => d.x).strength(0.8))
+    .force('y', d3.forceY((d) => d.y).strength(0.8))
     .force('collide', d3.forceCollide(radius))
     .stop();
 
-  for (let i = 0; i < 120; i++) simulation.tick();
+  for (let i = 0; i < 120; i += 1) simulation.tick();
 
   const colorScale = d3
-    .scaleLinear<string>()
+    .scaleLinear()
     .domain([-100, -60, -20, 0, 20, 60, 100])
     .range(colors)
     .clamp(true);
@@ -197,7 +180,7 @@ function buildCityMap(
     .attr('class', 'state')
     .attr('fill', '#fafafa')
     .attr('stroke', 'none')
-    .attr('d', path as any);
+    .attr('d', path);
 
   // State borders
   svg
@@ -232,13 +215,12 @@ function buildCityMap(
 
   // ── Labels ───────────────────────────────────────────────────────────────
   const sortedByPriority = [...forcedData].sort(
-    (a, b) => getPriority(b) - getPriority(a)
+    (a, b) => getPriority(b) - getPriority(a),
   );
 
   const labelData = sortedByPriority
     .filter(
-      (d) =>
-        d.city !== 'Fort Wayne, IN' && d.city !== 'North Las Vegas, NV'
+      (d) => d.city !== 'Fort Wayne, IN' && d.city !== 'North Las Vegas, NV',
     )
     .slice(0, 20)
     .map((d) => ({
@@ -254,7 +236,7 @@ function buildCityMap(
   const labelGroup = svg.append('g').attr('class', 'labels');
 
   const labelNodes = labelGroup
-    .selectAll<SVGGElement, (typeof labelData)[0]>('g.label')
+    .selectAll('g.label')
     .data(labelData)
     .join('g')
     .attr('class', 'label')
@@ -272,8 +254,11 @@ function buildCityMap(
     .text((d) => d.labelText);
 
   // Hover interaction (mirrors real component)
-  function handleMouseover(this: SVGPathElement, _event: MouseEvent, d: ForcedDatum) {
-    svg.selectAll('path.city-marker').attr('stroke', '#fff').attr('stroke-width', 1);
+  function handleMouseover(_event, d) {
+    svg
+      .selectAll('path.city-marker')
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 1);
     d3.select(this).attr('stroke', '#000').attr('stroke-width', 2);
 
     svg.selectAll('.labels').style('opacity', 0);
@@ -303,7 +288,10 @@ function buildCityMap(
   }
 
   function handleMouseout() {
-    svg.selectAll('path.city-marker').attr('stroke', '#fff').attr('stroke-width', 1);
+    svg
+      .selectAll('path.city-marker')
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 1);
     svg.selectAll('.labels').style('opacity', 1);
     svg.selectAll('.hover-label').remove();
 
@@ -311,10 +299,10 @@ function buildCityMap(
     labelNodes.each(function () {
       const el = d3.select(this);
       if (parseFloat(el.style('opacity') || '1') > 0) {
-        const ld = el.datum() as (typeof labelData)[0];
+        const ld = el.datum();
         svg
           .selectAll('path.city-marker')
-          .filter((cd: any) => cd.city === ld.city)
+          .filter((cd) => cd.city === ld.city)
           .attr('stroke', '#000')
           .attr('stroke-width', highlightStrokeWidth);
       }
@@ -322,12 +310,16 @@ function buildCityMap(
   }
 
   svg
-    .selectAll<SVGPathElement, ForcedDatum>('path.city-marker')
+    .selectAll('path.city-marker')
     .on('mouseover', handleMouseover)
     .on('mouseout', handleMouseout);
 
   // Voronoi for larger hit targets
-  const delaunay = d3.Delaunay.from(forcedData, (d) => d.x, (d) => d.y);
+  const delaunay = d3.Delaunay.from(
+    forcedData,
+    (d) => d.x,
+    (d) => d.y,
+  );
   const voronoi = delaunay.voronoi([0, 0, mapWidth, mapHeight]);
 
   svg
@@ -339,11 +331,9 @@ function buildCityMap(
     .attr('fill', 'none')
     .attr('pointer-events', 'all')
     .style('cursor', 'pointer')
-    .on('mouseover', function (_event, d) {
-      const marker = svg
-        .selectAll<SVGPathElement, ForcedDatum>('path.city-marker')
-        .filter((cd) => cd === d);
-      handleMouseover.call(marker.node()!, _event as MouseEvent, d);
+    .on('mouseover', (_event, d) => {
+      const marker = svg.selectAll('path.city-marker').filter((cd) => cd === d);
+      handleMouseover.call(marker.node(), _event, d);
     })
     .on('mouseout', handleMouseout);
 
@@ -352,29 +342,27 @@ function buildCityMap(
 
   // Choice generators — mirror the real component's positivePositions /
   // negativePositions arrays exactly, but as avoid-overlap choice fns.
-  function posUp(el: Element, x: number, y: number, anchor: string) {
+  function posUp(el, x, y, anchor) {
     el.setAttribute('transform', `translate(${x}, ${y})`);
     el.querySelector('text')?.setAttribute('text-anchor', anchor);
   }
 
-  const positiveChoices = (d: ForcedDatum) => [
-    (el: Element) => posUp(el, d.x - offset, d.y - offset + 3, 'end'),      // upper-left
-    (el: Element) => posUp(el, d.x + offset, d.y - offset + 3, 'start'),    // upper-right
-    (el: Element) => posUp(el, d.x, d.y + offset + 10, 'middle'),           // below
+  const positiveChoices = (d) => [
+    (el) => posUp(el, d.x - offset, d.y - offset + 3, 'end'), // upper-left
+    (el) => posUp(el, d.x + offset, d.y - offset + 3, 'start'), // upper-right
+    (el) => posUp(el, d.x, d.y + offset + 10, 'middle'), // below
   ];
 
-  const negativeChoices = (d: ForcedDatum) => [
-    (el: Element) => posUp(el, d.x - offset, d.y + offset + 5, 'end'),      // lower-left
-    (el: Element) => posUp(el, d.x + offset, d.y + offset + 5, 'start'),    // lower-right
-    (el: Element) => posUp(el, d.x, d.y - offset - 3, 'middle'),            // above
+  const negativeChoices = (d) => [
+    (el) => posUp(el, d.x - offset, d.y + offset + 5, 'end'), // lower-left
+    (el) => posUp(el, d.x + offset, d.y + offset + 5, 'start'), // lower-right
+    (el) => posUp(el, d.x, d.y - offset - 3, 'middle'), // above
   ];
 
-  const avoidLabelGroups: LabelGroup[] = (
-    labelNodes.nodes() as Element[]
-  ).map((node, i) => {
+  const avoidLabelGroups = labelNodes.nodes().map((node, i) => {
     const d = labelData[i];
 
-    let choices: ((el: Element) => void)[];
+    let choices;
     if (d.city === 'New York, NY' || d.city === 'Las Vegas, NV') {
       const pos = positiveChoices(d);
       choices = [pos[1], pos[0], pos[2]]; // right first
@@ -389,7 +377,7 @@ function buildCityMap(
     }
 
     return {
-      technique: 'choices' as const,
+      technique: 'choices',
       nodes: [node],
       choices,
       priority: getPriority(d),
@@ -397,26 +385,40 @@ function buildCityMap(
     };
   });
 
-  const svgNode = svg.node()!;
+  const svgNode = svg.node();
   container.appendChild(svgNode);
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      const avoidOverlap = new AvoidOverlap();
-      avoidOverlap.run(svgNode, avoidLabelGroups, {
+      const markerNodes = Array.from(
+        svgNode.querySelectorAll('path.city-marker'),
+      );
+      const allLabelGroups = [
+        {
+          technique: 'fixed',
+          nodes: markerNodes,
+          margin: -4,
+        },
+        ...avoidLabelGroups,
+      ];
+
+      const options = {
         includeParent: true,
         parentMargin: { top: -5, right: -5, bottom: -5, left: -5 },
-      });
+        scoreExponent: 2,
+        debug,
+      };
+      avoidOverlap(allLabelGroups, options);
 
       // Highlight visible labels' markers (matches real component)
       labelNodes.each(function () {
-        const el = this as Element;
+        const el = this;
         // Nodes removed by avoid-overlap are no longer in the DOM
         if (!svgNode.contains(el)) return;
-        const ld = d3.select<Element, (typeof labelData)[0]>(el).datum();
+        const ld = d3.select(el).datum();
         svg
           .selectAll('path.city-marker')
-          .filter((cd: any) => cd.city === ld.city)
+          .filter((cd) => cd.city === ld.city)
           .attr('stroke', '#000')
           .attr('stroke-width', highlightStrokeWidth)
           .raise();
@@ -449,32 +451,28 @@ function buildCityMap(
     'Source: <a href="https://inequalities.ai/" style="color:rgb(0,136,204);text-decoration:none">Inequalities.ai</a>';
 
   wrapper.appendChild(h3);
-  wrapper.appendChild(legendSvg.node()!);
+  wrapper.appendChild(legendSvg.node());
   wrapper.appendChild(svgNode);
   wrapper.appendChild(source);
   container.appendChild(wrapper);
 }
 
-const storyDefaults = {
+export const Pizza = {
   parameters: { docs: { story: { autoplay: true } } },
-  render: () => {
+  render: (args) => {
     const div = document.createElement('div');
     div.style.width = '100%';
-    return div;
-  },
-};
-
-export const Pizza: StoryObj = {
-  ...storyDefaults,
-  play: async ({ canvasElement }) => {
-    const div = canvasElement.querySelector('div') as HTMLElement;
-    div.innerHTML = '';
-    buildCityMap(
-      div,
-      citiesPizza as CityDatum[],
-      'The cities with the best (and worst) pizza',
-      'Worst pizza',
-      'Best pizza'
+    requestAnimationFrame(() =>
+      buildCityMap(
+        div,
+        citiesPizza,
+        'The cities with the best (and worst) pizza',
+        'Worst pizza',
+        'Best pizza',
+        [],
+        args.debug,
+      ),
     );
+    return div;
   },
 };

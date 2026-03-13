@@ -1,5 +1,5 @@
-import { AvoidOverlap } from '../src/index';
-import type { LabelGroup } from '../src/index';
+import { avoidOverlap } from '../src/index';
+import type { LabelGroup, Options } from '../src/index';
 
 interface TestNode {
   coords: {
@@ -20,88 +20,72 @@ interface TestLabelGroup extends Omit<LabelGroup, 'nodes'> {
 
 const svgNamespace = 'http://www.w3.org/2000/svg';
 
-export const render = () => document.createElementNS(svgNamespace, 'svg');
-
-export const play = async ({ canvasElement, args }) => {
-  const parent = canvasElement.querySelector('svg');
-  const parentBounds = parent.getBoundingClientRect();
-
-  // Clear any previous contents of the svg
+function buildElements(parent: SVGElement, args: any): ReturnType<typeof args.labelGroups.map> {
   parent.innerHTML = '';
-
-  // Remove any previous debugger nodes
-  document.querySelectorAll('.avoid-overlap-debugger').forEach((node) => {
-    node.remove();
-  });
+  document.querySelectorAll('[id^="avoid-overlap-scored-debug"]').forEach((n) => n.remove());
 
   parent.setAttributeNS(null, 'width', args.parent.coords.width);
   parent.setAttributeNS(null, 'height', args.parent.coords.height);
 
+  const parentBounds = parent.getBoundingClientRect();
   const xOffset = parentBounds.x - args.parent.coords.x;
   const yOffset = parentBounds.y - args.parent.coords.y;
 
-  const labelGroups = args.labelGroups.map(
-    (labelGroup: TestLabelGroup) => {
-      const newLabelGroup = {
-        ...labelGroup,
-        nodes: labelGroup.nodes.map((node) => {
-          const element = document.createElementNS(svgNamespace, 'g');
+  return args.labelGroups.map((labelGroup: TestLabelGroup) => ({
+    ...labelGroup,
+    nodes: labelGroup.nodes.map((node: TestNode) => {
+      const element = document.createElementNS(svgNamespace, 'g');
 
-          element.setAttributeNS(
-            null,
-            'transform',
-            `translate(${xOffset + node.coords.x - parentBounds.x}, ${
-              yOffset + node.coords.y - parentBounds.y
-            })`
-          );
+      element.setAttributeNS(
+        null,
+        'transform',
+        `translate(${xOffset + node.coords.x - parentBounds.x}, ${
+          yOffset + node.coords.y - parentBounds.y
+        })`
+      );
 
-          const rect = document.createElementNS(svgNamespace, 'rect');
-          rect.setAttributeNS(null, 'x', '0');
-          rect.setAttributeNS(null, 'y', '0');
-          rect.setAttributeNS(null, 'width', `${node.coords.width}`);
-          rect.setAttributeNS(null, 'height', `${node.coords.height}`);
-          rect.setAttributeNS(null, 'fill', '#ccc');
-          rect.setAttributeNS(null, 'stroke', '#333');
-          element.append(rect);
+      const rect = document.createElementNS(svgNamespace, 'rect');
+      rect.setAttributeNS(null, 'x', '0');
+      rect.setAttributeNS(null, 'y', '0');
+      rect.setAttributeNS(null, 'width', `${node.coords.width}`);
+      rect.setAttributeNS(null, 'height', `${node.coords.height}`);
+      rect.setAttributeNS(null, 'fill', '#ccc');
+      rect.setAttributeNS(null, 'stroke', '#333');
+      element.append(rect);
 
-          if (node.textContent) {
-            const text = document.createElementNS(svgNamespace, 'text');
-            text.setAttributeNS(null, 'x', '0');
-            text.setAttributeNS(null, 'y', '0');
-            text.setAttributeNS(null, 'dy', '0.8em');
-            text.innerHTML = node.textContent;
-            element.append(text);
-          }
+      if (node.textContent) {
+        const text = document.createElementNS(svgNamespace, 'text');
+        text.setAttributeNS(null, 'x', '0');
+        text.setAttributeNS(null, 'y', '0');
+        text.setAttributeNS(null, 'dy', '0.8em');
+        text.innerHTML = node.textContent;
+        element.append(text);
+      }
 
-          parent.append(element);
-          return element;
-        }),
-      };
+      parent.append(element);
+      return element;
+    }),
+  }));
+}
 
-      return newLabelGroup;
-    }
-  );
-
-  const avoidOverlap = new AvoidOverlap();
-  avoidOverlap.run(parent, labelGroups, args.options);
-};
-
-export const playExportedArgs = async ({ canvasElement, args }) => {
-  // Parse `exportedArgs` into an object
-  const parsed = JSON.parse(args.exportedArgs);
-  parsed.labelGroups = parsed.labelGroups.map((d: LabelGroup) => ({
-    // Override the render function for each label group
-    ...d,
-    render: labelGroupNudgeRender
-  }))
-
-  return await play({ canvasElement, args: parsed });
+export const render = (args: any) => {
+  const parent = document.createElementNS(svgNamespace, 'svg');
+  // First rAF: build elements after DOM attachment.
+  // Second rAF: run avoidOverlap after layout is fully computed (needed in Firefox).
+  requestAnimationFrame(() => {
+    const labelGroups = buildElements(parent, args);
+    requestAnimationFrame(() => {
+      const runOptions: Options = { ...args.options, ...args.scoredOptions, debug: args.debug ?? false };
+      avoidOverlap(labelGroups, runOptions);
+    });
+  });
+  return parent;
 };
 
 export const labelGroupNudgeRender = (element: Element, dx: number, dy: number) => {
   const prevTransform =
     element.getAttributeNS(null, 'transform') || 'translate(0, 0)';
-  const [x, y] = prevTransform.match(/([0-9]+)/g)!.map((d) => +d);
+  const [x, y] = prevTransform.match(/-?[0-9]+\.?[0-9]*/g)!.map((d) => +d);
 
   element.setAttributeNS(null, 'transform', `translate(${x + dx}, ${y + dy})`);
 };

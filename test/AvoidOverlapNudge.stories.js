@@ -1,28 +1,30 @@
-import type { Meta, StoryObj } from '@storybook/html';
+import { render, labelGroupNudgeRender } from './util';
 
-import { render, play, labelGroupNudgeRender } from './util';
-
-const meta: Meta = {
+const meta = {
   title: 'AvoidOverlapNudge',
   tags: ['autodocs'],
-  argTypes: {},
+  args: {
+    debug: false,
+  },
+  argTypes: {
+    debug: { control: 'boolean' },
+  },
 };
 export default meta;
 
-const Default: StoryObj = {
+const Default = {
   parameters: {
     docs: {
       story: { autoplay: true },
     },
   },
-  render: render,
-  play: play,
+  render,
 };
 
 /**
  * Subtitle should appear below title
  */
-export const TwoSetsOfNodes: StoryObj = {
+export const TwoSetsOfNodes = {
   ...Default,
   args: {
     parent: {
@@ -65,6 +67,7 @@ export const TwoSetsOfNodes: StoryObj = {
         ],
         priority: 5,
         render: labelGroupNudgeRender,
+        directions: ['down'],
       },
     ],
     options: {},
@@ -74,7 +77,7 @@ export const TwoSetsOfNodes: StoryObj = {
 /**
  * Square box should appear above the rectangle
  */
-export const ShortestWithDirectionUp: StoryObj = {
+export const ShortestWithDirectionUp = {
   ...Default,
   args: {
     parent: {
@@ -115,8 +118,8 @@ export const ShortestWithDirectionUp: StoryObj = {
         ],
         priority: 5,
         render: labelGroupNudgeRender,
-        nudgeStrategy: 'shortest',
-        nudgeDirections: ['up'],
+
+        directions: ['up'],
       },
     ],
     options: {},
@@ -126,7 +129,7 @@ export const ShortestWithDirectionUp: StoryObj = {
 /**
  * Square should appear to the right of the rectangle
  */
-export const ShortestWithDirectionRight: StoryObj = {
+export const ShortestWithDirectionRight = {
   ...Default,
   args: {
     parent: {
@@ -167,8 +170,9 @@ export const ShortestWithDirectionRight: StoryObj = {
         ],
         render: labelGroupNudgeRender,
         priority: 5,
-        nudgeStrategy: 'shortest',
-        nudgeDirections: ['right'],
+
+        directions: ['right'],
+        maxDistance: 110,
       },
     ],
     options: {},

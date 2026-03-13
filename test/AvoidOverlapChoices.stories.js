@@ -1,28 +1,30 @@
-import type { Meta, StoryObj } from '@storybook/html';
+import { render } from './util';
 
-import { render, play } from './util';
-
-const meta: Meta = {
+const meta = {
   title: 'AvoidOverlapChoices',
   tags: ['autodocs'],
-  argTypes: {},
+  args: {
+    debug: false,
+  },
+  argTypes: {
+    debug: { control: 'boolean' },
+  },
 };
 export default meta;
 
-const Default: StoryObj = {
+const Default = {
   parameters: {
     docs: {
       story: { autoplay: true },
     },
   },
-  render: render,
-  play: play,
+  render,
 };
 
 /**
  * Square should appear at top left corner
  */
-export const AvoidViewboxBounds: StoryObj = {
+export const AvoidViewboxBounds = {
   ...Default,
   args: {
     parent: {
@@ -47,9 +49,9 @@ export const AvoidViewboxBounds: StoryObj = {
           },
         ],
         choices: [
-          (element: Element) =>
+          (element) =>
             element.setAttributeNS(null, 'transform', 'translate(-20, -20)'),
-          (element: Element) =>
+          (element) =>
             element.setAttributeNS(null, 'transform', 'translate(0, 0)'),
         ],
       },
@@ -57,7 +59,8 @@ export const AvoidViewboxBounds: StoryObj = {
     options: {
       includeParent: true,
       parentMargin: {
-        // TODO why do we need -1 instead of 0?
+        // Negative margins so that labels touching (but not crossing) the
+        // parent edge are not treated as collisions by the spatial tree.
         top: -1,
         right: -1,
         bottom: -1,
