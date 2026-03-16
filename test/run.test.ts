@@ -3,7 +3,7 @@
  * Tests that the SA resolves overlapping labels to a non-overlapping state.
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { avoidOverlap } from './index';
+import { avoidOverlap } from '../src/index';
 
 type Rect = { x: number; y: number; width: number; height: number };
 
@@ -11,16 +11,26 @@ function mockBCR(el: Element, rectFn: () => Rect) {
   el.getBoundingClientRect = () => {
     const r = rectFn();
     return {
-      x: r.x, y: r.y, width: r.width, height: r.height,
-      top: r.y, left: r.x, bottom: r.y + r.height, right: r.x + r.width,
+      x: r.x,
+      y: r.y,
+      width: r.width,
+      height: r.height,
+      top: r.y,
+      left: r.x,
+      bottom: r.y + r.height,
+      right: r.x + r.width,
       toJSON: () => ({}),
     } as DOMRect;
   };
 }
 
 function rectsOverlap(a: Rect, b: Rect): boolean {
-  return !(a.x + a.width <= b.x || b.x + b.width <= a.x ||
-           a.y + a.height <= b.y || b.y + b.height <= a.y);
+  return !(
+    a.x + a.width <= b.x ||
+    b.x + b.width <= a.x ||
+    a.y + a.height <= b.y ||
+    b.y + b.height <= a.y
+  );
 }
 
 describe('avoidOverlap', () => {
@@ -61,22 +71,39 @@ describe('avoidOverlap', () => {
     ];
     mockBCR(nodeB, () => bPositions[bChoice]);
 
-    avoidOverlap([
-      {
-        technique: 'choices' as const,
-        nodes: [nodeA],
-        choices: [() => { aChoice = 0; }, () => { aChoice = 1; }],
-        priority: 1,
-        margin: 0,
-      },
-      {
-        technique: 'choices' as const,
-        nodes: [nodeB],
-        choices: [() => { bChoice = 0; }, () => { bChoice = 1; }],
-        priority: 1,
-        margin: 0,
-      },
-    ], { iterations: 50_000 });
+    avoidOverlap(
+      [
+        {
+          technique: 'choices' as const,
+          nodes: [nodeA],
+          choices: [
+            () => {
+              aChoice = 0;
+            },
+            () => {
+              aChoice = 1;
+            },
+          ],
+          priority: 1,
+          margin: 0,
+        },
+        {
+          technique: 'choices' as const,
+          nodes: [nodeB],
+          choices: [
+            () => {
+              bChoice = 0;
+            },
+            () => {
+              bChoice = 1;
+            },
+          ],
+          priority: 1,
+          margin: 0,
+        },
+      ],
+      { iterations: 50_000 },
+    );
 
     const aVisible = nodeA.isConnected;
     const bVisible = nodeB.isConnected;
@@ -86,7 +113,9 @@ describe('avoidOverlap', () => {
 
     if (aVisible && bVisible) {
       // Both visible → must not overlap
-      expect(rectsOverlap(aPositions[aChoice], bPositions[bChoice])).toBe(false);
+      expect(rectsOverlap(aPositions[aChoice], bPositions[bChoice])).toBe(
+        false,
+      );
     }
   });
 
@@ -118,29 +147,46 @@ describe('avoidOverlap', () => {
     ];
     mockBCR(nodeC, () => cPositions[cChoice]);
 
-    avoidOverlap([
-      {
-        technique: 'choices' as const,
-        nodes: [nodeA],
-        choices: [],                            // fixed obstacle
-        priority: 10,
-        margin: 0,
-      },
-      {
-        technique: 'choices' as const,
-        nodes: [nodeB],
-        choices: [() => { bChoice = 0; }, () => { bChoice = 1; }],
-        priority: 1,
-        margin: 0,
-      },
-      {
-        technique: 'choices' as const,
-        nodes: [nodeC],
-        choices: [() => { cChoice = 0; }, () => { cChoice = 1; }],
-        priority: 1,
-        margin: 0,
-      },
-    ], { iterations: 50_000 });
+    avoidOverlap(
+      [
+        {
+          technique: 'choices' as const,
+          nodes: [nodeA],
+          choices: [], // fixed obstacle
+          priority: 10,
+          margin: 0,
+        },
+        {
+          technique: 'choices' as const,
+          nodes: [nodeB],
+          choices: [
+            () => {
+              bChoice = 0;
+            },
+            () => {
+              bChoice = 1;
+            },
+          ],
+          priority: 1,
+          margin: 0,
+        },
+        {
+          technique: 'choices' as const,
+          nodes: [nodeC],
+          choices: [
+            () => {
+              cChoice = 0;
+            },
+            () => {
+              cChoice = 1;
+            },
+          ],
+          priority: 1,
+          margin: 0,
+        },
+      ],
+      { iterations: 50_000 },
+    );
 
     // A must survive (highest priority)
     expect(nodeA.isConnected).toBe(true);
@@ -148,7 +194,9 @@ describe('avoidOverlap', () => {
     // Check no overlaps among surviving nodes
     const aRect = { x: 10, y: 10, width: 40, height: 20 };
     if (nodeB.isConnected && nodeC.isConnected) {
-      expect(rectsOverlap(bPositions[bChoice], cPositions[cChoice])).toBe(false);
+      expect(rectsOverlap(bPositions[bChoice], cPositions[cChoice])).toBe(
+        false,
+      );
     }
     if (nodeB.isConnected) {
       expect(rectsOverlap(aRect, bPositions[bChoice])).toBe(false);
@@ -167,9 +215,9 @@ describe('avoidOverlap', () => {
 
     let aChoice = 0;
     const aPositions: Rect[] = [
-      { x: 5,  y: 5, width: 80, height: 30 },
-      { x: 5,  y: 60, width: 80, height: 30 },
-      { x: 5,  y: 120, width: 80, height: 30 },
+      { x: 5, y: 5, width: 80, height: 30 },
+      { x: 5, y: 60, width: 80, height: 30 },
+      { x: 5, y: 120, width: 80, height: 30 },
     ];
     mockBCR(nodeA, () => aPositions[aChoice]);
 
@@ -181,36 +229,53 @@ describe('avoidOverlap', () => {
     ];
     mockBCR(nodeB, () => bPositions[bChoice]);
 
-    avoidOverlap([
-      {
-        technique: 'choices' as const,
-        nodes: [nodeA],
-        choices: [
-          () => { aChoice = 0; },
-          () => { aChoice = 1; },
-          () => { aChoice = 2; },
-        ],
-        priority: 1,
-        margin: 0,
-      },
-      {
-        technique: 'choices' as const,
-        nodes: [nodeB],
-        choices: [
-          () => { bChoice = 0; },
-          () => { bChoice = 1; },
-          () => { bChoice = 2; },
-        ],
-        priority: 1,
-        margin: 0,
-      },
-    ], { iterations: 50_000 });
+    avoidOverlap(
+      [
+        {
+          technique: 'choices' as const,
+          nodes: [nodeA],
+          choices: [
+            () => {
+              aChoice = 0;
+            },
+            () => {
+              aChoice = 1;
+            },
+            () => {
+              aChoice = 2;
+            },
+          ],
+          priority: 1,
+          margin: 0,
+        },
+        {
+          technique: 'choices' as const,
+          nodes: [nodeB],
+          choices: [
+            () => {
+              bChoice = 0;
+            },
+            () => {
+              bChoice = 1;
+            },
+            () => {
+              bChoice = 2;
+            },
+          ],
+          priority: 1,
+          margin: 0,
+        },
+      ],
+      { iterations: 50_000 },
+    );
 
     const aVisible = nodeA.isConnected;
     const bVisible = nodeB.isConnected;
 
     if (aVisible && bVisible) {
-      expect(rectsOverlap(aPositions[aChoice], bPositions[bChoice])).toBe(false);
+      expect(rectsOverlap(aPositions[aChoice], bPositions[bChoice])).toBe(
+        false,
+      );
     }
     // At minimum one should be visible
     expect(aVisible || bVisible).toBe(true);
@@ -242,23 +307,33 @@ describe('avoidOverlap', () => {
     mockBCR(nodeA, () => aPositions[aChoice]);
     mockBCR(nodeB, () => ({ x: 10, y: 10, width: 40, height: 20 }));
 
-    avoidOverlap([
-      {
-        technique: 'choices' as const,
-        nodes: [nodeA],
-        choices: [() => { aChoice = 0; }, () => { aChoice = 1; }],
-        choiceBonuses: [8, 0],
-        priority: 2,
-        margin: 0,
-      },
-      {
-        technique: 'choices' as const,
-        nodes: [nodeB],
-        choices: [],          // fixed obstacle
-        priority: 1,
-        margin: 0,
-      },
-    ], { iterations: 50_000 });
+    avoidOverlap(
+      [
+        {
+          technique: 'choices' as const,
+          nodes: [nodeA],
+          choices: [
+            () => {
+              aChoice = 0;
+            },
+            () => {
+              aChoice = 1;
+            },
+          ],
+          choiceBonuses: [8, 0],
+          priority: 2,
+          margin: 0,
+        },
+        {
+          technique: 'choices' as const,
+          nodes: [nodeB],
+          choices: [], // fixed obstacle
+          priority: 1,
+          margin: 0,
+        },
+      ],
+      { iterations: 50_000 },
+    );
 
     // A must be visible at choice 0 (preferred position)
     expect(nodeA.isConnected).toBe(true);
