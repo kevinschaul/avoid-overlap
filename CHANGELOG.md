@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.1](https://github.com/kevinschaul/avoid-overlap/compare/v0.3.0...v0.3.1) (2026-03-16)
+
+### Bug Fixes
+
+* Exclude test files and assets from npm package
+
 ## [0.3.0](https://github.com/kevinschaul/avoid-overlap/compare/v0.2.3...v0.3.0) (2026-03-13)
 
 ### ⚠ Breaking Changes
